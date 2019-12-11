@@ -3,7 +3,7 @@ title: Legal
 layout: page
 ---
 
-# Impressum & Datenschutz
+# Legal & Data Protection
 
 Inhaltlich verantwortlich und vertretungsberechtigt:
 
