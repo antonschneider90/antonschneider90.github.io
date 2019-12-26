@@ -5,19 +5,19 @@ layout: page
 
 ### Education
 
-* 2019-2022: LMU Computational Statistics working group PhD in ML
-* 2016-2019: LMU M.Sc. Statistics
-* 2012-2015: Heidelberg University B.Sc. Economics
+* 2019-present: Stanford Continuing Studies
+* 2011-2015: Double Master's Program between Sciences Po Paris and University of St. Gallen: M.A. Finance & Strategy and M.A. International Relations and Governance
+* 2008-2011: Sciences Po Paris B.A. Politics & Economics 
+* 2010-2011: University of Pennsylvania two exchange semesters
 
 ### Work
 
-* 2019-2022: Fraunhofer IIS ADA Center
-* 2018-2019: LMU Computational Statistics working group / ConnectedLife  
-* 2016-2017: Munich Re / Freelance
-* 2015-2016: SAP  
+* 2016-2019: ORDA Technologies 
+* 2015-2018: UBS
+* 2012-2013: KfW-DEG  
 
 ### Skills
-* python, r, c++
-* pytorch, pyro, tensorflow, caret, mlr, sklearn, shiny, revealjs, flask, shiny
-* unix, aws, azure
 
+* private equity and financial modeling
+* business management, kpis, fp&a
+* excel, sql, python
