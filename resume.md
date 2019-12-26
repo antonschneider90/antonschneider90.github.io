@@ -18,6 +18,6 @@ layout: page
 
 ### Skills
 
-* private equity and financial modeling
+* private equity, financial modeling, economic analysis
 * business management, kpis, fp&a
 * excel, sql, python
