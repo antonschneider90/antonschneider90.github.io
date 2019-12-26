@@ -4,4 +4,7 @@ layout: page
 ---
 ![Profile Image]({{ site.url }}/{{ site.picture }})
 
-Jann started his journey as a quant. economist in Heidelberg. Thrilled by its manifold opportunities, he then entered the data science train via his master's in stats at LMU Munich. He applied various stats-related techniques (glms, survival analysis, deep learning, traditional machine learning) on various data types (sensor, text, imagery, tabular) in various settings (industry, research, startup) and is still excited by the multitude of use cases for sophisticated data science solutions. Since spring 2019 he is a PhD student within Bernd Bischl's [Computational Statistics Group](http://www.compstat.statistik.uni-muenchen.de/) at LMU, applying his skills within the [Fraunhofer IIS ADA Lovelace Center](https://www.scs.fraunhofer.de/de/forschung/ada-center.html). Jann's research is centered around the problem of **learning from few labeled data** with applications to functional/ time series data. 
+Anton started as an investment analyst at KfW and UBS.
+After analyzing hundreds of pre-IPO tech companies at UBS, Anton moved into the tech space becoming CFO at ORDA Technologies, a small B2B2C app development startup. He loves using data for impactful analyses. Through Stanford's Continuing Studies, Anton explores new skills in Python and data visualization.
+He holds a Bachelor's degree from Sciences Po Paris (Economics), a Master's degree from Sciences Po Paris (Finance) and a Master's degree from the University of St. Gallen (International Relations).
+Anton lives in Palo Alto, CA. 
