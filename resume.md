@@ -6,7 +6,7 @@ layout: page
 ### Education
 
 * 2019-present: Stanford Continuing Studies, learning new tools how to process big data with Python
-* 2011-2015: Double Master's Program between Sciences Po Paris and University of St. Gallen: M.A. Finance & Strategy and M.A. International Relations and Governance
+* 2011-2015: Double Master's Program between Sciences Po Paris (M.A. Finance & Strategy) and University of St. Gallen (M.A. International Relations and Governance)
 * 2008-2011: Sciences Po Paris B.A. Politics & Economics 
 * 2010-2011: University of Pennsylvania full scholarship for two exchange semesters
 
