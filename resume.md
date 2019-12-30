@@ -13,7 +13,7 @@ layout: page
 ### Work
 
 * 2016-2019: ORDA Technologies, CFO 
-* 2015-2018: UBS, Product Specialist (private equity investments) and Graduate Trainee Program
+* 2015-2018: UBS, Product Specialist (private equity/ sustainable investing)
 * 2012-2013: KfW-DEG, Investment Intern  
 
 ### Skills
