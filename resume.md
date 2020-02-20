@@ -14,7 +14,8 @@ layout: page
 ### Education
 
 * 2019-present: Stanford University - Continuing Studies in Data Visualizations with Python, Statistics for Machine Learning and Product Management for AI
-* 2011-2015: Sciences Po Paris - M.A. Finance & Strategy - and University of St. Gallen - M.A. International Relations and Governance - Double Master's Program
+* 2011-2015: University of St. Gallen - M.A. International Relations and Governance (Double Master's Program)
+* 2011-2015: Sciences Po Paris - M.A. Finance & Strategy (Double Master's Program)
 * 2008-2011: Sciences Po Paris - B.A. Politics & Economics 
 * 2010-2011: University of Pennsylvania - Full scholarship for two exchange semesters 
 
