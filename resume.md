@@ -22,5 +22,5 @@ layout: page
 ### Skills
 
 * private equity, financial modeling, economic analysis
-* business management, kpis, fp&a
+* business management, kpis, fp&a, data visualization
 * excel, sql, python
