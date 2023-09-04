@@ -6,8 +6,8 @@ layout: page
 
 ### Work
 
-* 2021-present: Google - Planning Lead - Strategic Growth at Google Access  
-* 2020-2021: Google - Financial Analyst at Google Access
+* 2021-present: Google - Planning Lead - Strategic Growth at Google Fiber 
+* 2020-2021: Google - Financial Analyst at Google Fiber
 * 2020-present: Everlaw - Business Analyst in the Data Science team 
 * 2016-2019: ORDA Technologies - CFO 
 * 2015-2018: UBS - Product Specialist (private equity/ sustainable investing)
@@ -15,6 +15,7 @@ layout: page
 
 ### Education
 
+* 2022-2023: Reforge - Selective growth-focused programs for experienced professionals in marketing, product, data, and engineering
 * 2019-2020: Stanford University - Continuing Studies in Data Visualizations with Python, Statistics for Machine Learning and Product Management for AI
 * 2011-2015: University of St. Gallen - M.A. International Relations and Governance (Double Master's Program)
 * 2011-2015: Sciences Po Paris - M.A. Finance & Strategy (Double Master's Program)
@@ -23,6 +24,7 @@ layout: page
 
 ### Skills
 
+* cross-functional planning, customer growth and profitability
 * fp&a, financial modeling, private equity, economic analysis
 * business management & strategy, kpis, data visualization
 * excel, sql, python
