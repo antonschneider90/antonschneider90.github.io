@@ -8,7 +8,7 @@ layout: page
 
 * 2021-present: Google - Planning Lead - Strategic Growth at Google Fiber 
 * 2020-2021: Google - Financial Analyst at Google Fiber
-* 2020-present: Everlaw - Business Analyst in the Data Science team 
+* 2020-2020: Everlaw - Business Analyst in the Data Science team 
 * 2016-2019: ORDA Technologies - CFO 
 * 2015-2018: UBS - Product Specialist (private equity/ sustainable investing)
 * 2012-2013: KfW-DEG - Investment Intern 
