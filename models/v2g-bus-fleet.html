@@ -549,7 +549,9 @@ function onFleetChange(){
   const sldr=g('nBuses');
   sldr.max=fb.n;
   // If current value exceeds new max, clamp it
-  if(+sldr.value>fb.n){ sldr.value=Math.min(50,fb.n); g('nBusesV').textContent=sldr.value+' buses'; }
+  if(+sldr.value>fb.n){ sldr.value=Math.min(50,fb.n); }
+  // Always update the display text to match the actual slider value
+  g('nBusesV').textContent=sldr.value+' buses';
   updateAll();
 }
 function onBusChange(){
