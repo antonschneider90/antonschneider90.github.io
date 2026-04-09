@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V2G Bus Fleet Financial Model - Anton Schneider</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .dashboard-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+            margin-top: 90px;
+        }
+        
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 3rem 2rem;
+            background: linear-gradient(135deg, #003049 0%, #004566 100%);
+            border-radius: 16px;
+            color: white;
+        }
+        
+        .dashboard-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: #D9FF00;
+        }
+        
+        .dashboard-header p {
+            font-size: 1.125rem;
+            color: #E5DEFF;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .controls-section {
+            background: #F8F9FA;
+            padding: 2.5rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            border: 2px solid #E4E9F0;
+        }
+        
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .control-group label {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: #003049;
+            font-size: 0.9375rem;
+        }
+        
+        .value-display {
+            color: #003049;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+        }
+        
+        .control-group input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #E4E9F0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .control-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #D9FF00, #95D5B2);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .control-group input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 12px rgba(217, 255, 0, 0.5);
+        }
+        
+        .control-helper {
+            font-size: 0.8125rem;
+            color: #8892A6;
+            margin-top: 0.375rem;
+        }
+        
+        .btn-calculate {
+            background: linear-gradient(135deg, #D9FF00, #E5FF33);
+            color: #003049;
+            padding: 1rem 2.5rem;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 24px rgba(217, 255, 0, 0.4);
+        }
+        
+        .btn-calculate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 32px rgba(217, 255, 0, 0.6);
+        }
+        
+        .metrics-dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .metric-card {
+            background: white;
+            padding: 1.75rem;
+            border-radius: 12px;
+            border: 2px solid #E4E9F0;
+            transition: all 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            border-color: #95D5B2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 48, 73, 0.08);
+        }
+        
+        .metric-label {
+            font-size: 0.875rem;
+            color: #8892A6;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #003049;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .metric-value.positive {
+            color: #10B981;
+        }
+        
+        .metric-value.negative {
+            color: #EF4444;
+        }
+        
+        .metric-value.highlight {
+            color: #003049;
+        }
+        
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .chart-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            border: 2px solid #E4E9F0;
+        }
+        
+        .chart-card h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #003049;
+        }
+        
+        .financial-statements {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 16px;
+            border: 2px solid #E4E9F0;
+            margin-bottom: 2rem;
+        }
+        
+        .statement-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #E4E9F0;
+            padding-bottom: 1rem;
+        }
+        
+        .tab {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: none;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 8px 8px 0 0;
+            transition: all 0.2s ease;
+            color: #8892A6;
+        }
+        
+        .tab.active {
+            background: linear-gradient(135deg, #D9FF00, #95D5B2);
+            color: #003049;
+        }
+        
+        .statement-content {
+            display: none;
+        }
+        
+        .statement-content.active {
+            display: block;
+        }
+        
+        .financial-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .financial-table th {
+            background: #F1FAEE;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 700;
+            color: #003049;
+            border-bottom: 2px solid #E4E9F0;
+        }
+        
+        .financial-table td {
+            padding: 0.875rem 1rem;
+            border-bottom: 1px solid #E4E9F0;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .financial-table tr:hover {
+            background: #F8F9FA;
+        }
+        
+        .section-total {
+            font-weight: 700;
+            background: #F8F9FA;
+        }
+        
+        .insights {
+            background: #F1FAEE;
+            padding: 2rem;
+            border-radius: 12px;
+            border-left: 4px solid #95D5B2;
+            margin-top: 2rem;
+        }
+        
+        .insights h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #003049;
+        }
+        
+        .insight-text {
+            color: #3D4451;
+            line-height: 1.7;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="../index.html" class="logo">
+                <span class="logo-text">Anton Schneider</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="../index.html#models">Models</a></li>
+                <li><a href="../index.html#blog">Blog</a></li>
+                <li><a href="../index.html#about">About</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <h1>🚌 Vehicle-to-Grid Bus Fleet Financial Model</h1>
+            <p>
+                Comprehensive financial analysis of electric bus fleets with bidirectional charging capability. 
+                Includes Monte Carlo simulation, full P&L, Balance Sheet, and Cash Flow projections.
+            </p>
+        </div>
+
+        <!-- Key Metrics Dashboard -->
+        <div class="metrics-dashboard" id="metrics-dashboard">
+            <!-- Populated by JavaScript -->
+        </div>
+
+        <!-- Controls Section -->
+        <div class="controls-section">
+            <h3 style="margin-bottom: 2rem; font-size: 1.5rem; font-weight: 700; color: #003049;">Model Parameters</h3>
+            
+            <div class="controls-grid">
+                <div class="control-group">
+                    <label>
+                        Fleet Size (Number of Buses)
+                        <span class="value-display" id="fleet-value">50</span>
+                    </label>
+                    <input type="range" id="fleet-size" min="10" max="200" value="50" step="10">
+                    <div class="control-helper">Total electric buses in fleet</div>
+                </div>
+
+                <div class="control-group">
+                    <label>
+                        Battery Capacity per Bus (kWh)
+                        <span class="value-display" id="battery-value">300</span>
+                    </label>
+                    <input type="range" id="battery-capacity" min="150" max="500" value="300" step="50">
+                    <div class="control-helper">Usable battery capacity for V2G</div>
+                </div>
+
+                <div class="control-group">
+                    <label>
+                        V2G Availability (hours/day)
+                        <span class="value-display" id="v2g-hours-value">16</span>
+                    </label>
+                    <input type="range" id="v2g-hours" min="8" max="20" value="16" step="1">
+                    <div class="control-helper">Hours buses available for grid services</div>
+                </div>
+
+                <div class="control-group">
+                    <label>
+                        Peak Price Spread (€/MWh)
+                        <span class="value-display" id="price-spread-value">80</span>
+                    </label>
+                    <input type="range" id="price-spread" min="30" max="150" value="80" step="10">
+                    <div class="control-helper">Peak vs off-peak price difference</div>
+                </div>
+
+                <div class="control-group">
+                    <label>
+                        Utilization Rate (%)
+                        <span class="value-display" id="utilization-value">70</span>
+                    </label>
+                    <input type="range" id="utilization" min="40" max="100" value="70" step="5">
+                    <div class="control-helper">% of available capacity used for V2G</div>
+                </div>
+
+                <div class="control-group">
+                    <label>
+                        Bus Purchase Price (€)
+                        <span class="value-display" id="bus-price-value">450,000</span>
+                    </label>
+                    <input type="range" id="bus-price" min="300000" max="700000" value="450000" step="50000">
+                    <div class="control-helper">Cost per electric bus (including V2G hardware)</div>
+                </div>
+            </div>
+
+            <button class="btn-calculate" onclick="runSimulation()">🎲 Run Monte Carlo Simulation (10,000 scenarios)</button>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-section">
+            <div class="chart-card">
+                <h3>📊 Revenue Distribution (Monte Carlo)</h3>
+                <canvas id="monteCarloChart"></canvas>
+            </div>
+
+            <div class="chart-card">
+                <h3>💰 5-Year Cash Flow Projection</h3>
+                <canvas id="cashFlowChart"></canvas>
+            </div>
+
+            <div class="chart-card">
+                <h3>⚡ Daily V2G Revenue Pattern</h3>
+                <canvas id="dailyRevenueChart"></canvas>
+            </div>
+
+            <div class="chart-card">
+                <h3>📈 Cumulative Profitability</h3>
+                <canvas id="cumulativeProfitChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Financial Statements -->
+        <div class="financial-statements">
+            <h3 style="margin-bottom: 2rem; font-size: 1.75rem; font-weight: 700;">Financial Statements (Year 1)</h3>
+            
+            <div class="statement-tabs">
+                <button class="tab active" onclick="showStatement('pl')">P&L Statement</button>
+                <button class="tab" onclick="showStatement('bs')">Balance Sheet</button>
+                <button class="tab" onclick="showStatement('cf')">Cash Flow</button>
+            </div>
+
+            <div id="pl-statement" class="statement-content active">
+                <table class="financial-table" id="pl-table">
+                    <!-- Populated by JavaScript -->
+                </table>
+            </div>
+
+            <div id="bs-statement" class="statement-content">
+                <table class="financial-table" id="bs-table">
+                    <!-- Populated by JavaScript -->
+                </table>
+            </div>
+
+            <div id="cf-statement" class="statement-content">
+                <table class="financial-table" id="cf-table">
+                    <!-- Populated by JavaScript -->
+                </table>
+            </div>
+        </div>
+
+        <!-- Insights -->
+        <div class="insights">
+            <h3>💡 Key Insights</h3>
+            <div class="insight-text" id="insights-text">
+                Adjust parameters above and run the simulation to see updated financial projections and insights.
+            </div>
+        </div>
+
+        <div style="margin-top: 3rem; padding-top: 2rem; border-top: 2px solid #E4E9F0;">
+            <a href="../index.html#models" style="color: #004566; text-decoration: none; font-weight: 700; font-size: 1rem;">← Back to Models</a>
+        </div>
+    </div>
+
+    <script src="../script.js"></script>
+    <script>
+        let charts = { monteCarlo: null, cashFlow: null, dailyRevenue: null, cumulative: null };
+
+        // Update value displays
+        const controls = {
+            'fleet-size': 'fleet-value',
+            'battery-capacity': 'battery-value',
+            'v2g-hours': 'v2g-hours-value',
+            'price-spread': 'price-spread-value',
+            'utilization': 'utilization-value',
+            'bus-price': 'bus-price-value'
+        };
+
+        Object.keys(controls).forEach(inputId => {
+            const input = document.getElementById(inputId);
+            const display = document.getElementById(controls[inputId]);
+            
+            input.addEventListener('input', (e) => {
+                let value = parseFloat(e.target.value);
+                if (inputId === 'utilization') {
+                    display.textContent = value + '%';
+                } else if (inputId === 'bus-price') {
+                    display.textContent = '€' + value.toLocaleString();
+                } else if (inputId === 'price-spread') {
+                    display.textContent = '€' + value;
+                } else {
+                    display.textContent = value;
+                }
+            });
+        });
+
+        function showStatement(type) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.statement-content').forEach(s => s.style.display = 'none');
+            
+            event.target.classList.add('active');
+            document.getElementById(`${type}-statement`).style.display = 'block';
+        }
+
+        function runMonteCarloSimulation(params) {
+            const simulations = 10000;
+            const results = [];
+            
+            for (let i = 0; i < simulations; i++) {
+                // Randomize key variables
+                const priceSpreadVar = params.priceSpread * (0.8 + Math.random() * 0.4); // ±20%
+                const utilizationVar = params.utilization * (0.85 + Math.random() * 0.3); // -15% to +15%
+                const availabilityVar = params.v2gHours * (0.9 + Math.random() * 0.2); // -10% to +10%
+                
+                // Calculate annual revenue for this scenario
+                const dailyEnergy = params.fleetSize * params.batteryCapacity * (utilizationVar / 100) * 0.8; // 80% depth of discharge
+                const dailyRevenue = (dailyEnergy / 1000) * priceSpreadVar * (availabilityVar / 24);
+                const annualRevenue = dailyRevenue * 365;
+                
+                results.push(annualRevenue);
+            }
+            
+            results.sort((a, b) => a - b);
+            
+            return {
+                p10: results[Math.floor(simulations * 0.1)],
+                p25: results[Math.floor(simulations * 0.25)],
+                p50: results[Math.floor(simulations * 0.5)],
+                p75: results[Math.floor(simulations * 0.75)],
+                p90: results[Math.floor(simulations * 0.9)],
+                mean: results.reduce((a, b) => a + b) / simulations,
+                distribution: results
+            };
+        }
+
+        function calculateFinancials() {
+            const params = {
+                fleetSize: parseFloat(document.getElementById('fleet-size').value),
+                batteryCapacity: parseFloat(document.getElementById('battery-capacity').value),
+                v2gHours: parseFloat(document.getElementById('v2g-hours').value),
+                priceSpread: parseFloat(document.getElementById('price-spread').value),
+                utilization: parseFloat(document.getElementById('utilization').value),
+                busPrice: parseFloat(document.getElementById('bus-price').value)
+            };
+
+            // Run Monte Carlo
+            const monteCarlo = runMonteCarloSimulation(params);
+
+            // Base case calculations
+            const dailyEnergy = params.fleetSize * params.batteryCapacity * (params.utilization / 100) * 0.8;
+            const dailyRevenue = (dailyEnergy / 1000) * params.priceSpread * (params.v2gHours / 24);
+            const annualV2GRevenue = dailyRevenue * 365;
+            
+            // Operating costs
+            const annualMaintenanceCost = params.fleetSize * 25000; // €25k per bus maintenance
+            const annualBatteryCost = params.fleetSize * params.batteryCapacity * 5; // €5/kWh degradation
+            const annualOperatingCost = annualMaintenanceCost + annualBatteryCost + (params.fleetSize * 8000); // +€8k overhead
+            
+            // Capital
+            const totalInvestment = params.fleetSize * params.busPrice;
+            const annualDepreciation = totalInvestment / 12; // 12 year useful life
+            
+            // P&L
+            const ebitda = annualV2GRevenue - annualOperatingCost;
+            const netIncome = ebitda - annualDepreciation;
+            const operatingCashFlow = netIncome + annualDepreciation;
+            
+            // Payback
+            const simplePayback = totalInvestment / operatingCashFlow;
+
+            return {
+                params,
+                monteCarlo,
+                annualV2GRevenue,
+                annualOperatingCost,
+                annualDepreciation,
+                ebitda,
+                netIncome,
+                operatingCashFlow,
+                totalInvestment,
+                simplePayback,
+                dailyRevenue
+            };
+        }
+
+        function runSimulation() {
+            const data = calculateFinancials();
+
+            // Update metrics dashboard
+            const metricsHTML = `
+                <div class="metric-card">
+                    <div class="metric-label">Annual V2G Revenue (P50)</div>
+                    <div class="metric-value highlight">€${(data.monteCarlo.p50 / 1000000).toFixed(2)}M</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">EBITDA Margin</div>
+                    <div class="metric-value ${data.ebitda > 0 ? 'positive' : 'negative'}">${((data.ebitda / data.annualV2GRevenue) * 100).toFixed(1)}%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Payback Period</div>
+                    <div class="metric-value">${data.simplePayback.toFixed(1)} yrs</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Total Investment</div>
+                    <div class="metric-value">€${(data.totalInvestment / 1000000).toFixed(1)}M</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Operating Cash Flow</div>
+                    <div class="metric-value ${data.operatingCashFlow > 0 ? 'positive' : 'negative'}">€${(data.operatingCashFlow / 1000).toFixed(0)}k</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Revenue Range (P10-P90)</div>
+                    <div class="metric-value" style="font-size: 1.25rem;">€${(data.monteCarlo.p10 / 1000000).toFixed(1)}-${(data.monteCarlo.p90 / 1000000).toFixed(1)}M</div>
+                </div>
+            `;
+            document.getElementById('metrics-dashboard').innerHTML = metricsHTML;
+
+            // Update charts
+            updateMonteCarloChart(data.monteCarlo);
+            updateCashFlowChart(data);
+            updateDailyRevenueChart(data);
+            updateCumulativeProfitChart(data);
+
+            // Update financial statements
+            updateFinancialStatements(data);
+
+            // Update insights
+            updateInsights(data);
+        }
+
+        function updateMonteCarloChart(monteCarlo) {
+            const buckets = 30;
+            const bucketSize = (monteCarlo.distribution[monteCarlo.distribution.length - 1] - monteCarlo.distribution[0]) / buckets;
+            const histogram = Array(buckets).fill(0);
+            
+            monteCarlo.distribution.forEach(value => {
+                const bucketIndex = Math.min(Math.floor((value - monteCarlo.distribution[0]) / bucketSize), buckets - 1);
+                histogram[bucketIndex]++;
+            });
+
+            const labels = Array(buckets).fill(0).map((_, i) => 
+                `€${((monteCarlo.distribution[0] + i * bucketSize) / 1000000).toFixed(1)}M`
+            );
+
+            if (charts.monteCarlo) charts.monteCarlo.destroy();
+            charts.monteCarlo = new Chart(document.getElementById('monteCarloChart'), {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Frequency',
+                        data: histogram,
+                        backgroundColor: 'rgba(217, 255, 0, 0.7)',
+                        borderColor: '#D9FF00',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function updateCashFlowChart(data) {
+            const years = [1, 2, 3, 4, 5];
+            const cashFlows = years.map(y => data.operatingCashFlow);
+
+            if (charts.cashFlow) charts.cashFlow.destroy();
+            charts.cashFlow = new Chart(document.getElementById('cashFlowChart'), {
+                type: 'bar',
+                data: {
+                    labels: years.map(y => `Year ${y}`),
+                    datasets: [{
+                        label: 'Operating Cash Flow',
+                        data: cashFlows,
+                        backgroundColor: cashFlows.map(cf => cf >= 0 ? 'rgba(16, 185, 129, 0.7)' : 'rgba(239, 68, 68, 0.7)'),
+                        borderColor: cashFlows.map(cf => cf >= 0 ? '#10B981' : '#EF4444'),
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            ticks: { callback: value => '€' + (value / 1000) + 'k' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateDailyRevenueChart(data) {
+            const hours = Array.from({length: 24}, (_, i) => i);
+            const revenuePattern = hours.map(h => {
+                if (h >= 6 && h <= 9) return data.dailyRevenue / 4; // Morning peak
+                if (h >= 17 && h <= 21) return data.dailyRevenue / 4; // Evening peak
+                return 0;
+            });
+
+            if (charts.dailyRevenue) charts.dailyRevenue.destroy();
+            charts.dailyRevenue = new Chart(document.getElementById('dailyRevenueChart'), {
+                type: 'line',
+                data: {
+                    labels: hours.map(h => `${h}:00`),
+                    datasets: [{
+                        label: 'Hourly Revenue',
+                        data: revenuePattern,
+                        borderColor: '#95D5B2',
+                        backgroundColor: 'rgba(149, 213, 178, 0.2)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { callback: value => '€' + value.toFixed(0) }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateCumulativeProfitChart(data) {
+            const years = [0, 1, 2, 3, 4, 5];
+            const cumulative = [-data.totalInvestment];
+            years.slice(1).forEach((y, i) => {
+                cumulative.push(cumulative[i] + data.operatingCashFlow);
+            });
+
+            if (charts.cumulative) charts.cumulative.destroy();
+            charts.cumulative = new Chart(document.getElementById('cumulativeProfitChart'), {
+                type: 'line',
+                data: {
+                    labels: years.map(y => y === 0 ? 'Start' : `Year ${y}`),
+                    datasets: [{
+                        label: 'Cumulative Cash Position',
+                        data: cumulative,
+                        borderColor: cumulative[cumulative.length - 1] >= 0 ? '#10B981' : '#EF4444',
+                        backgroundColor: cumulative[cumulative.length - 1] >= 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            ticks: { callback: value => '€' + (value / 1000000).toFixed(1) + 'M' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateFinancialStatements(data) {
+            // P&L Statement
+            document.getElementById('pl-table').innerHTML = `
+                <tr>
+                    <th>Income Statement (Year 1)</th>
+                    <th style="text-align: right;">Amount (€)</th>
+                </tr>
+                <tr>
+                    <td><strong>Revenue</strong></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;V2G Grid Services Revenue</td>
+                    <td style="text-align: right;">${data.annualV2GRevenue.toLocaleString('de-DE', {minimumFractionDigits: 0})}</td>
+                </tr>
+                <tr class="section-total">
+                    <td><strong>Total Revenue</strong></td>
+                    <td style="text-align: right;"><strong>${data.annualV2GRevenue.toLocaleString('de-DE', {minimumFractionDigits: 0})}</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Operating Expenses</strong></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;Fleet Maintenance</td>
+                    <td style="text-align: right;">${(data.params.fleetSize * 25000).toLocaleString('de-DE', {minimumFractionDigits: 0})}</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;Battery Degradation</td>
+                    <td style="text-align: right;">${(data.params.fleetSize * data.params.batteryCapacity * 5).toLocaleString('de-DE', {minimumFractionDigits: 0})}</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;Operational Overhead</td>
+                    <td style="text-align: right;">${(data.params.fleetSize * 8000).toLocaleString('de-DE', {minimumFractionDigits: 0})}</td>
+                </tr>
+                <tr class="section-total">
+                    <td><strong>Total Operating Expenses</strong></td>
+                    <td style="text-align: right;"><strong>${data.annualOperatingCost.toLocaleString('de-DE', {minimumFractionDigits: 0})}</strong></td>
+                </tr>
+                <tr class="section-total">
+                    <td><strong>EBITDA</strong></td>
+                    <td style="text-align: right; color: ${data.ebitda >= 0 ? '#10B981' : '#EF4444'};"><strong>${data.ebitda.toLocaleString('de-DE', {minimumFractionDigits: 0})}</strong></td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;Depreciation</td>
+                    <td style="text-align: right;">${data.annualDepreciation.toLocaleString('de-DE', {minimumFractionDigits: 0})}</td>
+                </tr>
+                <tr class="section-total">
+                    <td><strong>Net Income</strong></td>
+                    <td style="text-align: right; color: ${data.netIncome >= 0 ? '#10B981' : '#EF4444'};"><strong>${data.netIncome.toLocaleString('de-DE', {minimumFractionDigits: 0})}</strong></td>
+                </tr>
+            `;
+
+            // Balance Sheet
+            document.getElementById('bs-table').innerHTML = `
+                <tr>
+                    <th>Balance Sheet (End of Year 1)</th>
+                    <th style="text-align: right;">Amount (€)</th>
+                </tr>
+                <tr>
+                    <td><strong>Assets</strong></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;Electric Bus Fleet (Net)</td>
+                    <td style="text-align: right;">${(data.totalInvestment - data.annualDepreciation).toLocaleString('de-DE', {minimumFractionDigits: 0})}</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;Cash & Cash Equivalents</td>
+                    <td style="text-align: right;">${data.operatingCashFlow.toLocaleString('de-DE', {minimumFractionDigits: 0})}</td>
+                </tr>
+                <tr class="section-total">
+                    <td><strong>Total Assets</strong></td>
+                    <td style="text-align: right;"><strong>${(data.totalInvestment - data.annualDepreciation + data.operatingCashFlow).toLocaleString('de-DE', {minimumFractionDigits: 0})}</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Liabilities & Equity</strong></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;Long-term Debt</td>
+                    <td style="text-align: right;">${(data.totalInvestment * 0.6).toLocaleString('de-DE', {minimumFractionDigits: 0})}</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;Equity</td>
+                    <td style="text-align: right;">${(data.totalInvestment * 0.4 + data.netIncome).toLocaleString('de-DE', {minimumFractionDigits: 0})}</td>
+                </tr>
+                <tr class="section-total">
+                    <td><strong>Total Liabilities & Equity</strong></td>
+                    <td style="text-align: right;"><strong>${(data.totalInvestment * 0.6 + data.totalInvestment * 0.4 + data.netIncome).toLocaleString('de-DE', {minimumFractionDigits: 0})}</strong></td>
+                </tr>
+            `;
+
+            // Cash Flow Statement
+            document.getElementById('cf-table').innerHTML = `
+                <tr>
+                    <th>Cash Flow Statement (Year 1)</th>
+                    <th style="text-align: right;">Amount (€)</th>
+                </tr>
+                <tr>
+                    <td><strong>Operating Activities</strong></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;Net Income</td>
+                    <td style="text-align: right;">${data.netIncome.toLocaleString('de-DE', {minimumFractionDigits: 0})}</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;Add: Depreciation</td>
+                    <td style="text-align: right;">${data.annualDepreciation.toLocaleString('de-DE', {minimumFractionDigits: 0})}</td>
+                </tr>
+                <tr class="section-total">
+                    <td><strong>Cash from Operating Activities</strong></td>
+                    <td style="text-align: right; color: ${data.operatingCashFlow >= 0 ? '#10B981' : '#EF4444'};"><strong>${data.operatingCashFlow.toLocaleString('de-DE', {minimumFractionDigits: 0})}</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Investing Activities</strong></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;Fleet Purchase (Year 0)</td>
+                    <td style="text-align: right;">(${data.totalInvestment.toLocaleString('de-DE', {minimumFractionDigits: 0})})</td>
+                </tr>
+                <tr>
+                    <td><strong>Financing Activities</strong></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;Debt Proceeds</td>
+                    <td style="text-align: right;">${(data.totalInvestment * 0.6).toLocaleString('de-DE', {minimumFractionDigits: 0})}</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;Equity Investment</td>
+                    <td style="text-align: right;">${(data.totalInvestment * 0.4).toLocaleString('de-DE', {minimumFractionDigits: 0})}</td>
+                </tr>
+                <tr class="section-total">
+                    <td><strong>Net Change in Cash (Year 1)</strong></td>
+                    <td style="text-align: right;"><strong>${data.operatingCashFlow.toLocaleString('de-DE', {minimumFractionDigits: 0})}</strong></td>
+                </tr>
+            `;
+        }
+
+        function updateInsights(data) {
+            let insights = '<ul style="list-style: none; padding: 0;">';
+            
+            if (data.ebitda > 0) {
+                insights += `<li style="margin-bottom: 1rem;">✅ <strong>Positive EBITDA:</strong> The fleet generates €${(data.ebitda / 1000).toFixed(0)}k in annual EBITDA, indicating strong operational profitability.</li>`;
+            } else {
+                insights += `<li style="margin-bottom: 1rem;">⚠️ <strong>Negative EBITDA:</strong> Operating costs exceed V2G revenue by €${Math.abs(data.ebitda / 1000).toFixed(0)}k annually. Consider increasing utilization or price spread.</li>`;
+            }
+
+            if (data.simplePayback <= 5) {
+                insights += `<li style="margin-bottom: 1rem;">🎯 <strong>Attractive Payback:</strong> ${data.simplePayback.toFixed(1)} year payback period is well within acceptable range for infrastructure investments.</li>`;
+            } else if (data.simplePayback <= 10) {
+                insights += `<li style="margin-bottom: 1rem;">⏱️ <strong>Moderate Payback:</strong> ${data.simplePayback.toFixed(1)} year payback requires patient capital but is achievable for public transport operators.</li>`;
+            } else {
+                insights += `<li style="margin-bottom: 1rem;">🚨 <strong>Long Payback:</strong> ${data.simplePayback.toFixed(1)} year payback period may be challenging. Review cost structure and revenue assumptions.</li>`;
+            }
+
+            const revenueRange = data.monteCarlo.p90 - data.monteCarlo.p10;
+            const relativRange = (revenueRange / data.monteCarlo.p50) * 100;
+            
+            if (relativRange < 30) {
+                insights += `<li style="margin-bottom: 1rem;">📉 <strong>Low Revenue Volatility:</strong> Monte Carlo shows ${relativRange.toFixed(0)}% range (P10-P90), indicating predictable cash flows.</li>`;
+            } else {
+                insights += `<li style="margin-bottom: 1rem;">📊 <strong>Revenue Volatility:</strong> ${relativRange.toFixed(0)}% range (P10-P90) suggests significant price and utilization risk. Consider hedging strategies.</li>`;
+            }
+
+            insights += `<li style="margin-bottom: 1rem;">💰 <strong>Capital Efficiency:</strong> Each bus requires €${(data.params.busPrice / 1000).toFixed(0)}k investment and generates €${(data.annualV2GRevenue / data.params.fleetSize / 1000).toFixed(0)}k annual V2G revenue.</li>`;
+            
+            insights += '</ul>';
+            
+            document.getElementById('insights-text').innerHTML = insights;
+        }
+
+        // Run simulation on load
+        runSimulation();
+    </script>
+</body>
+</html>
