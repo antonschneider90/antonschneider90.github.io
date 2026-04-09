@@ -128,7 +128,7 @@ body {
    HERO SECTION
    ========================================== */
 .hero {
-    padding: 12rem 0 8rem;
+    padding: 8rem 0 5rem;
     background: var(--gradient-ocean);
     position: relative;
     overflow: hidden;
@@ -168,11 +168,11 @@ body {
 }
 
 .hero-title {
-    font-size: 4rem;
+    font-size: 3rem;
     font-weight: 700;
     line-height: 1.1;
     color: var(--white);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
 }
 
 .highlight-text {
@@ -180,10 +180,10 @@ body {
 }
 
 .hero-description {
-    font-size: 1.375rem;
-    line-height: 1.7;
+    font-size: 1.125rem;
+    line-height: 1.6;
     color: var(--soft-mint);
-    margin-bottom: 2.5rem;
+    margin-bottom: 2rem;
     max-width: 700px;
 }
 
@@ -245,13 +245,13 @@ body {
    SECTIONS
    ========================================== */
 .models-section {
-    padding: 6rem 0;
+    padding: 4rem 0;
     background: var(--white);
 }
 
 .section-header {
     text-align: center;
-    margin-bottom: 4rem;
+    margin-bottom: 2.5rem;
 }
 
 .section-tag {
@@ -269,10 +269,10 @@ body {
 }
 
 .section-title {
-    font-size: 3rem;
+    font-size: 2.25rem;
     font-weight: 700;
     color: var(--deep-ocean);
-    margin-bottom: 1rem;
+    margin-bottom: 0.875rem;
 }
 
 .section-description {
@@ -288,13 +288,13 @@ body {
 .models-showcase {
     display: flex;
     flex-direction: column;
-    gap: 3rem;
+    gap: 2rem;
 }
 
 .featured-model {
     background: var(--ice-white);
-    border-radius: 24px;
-    padding: 3.5rem;
+    border-radius: 20px;
+    padding: 2.5rem;
     border: 2px solid transparent;
     transition: all 0.4s var(--ease);
     position: relative;
@@ -343,25 +343,25 @@ body {
 }
 
 .model-text h3 {
-    font-size: 2rem;
+    font-size: 1.625rem;
     font-weight: 700;
     color: var(--deep-ocean);
-    margin-bottom: 1rem;
+    margin-bottom: 0.875rem;
     line-height: 1.2;
 }
 
 .model-tagline {
-    font-size: 1.125rem;
+    font-size: 1rem;
     color: var(--dark-gray);
-    margin-bottom: 2rem;
-    line-height: 1.7;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
 }
 
 .model-features {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
-    margin-bottom: 2.5rem;
+    gap: 1rem;
+    margin-bottom: 2rem;
 }
 
 .feature-item {
