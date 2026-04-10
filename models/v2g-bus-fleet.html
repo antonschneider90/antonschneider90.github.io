@@ -9,7 +9,7 @@
 :root{--bg:#003049;--bg2:#004566;--bg3:#005A82;--accent:#D9FF00;--a2:#95D5B2;--a3:#B8E0D2;--a4:#E5FF33;--a5:#F1FAEE;--text:#F1FAEE;--muted:#B8E0D2;--border:#006B99;--red:#F09595;--green:#95D5B2;--amber:#FAC775;--font:'Space Grotesk',sans-serif;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13px;}
-.nav{background:var(--bg2);border-bottom:2px solid var(--accent);display:flex;align-items:stretch;padding:0 20px;}
+.nav{background:var(--bg2);border-bottom:2px solid var(--accent);display:flex;align-items:stretch;padding:0 20px;flex-wrap:wrap;}
 .nav-brand{color:var(--accent);font-size:11px;font-weight:bold;letter-spacing:4px;text-transform:uppercase;padding:14px 20px 14px 0;border-right:1px solid var(--border);margin-right:16px;align-self:center;}
 .tab-btn{padding:14px 18px;font-family:var(--font);font-size:11px;font-weight:bold;color:var(--muted);background:transparent;border:none;border-bottom:3px solid transparent;cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:all .15s;margin-bottom:-2px;}
 .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
@@ -19,11 +19,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 .cp-t{font-size:9.5px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;font-weight:bold;}
 .cg{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;}
 .cg.wide{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));}
-.ctrl label{display:block;font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px;}
+.ctrl{min-width:0;}
+.ctrl label{display:block;font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px;overflow-wrap:break-word;word-wrap:break-word;line-height:1.4;}
 .ctrl select{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:4px;padding:5px 8px;font-family:var(--font);font-size:12px;}
-.ctrl .rr{display:flex;align-items:center;gap:4px;}
-.ctrl input[type=range]{flex:1;accent-color:var(--accent);height:4px;}
-.ctrl .rv{min-width:45px;text-align:right;font-size:12px;color:var(--accent);font-weight:bold;}
+.ctrl .rr{display:flex;flex-direction:column;align-items:stretch;gap:2px;}
+.ctrl .rr input[type=range]{width:100%;accent-color:var(--accent);height:4px;}
+.ctrl .rv{font-size:12px;color:var(--accent);font-weight:bold;margin-top:2px;}
 .cn{grid-column:1/-1;font-size:9.5px;color:var(--muted);font-style:italic;margin-top:4px;}
 .chk{padding:7px 14px;border-radius:6px;font-size:11px;font-weight:bold;margin-bottom:12px;border:1px solid;}
 .ok{background:rgba(0,212,170,.1);color:var(--accent);border-color:var(--accent);}
@@ -54,9 +55,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 .smat th,.smat td{padding:7px 10px;text-align:center;border:1px solid var(--border);}
 .smat th{background:var(--bg3);color:var(--muted);font-size:9px;letter-spacing:1px;}
 .smat td.hi{background:rgba(0,212,170,.18);color:var(--accent);font-weight:bold;}
-.smat td.g{background:rgba(159,225,203,.12);color:var(--green);}
-.smat td.b{background:rgba(74,158,245,.1);color:var(--a2);}
-.smat td.r{background:rgba(240,149,149,.1);color:var(--red);}
 .smat td.vg{background:rgba(0,180,80,.22);color:#00c853;font-weight:bold;}
 .smat td.g{background:rgba(159,225,203,.15);color:#00a86b;}
 .smat td.b{background:rgba(74,158,245,.12);color:var(--a2);}
@@ -64,30 +62,90 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 .smat td.r{background:rgba(240,149,149,.22);color:var(--red);}
 .smat td.vr{background:rgba(200,50,50,.28);color:#ff5252;font-weight:bold;}
 .kpi-num{display:block;font-weight:bold;}
-.kpi-num.kc-vg{color:#00c853;} .kpi-num.kc-g{color:#00a86b;}
-.kpi-num.kc-n{color:var(--amber);} .kpi-num.kc-lr{color:#e57373;} .kpi-num.kc-r{color:var(--red);}
+.kpi-num.kc-vg{color:#00c853;}.kpi-num.kc-g{color:#00a86b;}
+.kpi-num.kc-n{color:var(--amber);}.kpi-num.kc-lr{color:#e57373;}.kpi-num.kc-r{color:var(--red);}
 .callout{background:var(--bg3);border-left:3px solid var(--a2);border-radius:4px;padding:10px 14px;font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:12px;}
 .callout strong{color:var(--text);}
+/* Key cost slider grid — 5 columns with text constrained to slider width */
+.cost-slider-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+.cost-slider-item{display:flex;flex-direction:column;min-width:0;}
+.cost-slider-item label{display:block;font-size:9px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px;min-height:28px;line-height:1.3;overflow-wrap:break-word;word-wrap:break-word;}
+.cost-slider-item .rr{display:flex;flex-direction:column;align-items:stretch;gap:2px;}
+.cost-slider-item .rv{font-size:12px;color:var(--accent);font-weight:bold;white-space:nowrap;margin-top:2px;}
+.cost-slider-item input[type=range]{width:100%;accent-color:var(--accent);height:4px;}
+/* Assumptions tab */
+.assumption-section{margin-bottom:18px;}
+.assumption-section h4{font-size:10px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border);}
+.assumption-row{display:grid;grid-template-columns:280px 1fr 120px;align-items:center;padding:4px 0;border-bottom:1px solid rgba(26,58,92,.2);gap:12px;}
+.assumption-row label{font-size:11px;color:var(--muted);}
+.assumption-row input,.assumption-row select{background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:4px;padding:4px 8px;font-family:var(--font);font-size:12px;width:100%;}
+.assumption-row .unit{font-size:10px;color:var(--muted);text-align:right;}
+.reset-btn{background:var(--bg3);border:1px solid var(--accent);color:var(--accent);padding:6px 16px;border-radius:4px;font-family:var(--font);font-size:11px;font-weight:bold;cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:all .15s;}
+.reset-btn:hover{background:var(--accent);color:#0A1628;}
+.exec-kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+.exec-kpi{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;text-align:center;}
+.exec-kpi .ek-label{font-size:8.5px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;}
+.exec-kpi .ek-value{font-size:20px;font-weight:bold;color:var(--accent);}
+.exec-kpi .ek-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+.exec-bullet{padding:8px 0;font-size:12px;line-height:1.7;color:var(--text);border-bottom:1px solid rgba(26,58,92,.25);}
+.exec-bullet:last-child{border-bottom:none;}
+.exec-bullet strong{color:var(--accent);}
+.exec-bullet .num{color:var(--accent);font-weight:bold;}
 </style>
 </head>
 <body>
 <div class="nav">
   <div class="nav-brand">Bus Battery Trading</div>
+  <button class="tab-btn" onclick="showPage('exec',this)">Exec Summary</button>
   <button class="tab-btn active" onclick="showPage('revenue',this)">Revenue Model (MC)</button>
   <button class="tab-btn" onclick="showPage('financials',this)">Financial Statements</button>
   <div style="display:flex;align-items:center;gap:12px;margin-left:auto;padding:0 8px;">
     <div style="font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;white-space:nowrap;">City / Operator</div>
     <select id="fleetSel" onchange="onFleetChange()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:4px;padding:4px 8px;font-family:var(--font);font-size:11px;min-width:220px;">
-      <option value="hamburg">Hamburg — Hochbahn (380 kWh/bus)</option>
+      <option value="hamburg" selected>Hamburg — Hochbahn (380 kWh/bus)</option>
       <option value="cologne">Cologne — KVB (430 kWh/bus)</option>
       <option value="berlin">Berlin — BVG (320 kWh/bus)</option>
       <option value="munich">Munich — MVG (400 kWh/bus)</option>
     </select>
     <div style="font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;white-space:nowrap;">Pilot size (buses)</div>
     <div style="display:flex;align-items:center;gap:8px;">
-      <input type="range" id="nBuses" min="10" max="400" value="50" step="10"
+      <input type="range" id="nBuses" min="10" max="377" value="300" step="10"
         oninput="onBusChange()" style="width:120px;accent-color:var(--accent);height:4px;">
-      <span id="nBusesV" style="color:var(--accent);font-weight:bold;font-size:12px;min-width:60px;">50 buses</span>
+      <span id="nBusesV" style="color:var(--accent);font-weight:bold;font-size:12px;min-width:60px;">300 buses</span>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 0: EXEC SUMMARY -->
+<div id="page-exec" class="page">
+  <div style="margin-top:14px;">
+    <div class="cp">
+      <div class="cp-t">Executive Summary — V2G Bus Fleet Energy Trading</div>
+      <div style="font-size:12px;color:var(--text);line-height:1.7;margin-bottom:4px;">
+        This model explores whether <strong style="color:var(--accent);">electric bus batteries can generate revenue through energy trading</strong> while the buses are parked. The concept leverages three revenue streams: <strong>spot arbitrage</strong> (buying electricity when cheap, selling when expensive), <strong>aFRR balancing services</strong> (providing automatic frequency regulation reserves to TSOs), and <strong>peak shaving</strong> (discharging stored energy during demand response events). The main upfront investment is the <strong>V2G bidirectional charger retrofit</strong> installed on each bus.
+      </div>
+    </div>
+    <div class="exec-kpi-row" id="execKpiRow">
+      <div class="exec-kpi"><div class="ek-label">Revenue per bus (median)</div><div class="ek-value" id="ex_rpb">—</div><div class="ek-sub">per year</div></div>
+      <div class="exec-kpi"><div class="ek-label">Total fleet revenue (median)</div><div class="ek-value" id="ex_rev">—</div><div class="ek-sub" id="ex_rev_sub">for selected fleet</div></div>
+      <div class="exec-kpi"><div class="ek-label">Breakeven bus count</div><div class="ek-value" id="ex_be">—</div><div class="ek-sub">to cover annual opex</div></div>
+      <div class="exec-kpi"><div class="ek-label">EBITDA year 1</div><div class="ek-value" id="ex_ebitda">—</div><div class="ek-sub">at current fleet size</div></div>
+    </div>
+    <div class="cp">
+      <div class="cp-t">Key findings from the scenario model</div>
+      <div id="execFindings" style="font-size:12px;line-height:1.7;"></div>
+    </div>
+    <div class="cp">
+      <div class="cp-t">Revenue model methodology</div>
+      <div style="font-size:12px;color:var(--text);line-height:1.7;">
+        Revenue projections are based on a <strong style="color:var(--accent);">Monte Carlo simulation (500 iterations)</strong> using actual Germany 2025 day-ahead and intraday 15-minute slot prices from the EPEX SPOT market. The simulation samples daily price spreads, applies round-trip efficiency losses, and models capacity payments and demand response events to generate a probability distribution of annual revenues. A uniform 3% annual inflation rate is applied to all revenues and costs from the base year 2027 onward.
+      </div>
+    </div>
+    <div class="cp">
+      <div class="cp-t">Pilot team structure</div>
+      <div style="font-size:12px;color:var(--text);line-height:1.7;">
+        For the pilot phase, we anticipate a lean team of <strong style="color:var(--accent);">4–5 people</strong>: one founder focused on business development and partnerships with transport operators, one finance &amp; legal hire handling contracts, regulatory compliance, and reporting, two technical staff for V2G hardware maintenance and bus fleet operations, plus one additional hire (tech or non-tech) for customer service, recruiting, or operational support as the pilot scales.
+      </div>
     </div>
   </div>
 </div>
@@ -99,7 +157,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
     <div class="cg">
       <div class="ctrl" style="grid-column:1/-1;padding:4px 0;">
         <div style="font-size:10px;color:var(--a2);background:rgba(74,158,245,.08);border:1px solid rgba(74,158,245,.2);border-radius:4px;padding:6px 10px;">
-          ⬆ City and pilot bus count are set in the top navigation bar — changes apply to both Revenue and Financial Statements tabs simultaneously.
+          ⬆ City and pilot bus count are set in the top navigation bar — changes apply to all tabs simultaneously.
         </div>
       </div>
       <div class="ctrl"><label>Night avail % (22h–05h)</label>
@@ -116,6 +174,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
     <button class="ytb active" onclick="setRY(2027,this)">2027</button>
     <button class="ytb" onclick="setRY(2028,this)">2028</button>
     <button class="ytb" onclick="setRY(2029,this)">2029</button>
+    <button class="ytb" onclick="setRY(2030,this)">2030</button>
+    <button class="ytb" onclick="setRY(2031,this)">2031</button>
   </div>
   <div class="kr">
     <div class="kpi hi"><div class="kl">Median revenue</div><div class="kv" id="r_med">—</div><div class="ks" id="r_pb">—</div></div>
@@ -129,7 +189,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
     <div class="card"><h3>Revenue by source — median</h3><div class="ch h260"><canvas id="bdC"></canvas></div></div>
   </div>
   <div class="g2">
-    <div class="card"><h3>P10 / Median / P90 range — 2027–2029</h3><div class="ch h240"><canvas id="bandC"></canvas></div></div>
+    <div class="card"><h3>P10 / Median / P90 range — 2027–2031</h3><div class="ch h240"><canvas id="bandC"></canvas></div></div>
     <div class="card"><h3>Revenue per bus (stacked, median)</h3><div class="ch h240"><canvas id="pbC"></canvas></div></div>
   </div>
 </div>
@@ -138,19 +198,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 <div id="page-financials" class="page">
   <div class="cp" style="margin-top:14px;">
     <div class="cp-t">Key Cost Assumptions — adjust sliders to see live impact on all three statements &amp; investor returns</div>
-    <div class="cg wide">
-      <div class="ctrl"><label>Battery lease — fixed (€/kWh/month)</label>
-        <div class="rr"><input type="range" id="leaseFixed" min="0.02" max="0.25" value="0.08" step="0.01" oninput="slF('leaseFixed','lFV','€',2)"><span class="rv" id="lFV">€0.08</span></div></div>
-      <div class="ctrl"><label>Battery lease — variable (% of revenue)</label>
-        <div class="rr"><input type="range" id="leaseVar" min="0" max="25" value="8" step="1" oninput="sl('leaseVar','lVV','%')"><span class="rv" id="lVV">8%</span></div></div>
-      <div class="ctrl"><label>Retrofit cost per bus (€)</label>
-        <div class="rr"><input type="range" id="retrofitPB" min="500" max="20000" value="8000" step="500" oninput="slN('retrofitPB','retV',' €')"><span class="rv" id="retV">8,000 €</span></div></div>
-      <div class="ctrl"><label>Technical FTEs (uniform 2027–29)</label>
-        <div class="rr"><input type="range" id="techHC" min="1" max="8" value="3" step="1" oninput="sl('techHC','techV','')"><span class="rv" id="techV">3</span></div></div>
-      <div class="ctrl"><label>Non-technical FTEs (uniform 2027–29)</label>
-        <div class="rr"><input type="range" id="ntechHC" min="1" max="8" value="3" step="1" oninput="sl('ntechHC','ntechV','')"><span class="rv" id="ntechV">3</span></div></div>
-      <div class="cn">⚡ <strong>Battery lease:</strong> transport operator earns fixed fee per kWh capacity made available + revenue share to incentivise peak-hour bus availability. &nbsp;|&nbsp; <strong>Retrofit:</strong> V2G bidirectional charger + installation per bus (pilot low-end ~€500; commercial grade €5,000–8,000). &nbsp;|&nbsp; <strong>HC:</strong> same headcount applied uniformly across 2027–2029.</div>
+    <div class="cost-slider-grid">
+      <div class="cost-slider-item"><label>Battery lease — fixed (€/kWh/month)</label><div class="rr"><input type="range" id="leaseFixed" min="0.02" max="0.25" value="0.08" step="0.01" oninput="slF('leaseFixed','lFV','€',2)"><span class="rv" id="lFV">€0.08</span></div></div>
+      <div class="cost-slider-item"><label>Battery lease — variable (% of revenue)</label><div class="rr"><input type="range" id="leaseVar" min="0" max="25" value="8" step="1" oninput="sl('leaseVar','lVV','%')"><span class="rv" id="lVV">8%</span></div></div>
+      <div class="cost-slider-item"><label>Retrofit cost per bus (€)</label><div class="rr"><input type="range" id="retrofitPB" min="500" max="20000" value="8000" step="500" oninput="slN('retrofitPB','retV',' €')"><span class="rv" id="retV">8,000 €</span></div></div>
+      <div class="cost-slider-item"><label>Technical FTEs (uniform 2027–31)</label><div class="rr"><input type="range" id="techHC" min="1" max="5" value="2" step="1" oninput="sl('techHC','techV','')"><span class="rv" id="techV">2</span></div></div>
+      <div class="cost-slider-item"><label>Non-technical FTEs (uniform 2027–31)</label><div class="rr"><input type="range" id="ntechHC" min="1" max="5" value="2" step="1" oninput="sl('ntechHC','ntechV','')"><span class="rv" id="ntechV">2</span></div></div>
     </div>
+    <div class="cn">⚡ <strong>Battery lease:</strong> transport operator earns fixed fee per kWh capacity made available + revenue share to incentivise peak-hour bus availability. &nbsp;|&nbsp; <strong>HC:</strong> same headcount applied uniformly across 2027–2031. Detailed assumptions editable in the Assumptions tab.</div>
   </div>
   <div id="fsChk" class="chk ok">✓ No model errors — P&amp;L, Balance Sheet and Cash Flow tie out</div>
   <div class="yt">
@@ -158,6 +213,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
     <button class="ytb" onclick="setFT('bs',this)">Balance Sheet</button>
     <button class="ytb" onclick="setFT('cf',this)">Cash Flow</button>
     <button class="ytb" onclick="setFT('inv',this)">Investor Returns</button>
+    <button class="ytb" onclick="setFT('assumptions',this)">Assumptions</button>
   </div>
   <div id="fs-pl">
     <div class="g2">
@@ -185,7 +241,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
       <div style="flex:1;">
         <div style="font-size:9px;color:var(--amber);letter-spacing:3px;text-transform:uppercase;margin-bottom:4px;font-weight:bold;">Required investment to sustain operations</div>
         <div style="font-size:22px;font-weight:bold;color:var(--amber)" id="reqInvAmt">—</div>
-        <div style="font-size:10px;color:var(--muted);margin-top:3px;" id="reqInvNote">Minimum equity needed so cash never falls below the 10% covenant buffer, given current cost assumptions and bus count.</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:3px;" id="reqInvNote"></div>
       </div>
       <div style="text-align:right;min-width:200px;">
         <div style="font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;">Breakeven bus count</div>
@@ -194,150 +250,172 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
       </div>
     </div>
     <div class="callout">
-      <strong>How to read this:</strong> You invest <strong>€1 million</strong> in January 2027 in exchange for a % of the company (left axis — this is the key negotiation; the implied pre-money valuation is shown in brackets). At end of 2029 the business is sold at X × its 2029 EBITDA (top axis). Each cell shows your <strong>IRR</strong> (annualised return). Example: 40% ownership at 8× exit → IRR shown in the teal cell. The pre-money valuation embedded in each row tells you what you're implying the business is worth today for that ownership %.
+      <strong>How to read this:</strong> You invest <strong>€1 million</strong> in January 2027 in exchange for a % of the company (left axis — this is the key negotiation; the implied pre-money valuation is shown in brackets). At end of 2031 the business is sold at X × its 2031 EBITDA (top axis). Each cell shows your <strong>IRR</strong> (annualised return). Example: 40% ownership at 8× exit → IRR shown in the teal cell. The pre-money valuation embedded in each row tells you what you're implying the business is worth today for that ownership %.
     </div>
     <div class="kr">
       <div class="kpi hi"><div class="kl">IRR @ 40% / 8×</div><div class="kv" id="i_irr">—</div><div class="ks" id="i_irr_s">Base case</div></div>
       <div class="kpi po"><div class="kl">NPV @ 20% hurdle</div><div class="kv" id="i_npv">—</div><div class="ks">Extra value vs 20%/yr alt.</div></div>
       <div class="kpi wa"><div class="kl">Cash-on-cash</div><div class="kv" id="i_coc">—</div><div class="ks" id="i_coc_s">Total returned ÷ required equity</div></div>
       <div class="kpi"><div class="kl">Required equity raise</div><div class="kv" id="i_req_eq" style="color:var(--amber)">—</div><div class="ks" id="i_req_note">Min. to sustain operations</div></div>
-      <div class="kpi"><div class="kl">2029 EBITDA</div><div class="kv" id="i_ebitda">—</div><div class="ks">Base for exit calc</div></div>
+      <div class="kpi"><div class="kl">2031 EBITDA</div><div class="kv" id="i_ebitda">—</div><div class="ks">Base for exit calc</div></div>
+    </div>
+    <div class="card" style="margin-bottom:12px;">
+      <h3>IRR sensitivity — Investor ownership % (for €1M) vs EV/EBITDA exit multiple at end of 2031</h3>
+      <p style="font-size:10px;color:var(--muted);margin-bottom:10px;">Green >50% IRR · Blue 25–50% · Red &lt;25% · Teal = base case (40% / 8×). Pre-money valuation per row shown in brackets.</p>
+      <div style="overflow-x:auto"><table class="smat" id="sensT"></table></div>
     </div>
     <div class="callout" style="margin-top:0;">
-      <strong>NPV @ 20%:</strong> If you demand 20%/yr returns, this is how many extra euros this deal makes you vs. that alternative. Positive = beats your hurdle. &nbsp;|&nbsp; <strong>Cash-on-cash:</strong> Total cash you receive (operating dividends + exit) ÷ €1M invested. 3× means you tripled your money. &nbsp;|&nbsp; <strong>Terminal value:</strong> Estimated sale price of the whole business (2029 EBITDA × exit multiple). Your share is prorated by your ownership %.
+      <strong>NPV @ 20%:</strong> If you demand 20%/yr returns, this is how many extra euros this deal makes you vs. that alternative. Positive = beats your hurdle. &nbsp;|&nbsp; <strong>Cash-on-cash:</strong> Total cash you receive (operating dividends + exit) ÷ €1M invested. 3× means you tripled your money. &nbsp;|&nbsp; <strong>Terminal value:</strong> Estimated sale price of the whole business (2031 EBITDA × exit multiple). Your share is prorated by your ownership %.
     </div>
     <div class="g2">
       <div class="card"><h3>Equity cash flows (€k) — 40% ownership base case</h3><div class="ch h240"><canvas id="invWfC"></canvas></div></div>
       <div class="card"><h3>Value creation bridge (€k) — 40% ownership</h3><div class="ch h240"><canvas id="invBrC"></canvas></div></div>
     </div>
-    <div class="card" style="margin-top:12px;">
-      <h3>IRR sensitivity — Investor ownership % (for €1M) vs EV/EBITDA exit multiple at end of 2029</h3>
-      <p style="font-size:10px;color:var(--muted);margin-bottom:10px;">Green >50% IRR · Blue 25–50% · Red &lt;25% · Teal = base case (40% / 8×). Pre-money valuation per row shown in brackets.</p>
-      <div style="overflow-x:auto"><table class="smat" id="sensT"></table></div>
+  </div>
+  <!-- ASSUMPTIONS TAB -->
+  <div id="fs-assumptions" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div style="font-size:10px;color:var(--muted);">Edit assumptions below. Changes are reflected immediately in the financial model.</div>
+      <button class="reset-btn" onclick="resetAssumptions()">↺ Reset to Default</button>
+    </div>
+    <div class="card assumption-section">
+      <h4>Compensation &amp; Headcount</h4>
+      <div class="assumption-row"><label>Technical FTE base salary (year 1)</label><input type="number" id="a_techSal" value="95000" step="1000" onchange="updateAll()"><div class="unit">€/year</div></div>
+      <div class="assumption-row"><label>Non-technical FTE base salary (year 1)</label><input type="number" id="a_ntechSal" value="75000" step="1000" onchange="updateAll()"><div class="unit">€/year</div></div>
+      <div class="assumption-row"><label>Employer social security contribution</label><input type="number" id="a_empSS" value="21" step="1" onchange="updateAll()"><div class="unit">% of salary</div></div>
+      <div class="assumption-row"><label>ESOP cost (share-based compensation)</label><input type="number" id="a_esop" value="10" step="1" onchange="updateAll()"><div class="unit">% of salary</div></div>
+      <div class="assumption-row"><label>Software dev capitalisation rate</label><input type="number" id="a_swCapRate" value="121" step="1" onchange="updateAll()"><div class="unit">% of 1 tech FTE salary</div></div>
+    </div>
+    <div class="card assumption-section">
+      <h4>Inflation &amp; Growth</h4>
+      <div class="assumption-row"><label>Annual inflation rate (all revenues &amp; costs)</label><input type="number" id="a_inflation" value="3" step="0.5" onchange="updateAll()"><div class="unit">%</div></div>
+    </div>
+    <div class="card assumption-section">
+      <h4>Depreciation</h4>
+      <div class="assumption-row"><label>Retrofit depreciation period</label><input type="number" id="a_retDep" value="8" step="1" min="3" max="15" onchange="updateAll()"><div class="unit">years</div></div>
+      <div class="assumption-row"><label>Company car depreciation period</label><input type="number" id="a_carDep" value="5" step="1" min="3" max="10" onchange="updateAll()"><div class="unit">years</div></div>
+      <div class="assumption-row"><label>Software amortisation period</label><input type="number" id="a_swDep" value="3" step="1" min="2" max="7" onchange="updateAll()"><div class="unit">years</div></div>
+    </div>
+    <div class="card assumption-section">
+      <h4>Operating Costs (G&amp;A)</h4>
+      <div class="assumption-row"><label>Office / coworking space</label><input type="number" id="a_office" value="18000" step="1000" onchange="updateAll()"><div class="unit">€/year (base)</div></div>
+      <div class="assumption-row"><label>Legal &amp; accounting</label><input type="number" id="a_legal" value="30000" step="1000" onchange="updateAll()"><div class="unit">€/year (base)</div></div>
+      <div class="assumption-row"><label>Insurance</label><input type="number" id="a_insurance" value="15000" step="1000" onchange="updateAll()"><div class="unit">€/year (base)</div></div>
+      <div class="assumption-row"><label>HR &amp; payroll software</label><input type="number" id="a_hrSw" value="6000" step="500" onchange="updateAll()"><div class="unit">€/year (base)</div></div>
+      <div class="assumption-row"><label>Other G&amp;A (travel, comms, misc)</label><input type="number" id="a_otherGA" value="12000" step="1000" onchange="updateAll()"><div class="unit">€/year (base)</div></div>
+    </div>
+    <div class="card assumption-section">
+      <h4>COGS Assumptions</h4>
+      <div class="assumption-row"><label>Transaction fee (% of revenue)</label><input type="number" id="a_txFee" value="0.15" step="0.01" onchange="updateAll()"><div class="unit">%</div></div>
+      <div class="assumption-row"><label>BSP prequalification (year 1)</label><input type="number" id="a_bspY1" value="15000" step="1000" onchange="updateAll()"><div class="unit">€</div></div>
+      <div class="assumption-row"><label>BSP annual TSO fee (year 2+)</label><input type="number" id="a_bspAnn" value="8000" step="1000" onchange="updateAll()"><div class="unit">€/year</div></div>
+      <div class="assumption-row"><label>Customer support — call center (monthly, fixed)</label><input type="number" id="a_suppCalls" value="540" step="10" onchange="updateAll()"><div class="unit">€/month (base)</div></div>
+      <div class="assumption-row"><label>Customer support — truck rolls per month (year 1)</label><input type="number" id="a_truckY1" value="15" step="1" onchange="updateAll()"><div class="unit">visits/month</div></div>
+      <div class="assumption-row"><label>Truck roll cost per visit</label><input type="number" id="a_truckCost" value="400" step="50" onchange="updateAll()"><div class="unit">€</div></div>
+      <div class="assumption-row"><label>Bad debt provision (% of revenue)</label><input type="number" id="a_badDebt" value="0.5" step="0.1" onchange="updateAll()"><div class="unit">%</div></div>
+    </div>
+    <div class="card assumption-section">
+      <h4>Capital Expenditures</h4>
+      <div class="assumption-row"><label>Company car capex</label><input type="number" id="a_carCap" value="35000" step="1000" onchange="updateAll()"><div class="unit">€ (one-time, year 1)</div></div>
+    </div>
+    <div class="card assumption-section">
+      <h4>Investor Returns</h4>
+      <div class="assumption-row"><label>EV/EBITDA exit multiple range — low</label><input type="number" id="a_evLow" value="6" step="1" onchange="updateAll()"><div class="unit">×</div></div>
+      <div class="assumption-row"><label>EV/EBITDA exit multiple range — high</label><input type="number" id="a_evHigh" value="20" step="1" onchange="updateAll()"><div class="unit">×</div></div>
+      <div class="assumption-row"><label>Interest rate on cash balance</label><input type="number" id="a_intRate" value="2" step="0.5" onchange="updateAll()"><div class="unit">%</div></div>
+      <div class="assumption-row"><label>Cash covenant buffer</label><input type="number" id="a_covenant" value="10" step="1" onchange="updateAll()"><div class="unit">% of equity</div></div>
     </div>
   </div>
 </div>
 
 <script>
-const SIM={"2027":{p10:1.707,p50:2.077,p90:2.457,arb:0.832,afrr:0.848,peak:0.407,hx:[1.297,1.384,1.472,1.559,1.647,1.734,1.822,1.909,1.997,2.084,2.172,2.259,2.347,2.434,2.522,2.609,2.697,2.784,2.872,2.959],hy:[1,4,5,11,24,36,30,45,68,57,55,55,35,28,15,16,7,4,3,1]},"2028":{p10:1.774,p50:2.123,p90:2.484,arb:0.873,afrr:0.845,peak:0.407,hx:[1.36,1.449,1.539,1.628,1.718,1.807,1.897,1.986,2.076,2.165,2.254,2.344,2.433,2.523,2.612,2.702,2.791,2.881,2.97,3.06],hy:[1,3,6,11,20,38,48,79,90,78,71,37,24,9,5,3,2,1,1,1]},"2029":{p10:1.783,p50:2.104,p90:2.476,arb:0.856,afrr:0.849,peak:0.407,hx:[1.393,1.478,1.563,1.648,1.733,1.818,1.903,1.988,2.073,2.158,2.243,2.328,2.413,2.498,2.583,2.668,2.753,2.838,2.923,3.008],hy:[1,2,5,7,15,27,50,81,92,82,60,33,23,11,5,2,1,1,1,1]}};
-const FLEETS={hamburg:{n:377,kwh:380},cologne:{n:247,kwh:430},berlin:{n:277,kwh:320},munich:{n:101,kwh:400},custom:{n:377,kwh:380}};
+const SIM={"2027":{p10:1.707,p50:2.077,p90:2.457,arb:0.832,afrr:0.848,peak:0.407,hx:[1.297,1.384,1.472,1.559,1.647,1.734,1.822,1.909,1.997,2.084,2.172,2.259,2.347,2.434,2.522,2.609,2.697,2.784,2.872,2.959],hy:[1,4,5,11,24,36,30,45,68,57,55,55,35,28,15,16,7,4,3,1]},"2028":{p10:1.774,p50:2.123,p90:2.484,arb:0.873,afrr:0.845,peak:0.407,hx:[1.36,1.449,1.539,1.628,1.718,1.807,1.897,1.986,2.076,2.165,2.254,2.344,2.433,2.523,2.612,2.702,2.791,2.881,2.97,3.06],hy:[1,3,6,11,20,38,48,79,90,78,71,37,24,9,5,3,2,1,1,1]},"2029":{p10:1.783,p50:2.104,p90:2.476,arb:0.856,afrr:0.849,peak:0.407,hx:[1.393,1.478,1.563,1.648,1.733,1.818,1.903,1.988,2.073,2.158,2.243,2.328,2.413,2.498,2.583,2.668,2.753,2.838,2.923,3.008],hy:[1,2,5,7,15,27,50,81,92,82,60,33,23,11,5,2,1,1,1,1]},"2030":{p10:1.836,p50:2.167,p90:2.550,arb:0.882,afrr:0.874,peak:0.419,hx:[1.432,1.521,1.609,1.698,1.786,1.875,1.963,2.052,2.140,2.229,2.317,2.406,2.494,2.583,2.671,2.760,2.848,2.937,3.025,3.114],hy:[1,2,5,8,16,28,48,78,90,82,62,35,22,10,5,3,2,1,1,1]},"2031":{p10:1.892,p50:2.232,p90:2.627,arb:0.908,afrr:0.901,peak:0.432,hx:[1.478,1.569,1.660,1.751,1.842,1.933,2.025,2.116,2.207,2.298,2.389,2.480,2.571,2.662,2.753,2.844,2.935,3.027,3.118,3.209],hy:[1,2,4,7,14,26,46,76,88,84,64,38,24,12,6,3,2,1,1,1]}};
+const FLEETS={hamburg:{n:377,kwh:380},cologne:{n:247,kwh:430},berlin:{n:277,kwh:320},munich:{n:101,kwh:400}};
 const BASE={n:377,kwh:380,night:.9,day:.2,rt:.88,soc:.8};
-const YEARS=[2027,2028,2029];
-const REV=[2087000,2125000,2112000],ARB=[832000,873000,856000],AFRR=[848000,845000,849000],PEAK=[407000,407000,407000];
+const YEARS=[2027,2028,2029,2030,2031];
+const NY=5;
+const REV=[2087000,2125000,2112000,2175000,2241000];
+const ARB=[832000,873000,856000,882000,908000];
+const AFRR=[848000,845000,849000,874000,901000];
+const PEAK=[407000,407000,407000,419000,432000];
 let ry=2027,fs='pl';
 const CH={};
 const g=id=>document.getElementById(id);
-const fmtK=v=>Math.abs(v)>=1e6?`€${(v/1e6).toFixed(2)}M`:(Math.abs(v)>=1000?`€${Math.round(v/1e3)}k`:`€${Math.round(v)}`);
-const fmtN=v=>{if(v==null)return'—';const a=Math.abs(Math.round(v));return v>=0?`€${a.toLocaleString()}`:`(€${a.toLocaleString()})`;};
+const fmtK=v=>Math.abs(v)>=1e6?'€'+(v/1e6).toFixed(2)+'M':(Math.abs(v)>=1000?'€'+Math.round(v/1e3)+'k':'€'+Math.round(v));
+const fmtN=v=>{if(v==null)return'—';const a=Math.abs(Math.round(v));return v>=0?'€'+a.toLocaleString():'(€'+a.toLocaleString()+')';};
 const cl=v=>v>=0?'pos':'neg';
-
 function sl(id,vid,sfx){g(vid).textContent=Number(g(id).value).toLocaleString()+sfx;updateAll();}
 function slF(id,vid,pfx,d){g(vid).textContent=pfx+parseFloat(g(id).value).toFixed(d);updateAll();}
 function slN(id,vid,sfx){g(vid).textContent=Number(g(id).value).toLocaleString()+sfx;updateAll();}
+function getA(id){return parseFloat(g(id).value);}
+const DEFAULTS={a_techSal:95000,a_ntechSal:75000,a_empSS:21,a_esop:10,a_swCapRate:121,a_inflation:3,a_retDep:8,a_carDep:5,a_swDep:3,a_office:18000,a_legal:30000,a_insurance:15000,a_hrSw:6000,a_otherGA:12000,a_txFee:0.15,a_bspY1:15000,a_bspAnn:8000,a_suppCalls:540,a_truckY1:15,a_truckCost:400,a_badDebt:0.5,a_carCap:35000,a_evLow:6,a_evHigh:20,a_intRate:2,a_covenant:10};
+function resetAssumptions(){Object.entries(DEFAULTS).forEach(([id,val])=>{g(id).value=val;});g('leaseFixed').value=0.08;g('lFV').textContent='€0.08';g('leaseVar').value=8;g('lVV').textContent='8%';g('retrofitPB').value=8000;g('retV').textContent='8,000 €';g('techHC').value=2;g('techV').textContent='2';g('ntechHC').value=2;g('ntechV').textContent='2';updateAll();}
 
-function getSF(){
-  const fl=g('fleetSel').value, fb=FLEETS[fl];
-  const n=+g('nBuses').value;          // always from nav slider
-  const kw=fb.kwh;                     // always from city's avg battery size
-  const na=+g('nightA').value/100, da=+g('dayA').value/100;
-  const rt=+g('rtEff').value/100, sc=+g('socW').value/100;
-  const sf=(n*kw*sc)/(BASE.n*BASE.kwh*BASE.soc)*(na*(9/24)+da*(6/24))/(BASE.night*(9/24)+BASE.day*(6/24))*Math.pow(rt/BASE.rt,1.5);
-  return{sf,n,kw,sc};
-}
+function getSF(){const fl=g('fleetSel').value,fb=FLEETS[fl],n=+g('nBuses').value,kw=fb.kwh,na=+g('nightA').value/100,da=+g('dayA').value/100,rt=+g('rtEff').value/100,sc=+g('socW').value/100;const sf=(n*kw*sc)/(BASE.n*BASE.kwh*BASE.soc)*(na*(9/24)+da*(6/24))/(BASE.night*(9/24)+BASE.day*(6/24))*Math.pow(rt/BASE.rt,1.5);return{sf,n,kw,sc};}
 function getRev(yr){const{sf,n,kw,sc}=getSF(),d=SIM[String(yr)];return{p10:d.p10*sf,p50:d.p50*sf,p90:d.p90*sf,arb:d.arb*sf,afrr:d.afrr*sf,peak:d.peak*sf,hx:d.hx.map(x=>x*sf),hy:d.hy,n,usable:n*kw*sc/1000,sf};}
 
-function updateRevPage(){
-  const d=getRev(ry);
-  g('r_med').textContent=`€${d.p50.toFixed(2)}M`;g('r_pb').textContent=`€${Math.round(d.p50*1e6/d.n).toLocaleString()} per bus/yr`;
-  g('r_p10').textContent=`€${d.p10.toFixed(2)}M`;g('r_p90').textContent=`€${d.p90.toFixed(2)}M`;
-  g('r_mwh').textContent=`€${Math.round(d.p50*1e6/(d.usable*1000))}/MWh`;g('r_pool').textContent=`${d.usable.toFixed(0)} MWh pool`;g('r_cap').textContent=`${d.usable.toFixed(0)} MWh`;
-  const fb2=FLEETS[g('fleetSel').value];
-  g('r_buses').textContent=`${d.n} buses · ${fb2.kwh} kWh each`;
-  mkH(d);mkBd(d);mkBand();mkPB();
-}
-function mkH(d){const ctx=g('histC');if(CH.h)CH.h.destroy();CH.h=new Chart(ctx,{type:'bar',data:{labels:d.hx.map(x=>x.toFixed(2)),datasets:[{data:d.hy,backgroundColor:d.hx.map(x=>x<d.p10?'rgba(240,149,149,.7)':x>d.p90?'rgba(159,225,203,.7)':Math.abs(x-d.p50)<.06?'rgba(0,212,170,.9)':'rgba(74,158,245,.55)'),borderWidth:0,borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{title:i=>`€${i[0].label}M`,label:i=>`${i.raw} sims`}}},scales:{x:{grid:{color:'rgba(26,58,92,.5)'},ticks:{color:'#7BA5C8',font:{size:9},maxTicksLimit:8},title:{display:true,text:'Annual revenue (€M)',color:'#7BA5C8',font:{size:10}}},y:{grid:{color:'rgba(26,58,92,.5)'},ticks:{color:'#7BA5C8',font:{size:9}}}}}});}
-function mkBd(d){const ctx=g('bdC');if(CH.bd)CH.bd.destroy();CH.bd=new Chart(ctx,{type:'doughnut',data:{labels:['Spot arbitrage','aFRR','Peak shaving'],datasets:[{data:[d.arb,d.afrr,d.peak],backgroundColor:['#00D4AA','#4A9EF5','#FAC775'],borderColor:'#0D2240',borderWidth:3}]},options:{responsive:true,maintainAspectRatio:false,cutout:'58%',plugins:{legend:{position:'bottom',labels:{color:'#7BA5C8',font:{size:10},padding:12,usePointStyle:true}},tooltip:{callbacks:{label:i=>`${i.label}: €${Math.round(i.raw*1e6/1e3)}k (${Math.round(100*i.raw/d.p50)}%)`}}}}});}
-function mkBand(){const ctx=g('bandC');if(CH.band)CH.band.destroy();CH.band=new Chart(ctx,{type:'line',data:{labels:YEARS.map(String),datasets:[{label:'P90',data:YEARS.map(y=>getRev(y).p90),borderColor:'#9FE1CB',backgroundColor:'rgba(159,225,203,.1)',fill:'+1',tension:.3,pointRadius:4},{label:'Median',data:YEARS.map(y=>getRev(y).p50),borderColor:'#00D4AA',fill:false,tension:.3,pointRadius:5,borderWidth:2.5},{label:'P10',data:YEARS.map(y=>getRev(y).p10),borderColor:'#F09595',backgroundColor:'rgba(240,149,149,.1)',fill:'-1',tension:.3,pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7BA5C8',font:{size:10},usePointStyle:true}},tooltip:{callbacks:{label:i=>`${i.dataset.label}: €${i.raw.toFixed(2)}M`}}},scales:{x:{grid:{color:'rgba(26,58,92,.5)'},ticks:{color:'#7BA5C8'}},y:{grid:{color:'rgba(26,58,92,.5)'},ticks:{color:'#7BA5C8',callback:v=>`€${v.toFixed(1)}M`}}}}});}
-function mkPB(){const ctx=g('pbC');if(CH.pb)CH.pb.destroy();const data=YEARS.map(y=>{const d=getRev(y),n=d.n;return{a:Math.round(d.arb*1e6/n),f:Math.round(d.afrr*1e6/n),p:Math.round(d.peak*1e6/n)};});CH.pb=new Chart(ctx,{type:'bar',data:{labels:YEARS.map(String),datasets:[{label:'Spot arbitrage',data:data.map(d=>d.a),backgroundColor:'#00D4AA'},{label:'aFRR',data:data.map(d=>d.f),backgroundColor:'#4A9EF5'},{label:'Peak shaving',data:data.map(d=>d.p),backgroundColor:'#FAC775'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7BA5C8',font:{size:10},usePointStyle:true}}},scales:{x:{stacked:true,ticks:{color:'#7BA5C8'},grid:{color:'rgba(26,58,92,.5)'}},y:{stacked:true,ticks:{color:'#7BA5C8',callback:v=>`€${v.toLocaleString()}`},grid:{color:'rgba(26,58,92,.5)'}}}}});}
+function updateRevPage(){const d=getRev(ry);g('r_med').textContent='€'+d.p50.toFixed(2)+'M';g('r_pb').textContent='€'+Math.round(d.p50*1e6/d.n).toLocaleString()+' per bus/yr';g('r_p10').textContent='€'+d.p10.toFixed(2)+'M';g('r_p90').textContent='€'+d.p90.toFixed(2)+'M';g('r_mwh').textContent='€'+Math.round(d.p50*1e6/(d.usable*1000))+'/MWh';g('r_pool').textContent=d.usable.toFixed(0)+' MWh pool';g('r_cap').textContent=d.usable.toFixed(0)+' MWh';const fb2=FLEETS[g('fleetSel').value];g('r_buses').textContent=d.n+' buses · '+fb2.kwh+' kWh each';mkH(d);mkBd(d);mkBand();mkPB();}
+function mkH(d){const ctx=g('histC');if(CH.h)CH.h.destroy();CH.h=new Chart(ctx,{type:'bar',data:{labels:d.hx.map(x=>x.toFixed(2)),datasets:[{data:d.hy,backgroundColor:d.hx.map(x=>x<d.p10?'rgba(240,149,149,.7)':x>d.p90?'rgba(159,225,203,.7)':Math.abs(x-d.p50)<.06?'rgba(0,212,170,.9)':'rgba(74,158,245,.55)'),borderWidth:0,borderRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{title:i=>'€'+i[0].label+'M',label:i=>i.raw+' sims'}}},scales:{x:{grid:{color:'rgba(26,58,92,.5)'},ticks:{color:'#7BA5C8',font:{size:9},maxTicksLimit:8},title:{display:true,text:'Annual revenue (€M)',color:'#7BA5C8',font:{size:10}}},y:{grid:{color:'rgba(26,58,92,.5)'},ticks:{color:'#7BA5C8',font:{size:9}}}}}});}
+function mkBd(d){const ctx=g('bdC');if(CH.bd)CH.bd.destroy();CH.bd=new Chart(ctx,{type:'doughnut',data:{labels:['Spot arbitrage','aFRR','Peak shaving'],datasets:[{data:[d.arb,d.afrr,d.peak],backgroundColor:['#00D4AA','#4A9EF5','#FAC775'],borderColor:'#0D2240',borderWidth:3}]},options:{responsive:true,maintainAspectRatio:false,cutout:'58%',plugins:{legend:{position:'bottom',labels:{color:'#7BA5C8',font:{size:10},padding:12,usePointStyle:true}},tooltip:{callbacks:{label:i=>i.label+': €'+Math.round(i.raw*1e6/1e3)+'k ('+Math.round(100*i.raw/d.p50)+'%)'}}}}});}
+function mkBand(){const ctx=g('bandC');if(CH.band)CH.band.destroy();CH.band=new Chart(ctx,{type:'line',data:{labels:YEARS.map(String),datasets:[{label:'P90',data:YEARS.map(y=>getRev(y).p90),borderColor:'#9FE1CB',backgroundColor:'rgba(159,225,203,.1)',fill:'+1',tension:.3,pointRadius:4},{label:'Median',data:YEARS.map(y=>getRev(y).p50),borderColor:'#00D4AA',fill:false,tension:.3,pointRadius:5,borderWidth:2.5},{label:'P10',data:YEARS.map(y=>getRev(y).p10),borderColor:'#F09595',backgroundColor:'rgba(240,149,149,.1)',fill:'-1',tension:.3,pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7BA5C8',font:{size:10},usePointStyle:true}},tooltip:{callbacks:{label:i=>i.dataset.label+': €'+i.raw.toFixed(2)+'M'}}},scales:{x:{grid:{color:'rgba(26,58,92,.5)'},ticks:{color:'#7BA5C8'}},y:{grid:{color:'rgba(26,58,92,.5)'},ticks:{color:'#7BA5C8',callback:v=>'€'+v.toFixed(1)+'M'}}}}});}
+function mkPB(){const ctx=g('pbC');if(CH.pb)CH.pb.destroy();const data=YEARS.map(y=>{const d=getRev(y),n=d.n;return{a:Math.round(d.arb*1e6/n),f:Math.round(d.afrr*1e6/n),p:Math.round(d.peak*1e6/n)};});CH.pb=new Chart(ctx,{type:'bar',data:{labels:YEARS.map(String),datasets:[{label:'Spot arbitrage',data:data.map(d=>d.a),backgroundColor:'#00D4AA'},{label:'aFRR',data:data.map(d=>d.f),backgroundColor:'#4A9EF5'},{label:'Peak shaving',data:data.map(d=>d.p),backgroundColor:'#FAC775'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7BA5C8',font:{size:10},usePointStyle:true}}},scales:{x:{stacked:true,ticks:{color:'#7BA5C8'},grid:{color:'rgba(26,58,92,.5)'}},y:{stacked:true,ticks:{color:'#7BA5C8',callback:v=>'€'+v.toLocaleString()},grid:{color:'rgba(26,58,92,.5)'}}}}});}
 
 function calcModel(){
   const{sf,n,kw,sc}=getSF();
+  const inflRate=getA('a_inflation')/100;
   const rev=REV.map(r=>r*sf),arb=ARB.map(r=>r*sf),afrr=AFRR.map(r=>r*sf),peak=PEAK.map(r=>r*sf);
   const uk=n*kw*sc;
-  const tx=rev.map(r=>-r*0.0015);
-  const bsp=[-15000,-8000,-8000]; // BSP prequalification (yr1) + annual TSO fee
+  const txRate=getA('a_txFee')/100;
+  const tx=rev.map(r=>-r*txRate);
+  const bspY1=getA('a_bspY1'),bspAnn=getA('a_bspAnn');
+  const bsp=YEARS.map((_,i)=>i===0?-bspY1:-bspAnn);
   const lF=+g('leaseFixed').value,lVp=+g('leaseVar').value/100;
   const lFixed=rev.map(()=>-(uk*lF*12)),lVar=rev.map(r=>-r*lVp);
   const lease=rev.map((_,i)=>lFixed[i]+lVar[i]);
-  // Support scales partially with fleet size (calls fixed, truck rolls ~ proportional to buses)
-  const truckScalar=Math.min(n/377,1.5); // truck rolls scale with fleet, capped at 1.5x base
-  const supp=[15,10,5].map(trm=>-((15*12*35)+Math.round(trm*truckScalar)*12*400));
-  const bd=rev.map(r=>-r*0.005);
+  const truckScalar=Math.min(n/377,1.5);
+  const suppCallsBase=getA('a_suppCalls'),truckY1i=getA('a_truckY1'),truckCost=getA('a_truckCost');
+  const truckByYear=[truckY1i,Math.round(truckY1i*0.67),Math.round(truckY1i*0.33),Math.round(truckY1i*0.25),Math.round(truckY1i*0.2)];
+  const supp=truckByYear.map((trm,i)=>{const infl=Math.pow(1+inflRate,i);return-((suppCallsBase*12*infl)+Math.round(trm*truckScalar)*12*truckCost*infl);});
+  const bdRate=getA('a_badDebt')/100;
+  const bd=rev.map(r=>-r*bdRate);
   const cogs=rev.map((_,i)=>tx[i]+bsp[i]+lease[i]+supp[i]+bd[i]);
   const gp=rev.map((_,i)=>rev[i]+cogs[i]);
   const tHC=+g('techHC').value,ntHC=+g('ntechHC').value;
-  const sT=[120000,123600,127308],sNT=[90000,92700,95481];
+  const techBase=getA('a_techSal'),ntechBase=getA('a_ntechSal');
+  const sT=YEARS.map((_,i)=>techBase*Math.pow(1+inflRate,i));
+  const sNT=YEARS.map((_,i)=>ntechBase*Math.pow(1+inflRate,i));
+  const empSSRate=getA('a_empSS')/100,esopRate=getA('a_esop')/100;
   const gP=rev.map((_,i)=>-(tHC*sT[i]+ntHC*sNT[i]));
-  const empSS=gP.map(p=>p*0.21),esopC=gP.map(p=>p*0.10);
-  const swCap=sT.map(s=>s*1.21);
+  const empSS=gP.map(p=>p*empSSRate),esopC=gP.map(p=>p*esopRate);
+  const swCapRate=getA('a_swCapRate')/100;
+  const swCap=sT.map(s=>s*swCapRate);
   const labNet=gP.map((_,i)=>gP[i]+empSS[i]+esopC[i]-swCap[i]);
-  const ga=[-102600,-105800,-112000]; // G&A is fixed overhead (does not scale with bus count)
-  const swAm=[-(swCap[0]/3),-(swCap[0]/3+swCap[1]/3),-(swCap[0]/3+swCap[1]/3+swCap[2]/3)];
+  const gaBase=getA('a_office')+getA('a_legal')+getA('a_insurance')+getA('a_hrSw')+getA('a_otherGA');
+  const ga=YEARS.map((_,i)=>-(gaBase*Math.pow(1+inflRate,i)));
+  const swDepYrs=getA('a_swDep');
+  const swAm=YEARS.map((_,i)=>{let t=0;for(let j=0;j<=i;j++){if(i-j<swDepYrs)t+=-(swCap[j]/swDepYrs);}return t;});
   const opex=rev.map((_,i)=>labNet[i]+ga[i]+swAm[i]);
   const ebitda=rev.map((_,i)=>gp[i]+opex[i]);
-  const rPB=+g('retrofitPB').value,rCap=rPB*n,cCap=35000;
-  const rDep=[-rCap/3,-rCap/3,-rCap/3],cDep=[-cCap/5,-cCap/5,-cCap/5];
+  const rPB=+g('retrofitPB').value,rCap=rPB*n,cCap=getA('a_carCap');
+  const retDepYrs=getA('a_retDep'),carDepYrs=getA('a_carDep');
+  const rDep=YEARS.map((_,i)=>i<retDepYrs?-rCap/retDepYrs:0);
+  const cDep=YEARS.map((_,i)=>i<carDepYrs?-cCap/carDepYrs:0);
   const ebit=rev.map((_,i)=>ebitda[i]+rDep[i]+cDep[i]);
-  // ── Dynamic equity: compute minimum equity required first ──────────────
-  // Run a quick pre-pass with trial equity to find the minimum needed
-  // so cash never drops below the 10% buffer covenant
-  const iR=0.02, bufPct=0.10;
-  function findMinEquity(ebitArr, retDepArr, carDepArr, swAmArr, invCFArr, revArr, cogsArr, opexArr){
-    let E=100000;
-    for(let iter=0;iter<300;iter++){
-      const cc2=[];
-      for(let i=0;i<3;i++){
-        const oc2=i===0?E:cc2[i-1];
-        const ni2=ebitArr[i]+oc2*iR;
-        const da2=-(retDepArr[i]+carDepArr[i]+swAmArr[i]);
-        const prevRev=i===0?0:revArr[i-1]; const curRev=revArr[i];
-        const prevCogs=i===0?0:cogsArr[i]; const curCogs=cogsArr[i];
-        const prevOp=i===0?0:opexArr[i];
-        const wc2=0; // simplified WC for this pre-pass
-        const op2=ni2+da2+wc2;
-        cc2.push((i===0?0:cc2[i-1])+op2+invCFArr[i]+(i===0?E:0));
-      }
-      if(Math.min(...cc2)>=E*bufPct) break;
-      E+=50000;
-    }
-    return Math.ceil(E/50000)*50000; // round up to nearest €50k
-  }
-  // invCF must be declared before findMinEquity uses it
-  const invCF=[-(rCap+cCap+swCap[0]),-swCap[1],-swCap[2]];
-  // Dynamic equity: minimum needed so cash never falls below 10% covenant
-  const eq=findMinEquity(ebit,rDep,cDep,swAm,invCF,rev,cogs,opex);
-  // Pre-compute WC items so CF↔BS tie out exactly
+  const iR=getA('a_intRate')/100,bufPct=getA('a_covenant')/100;
+  const invCF=YEARS.map((_,i)=>i===0?-(rCap+cCap+swCap[0]):-swCap[i]);
+  function findMinEquity(){let E=100000;for(let iter=0;iter<300;iter++){const cc2=[];for(let i=0;i<NY;i++){const oc=i===0?E:cc2[i-1];const ni2=ebit[i]+oc*iR;const da2=-(rDep[i]+cDep[i]+swAm[i]);const op2=ni2+da2;cc2.push((i===0?0:cc2[i-1])+op2+invCF[i]+(i===0?E:0));}if(Math.min(...cc2)>=E*bufPct)break;E+=50000;}return Math.ceil(E/50000)*50000;}
+  const eq=findMinEquity();
   const recv_arr=rev.map(r=>Math.round(r/365*5));
   const pay_arr=cogs.map(c=>Math.round(-c/365*14));
   const acc_arr=opex.map(o=>Math.round(-o/12));
   const ni=[],cc=[],opCF=[];
-  for(let i=0;i<3;i++){
-    const oc=i===0?eq:cc[i-1];
-    ni.push(ebit[i]+oc*iR);
-    const da=-(rDep[i]+cDep[i]+swAm[i]);
-    // WC change: increase in payables+accruals is cash inflow; increase in receivables is outflow
-    const prevRecv=i===0?0:recv_arr[i-1], prevPay=i===0?0:pay_arr[i-1], prevAcc=i===0?0:acc_arr[i-1];
-    const wc=(pay_arr[i]-prevPay)+(acc_arr[i]-prevAcc)-(recv_arr[i]-prevRecv);
-    const op=ni[i]+da+wc;
-    opCF.push(op);
-    cc.push((i===0?0:cc[i-1])+op+invCF[i]+(i===0?eq:0));
-  }
+  for(let i=0;i<NY;i++){const oc=i===0?eq:cc[i-1];ni.push(ebit[i]+oc*iR);const da=-(rDep[i]+cDep[i]+swAm[i]);const pR=i===0?0:recv_arr[i-1],pP=i===0?0:pay_arr[i-1],pA=i===0?0:acc_arr[i-1];const wc=(pay_arr[i]-pP)+(acc_arr[i]-pA)-(recv_arr[i]-pR);const op=ni[i]+da+wc;opCF.push(op);cc.push((i===0?0:cc[i-1])+op+invCF[i]+(i===0?eq:0));}
   const recv=rev.map(r=>Math.round(r/365*5));
   const cash=cc.map(v=>Math.round(v));
   const currA=cash.map((c,i)=>c+recv[i]);
-  const rN=[rCap+rDep[0],rCap+rDep[0]+rDep[1],rCap+rDep[0]+rDep[1]+rDep[2]];
-  const cN=[cCap+cDep[0],cCap+cDep[0]+cDep[1],cCap+cDep[0]+cDep[1]+cDep[2]];
-  const swN=[swCap[0]+swAm[0],swCap[0]+swCap[1]+swAm[0]+swAm[1],swCap[0]+swCap[1]+swCap[2]+swAm[0]+swAm[1]+swAm[2]];
+  const rN=YEARS.map((_,i)=>{const dep=Math.min(i+1,retDepYrs)*(rCap/retDepYrs);return Math.max(0,rCap-dep);});
+  const cN=YEARS.map((_,i)=>{const dep=Math.min(i+1,carDepYrs)*(cCap/carDepYrs);return Math.max(0,cCap-dep);});
+  const swN=YEARS.map((_,i)=>{let t=0;for(let j=0;j<=i;j++){const yu=i-j+1;t+=Math.max(0,swCap[j]-swCap[j]/swDepYrs*Math.min(yu,swDepYrs));}return t;});
   const ncA=rN.map((_,i)=>rN[i]+cN[i]+swN[i]);
   const totA=currA.map((_,i)=>currA[i]+ncA[i]);
   const pay=cogs.map(c=>-Math.round(c/365*14)),acc=opex.map(o=>-Math.round(o/12));
@@ -348,219 +426,107 @@ function calcModel(){
   return{rev,arb,afrr,peak,cogs,gp,opex,ebitda,ebit,ni,tx,bsp,lease,lFixed,lVar,supp,bd,labNet,ga,swAm,rDep,cDep,opCF,invCF,cash,totA,currA,ncA,rN,cN,swN,totL,pay,acc,totE,totLE,cumNI,eq,rCap,cCap,swCap,n};
 }
 
-function updateFinancials(){
-  const m=calcModel();
-  const ok=YEARS.every((_,i)=>Math.abs(m.totA[i]-m.totLE[i])<10);
-  const el=g('fsChk');el.className='chk '+(ok?'ok':'er');el.textContent=ok?'✓ No model errors — P&L, Balance Sheet and Cash Flow tie out':'✗ Model error — check assumptions';
-  if(fs==='pl')buildPL(m);else if(fs==='bs')buildBS(m);else if(fs==='cf')buildCF(m);else buildInv(m);
-}
+function updateFinancials(){const m=calcModel();const ok=YEARS.every((_,i)=>Math.abs(m.totA[i]-m.totLE[i])<10);const el=g('fsChk');el.className='chk '+(ok?'ok':'er');el.textContent=ok?'✓ No model errors — P&L, Balance Sheet and Cash Flow tie out':'✗ Model error — check assumptions';if(fs==='pl')buildPL(m);else if(fs==='bs')buildBS(m);else if(fs==='cf')buildCF(m);else if(fs==='inv')buildInv(m);updateExecSummary(m);}
 
-function tbl(rows,id){
-  const t=g(id);t.innerHTML=`<thead><tr><th>Line item</th>${YEARS.map(y=>`<th class="r">${y}</th>`).join('')}</tr></thead>`;
-  const tb=document.createElement('tbody');
-  rows.forEach(r=>{
-    const tr=document.createElement('tr');
-    if(r.sec){tr.className='sec';tr.innerHTML=`<td colspan="4">${r.label}</td>`;}
-    else{
-      tr.className=r.tot?'tot':'';
-      const ic=r.ind?'ind':'';
-      tr.innerHTML=`<td class="${ic}">${r.label}</td>`+(r.pct?r.vals.map(v=>`<td class="r">${(v*100).toFixed(1)}%</td>`):r.vals.map(v=>`<td class="r ${cl(v)}">${fmtN(v)}</td>`)).join('');
-    }
-    tb.appendChild(tr);
-  });
-  t.appendChild(tb);
-}
+function tbl(rows,id){const t=g(id);t.innerHTML='<thead><tr><th>Line item</th>'+YEARS.map(y=>'<th class="r">'+y+'</th>').join('')+'</tr></thead>';const tb=document.createElement('tbody');rows.forEach(r=>{const tr=document.createElement('tr');if(r.sec){tr.className='sec';tr.innerHTML='<td colspan="'+(NY+1)+'">'+r.label+'</td>';}else{tr.className=r.tot?'tot':'';const ic=r.ind?'ind':'';tr.innerHTML='<td class="'+ic+'">'+r.label+'</td>'+(r.pct?r.vals.map(v=>'<td class="r">'+(v*100).toFixed(1)+'%</td>'):r.vals.map(v=>'<td class="r '+cl(v)+'">'+fmtN(v)+'</td>')).join('');}tb.appendChild(tr);});t.appendChild(tb);}
 
-function mkBar(id,key,labels,datasets){const ctx=g(id);if(CH[key])CH[key].destroy();CH[key]=new Chart(ctx,{type:'bar',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7BA5C8',font:{size:10},usePointStyle:true}}},scales:{x:{stacked:false,ticks:{color:'#7BA5C8'},grid:{color:'rgba(26,58,92,.4)'}},y:{ticks:{color:'#7BA5C8',callback:v=>`€${Math.abs(v).toFixed(0)}k`},grid:{color:'rgba(26,58,92,.4)'}}}}});}
-function mkSBar(id,key,labels,datasets){const ctx=g(id);if(CH[key])CH[key].destroy();CH[key]=new Chart(ctx,{type:'bar',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7BA5C8',font:{size:10},usePointStyle:true}}},scales:{x:{stacked:true,ticks:{color:'#7BA5C8'},grid:{color:'rgba(26,58,92,.4)'}},y:{stacked:true,ticks:{color:'#7BA5C8',callback:v=>`€${Math.abs(v).toFixed(0)}k`},grid:{color:'rgba(26,58,92,.4)'}}}}});}
-function mkLine(id,key,labels,datasets){const ctx=g(id);if(CH[key])CH[key].destroy();CH[key]=new Chart(ctx,{type:'line',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7BA5C8',font:{size:10},usePointStyle:true}}},scales:{x:{ticks:{color:'#7BA5C8'},grid:{color:'rgba(26,58,92,.4)'}},y:{ticks:{color:'#7BA5C8',callback:v=>`€${Math.abs(v).toFixed(0)}k`},grid:{color:'rgba(26,58,92,.4)'}}}}});}
+function mkBar(id,key,labels,datasets){const ctx=g(id);if(CH[key])CH[key].destroy();CH[key]=new Chart(ctx,{type:'bar',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7BA5C8',font:{size:10},usePointStyle:true}}},scales:{x:{stacked:false,ticks:{color:'#7BA5C8'},grid:{color:'rgba(26,58,92,.4)'}},y:{ticks:{color:'#7BA5C8',callback:v=>'€'+Math.abs(v).toFixed(0)+'k'},grid:{color:'rgba(26,58,92,.4)'}}}}});}
+function mkSBar(id,key,labels,datasets){const ctx=g(id);if(CH[key])CH[key].destroy();CH[key]=new Chart(ctx,{type:'bar',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7BA5C8',font:{size:10},usePointStyle:true}}},scales:{x:{stacked:true,ticks:{color:'#7BA5C8'},grid:{color:'rgba(26,58,92,.4)'}},y:{stacked:true,ticks:{color:'#7BA5C8',callback:v=>'€'+Math.abs(v).toFixed(0)+'k'},grid:{color:'rgba(26,58,92,.4)'}}}}});}
+function mkLine(id,key,labels,datasets){const ctx=g(id);if(CH[key])CH[key].destroy();CH[key]=new Chart(ctx,{type:'line',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7BA5C8',font:{size:10},usePointStyle:true}}},scales:{x:{ticks:{color:'#7BA5C8'},grid:{color:'rgba(26,58,92,.4)'}},y:{ticks:{color:'#7BA5C8',callback:v=>'€'+Math.abs(v).toFixed(0)+'k'},grid:{color:'rgba(26,58,92,.4)'}}}}});}
 
-function buildPL(m){
-  tbl([
-    {sec:true,label:'REVENUE'},
-    {label:'Spot arbitrage',vals:m.arb,ind:true},{label:'aFRR balancing',vals:m.afrr,ind:true},{label:'Peak shaving',vals:m.peak,ind:true},
-    {label:'Total Revenue',vals:m.rev,tot:true},
-    {sec:true,label:'COST OF GOODS SOLD'},
-    {label:'Transaction fees',vals:m.tx,ind:true},{label:'BSP / network access fees',vals:m.bsp,ind:true},
-    {label:'Battery lease — fixed (capacity payment)',vals:m.lFixed,ind:true},{label:'Battery lease — variable (revenue share)',vals:m.lVar,ind:true},
-    {label:'Customer support (calls + truck rolls)',vals:m.supp,ind:true},{label:'Bad debt provision (0.5% rev)',vals:m.bd,ind:true},
-    {label:'Total COGS',vals:m.cogs,tot:true},
-    {label:'GROSS PROFIT',vals:m.gp,tot:true},
-    {label:'Gross margin %',vals:m.gp.map((_,i)=>m.gp[i]/m.rev[i]),pct:true},
-    {sec:true,label:'OPERATING EXPENSES'},
-    {label:'Labour — net of dev capitalisation',vals:m.labNet,ind:true},
-    {label:'G&A',vals:m.ga,ind:true},{label:'Software amortisation',vals:m.swAm,ind:true},
-    {label:'Total Opex',vals:m.opex,tot:true},
-    {label:'EBITDA',vals:m.ebitda,tot:true},
-    {label:'EBITDA margin %',vals:m.ebitda.map((_,i)=>m.ebitda[i]/m.rev[i]),pct:true},
-    {label:'D&A — retrofit depreciation',vals:m.rDep},{label:'D&A — car depreciation',vals:m.cDep},
-    {label:'EBIT',vals:m.ebit,tot:true},
-    {label:'NET INCOME / (LOSS)',vals:m.ni,tot:true},
-  ],'plT');
-  mkBar('plBarC','plBar',YEARS.map(String),[
-    {label:'Revenue',data:m.rev.map(v=>v/1e3),backgroundColor:'rgba(0,212,170,.7)'},
-    {label:'COGS',data:m.cogs.map(v=>v/1e3),backgroundColor:'rgba(240,149,149,.7)'},
-    {label:'Opex',data:m.opex.map(v=>v/1e3),backgroundColor:'rgba(192,122,245,.7)'},
-    {label:'EBITDA',data:m.ebitda.map(v=>v/1e3),backgroundColor:'rgba(74,158,245,.7)'},
-  ]);
-  mkSBar('cogsC','cogs',YEARS.map(String),[{label:'Battery lease',data:m.lease.map(v=>-v/1e3),backgroundColor:'#F09595'},{label:'BSP fees',data:m.bsp.map(v=>-v/1e3),backgroundColor:'#FAC775'},{label:'Support',data:m.supp.map(v=>-v/1e3),backgroundColor:'#C07AF5'},{label:'Tx fees+BD',data:m.rev.map((_,i)=>(-m.tx[i]-m.bd[i])/1e3),backgroundColor:'#4A9EF5'}]);
-}
+function buildPL(m){tbl([{sec:true,label:'REVENUE'},{label:'Spot arbitrage',vals:m.arb,ind:true},{label:'aFRR balancing',vals:m.afrr,ind:true},{label:'Peak shaving',vals:m.peak,ind:true},{label:'Total Revenue',vals:m.rev,tot:true},{sec:true,label:'COST OF GOODS SOLD'},{label:'Transaction fees',vals:m.tx,ind:true},{label:'BSP / network access fees',vals:m.bsp,ind:true},{label:'Battery lease — fixed (capacity payment)',vals:m.lFixed,ind:true},{label:'Battery lease — variable (revenue share)',vals:m.lVar,ind:true},{label:'Customer support (calls + truck rolls)',vals:m.supp,ind:true},{label:'Bad debt provision',vals:m.bd,ind:true},{label:'Total COGS',vals:m.cogs,tot:true},{label:'GROSS PROFIT',vals:m.gp,tot:true},{label:'Gross margin %',vals:m.gp.map((_,i)=>m.gp[i]/m.rev[i]),pct:true},{sec:true,label:'OPERATING EXPENSES'},{label:'Labour — net of dev capitalisation',vals:m.labNet,ind:true},{label:'G&A',vals:m.ga,ind:true},{label:'Software amortisation',vals:m.swAm,ind:true},{label:'Total Opex',vals:m.opex,tot:true},{label:'EBITDA',vals:m.ebitda,tot:true},{label:'EBITDA margin %',vals:m.ebitda.map((_,i)=>m.ebitda[i]/m.rev[i]),pct:true},{label:'D&A — retrofit depreciation',vals:m.rDep},{label:'D&A — car depreciation',vals:m.cDep},{label:'EBIT',vals:m.ebit,tot:true},{label:'NET INCOME / (LOSS)',vals:m.ni,tot:true}],'plT');mkBar('plBarC','plBar',YEARS.map(String),[{label:'Revenue',data:m.rev.map(v=>v/1e3),backgroundColor:'rgba(0,212,170,.7)'},{label:'COGS',data:m.cogs.map(v=>v/1e3),backgroundColor:'rgba(240,149,149,.7)'},{label:'Opex',data:m.opex.map(v=>v/1e3),backgroundColor:'rgba(192,122,245,.7)'},{label:'EBITDA',data:m.ebitda.map(v=>v/1e3),backgroundColor:'rgba(74,158,245,.7)'}]);mkSBar('cogsC','cogs',YEARS.map(String),[{label:'Battery lease',data:m.lease.map(v=>-v/1e3),backgroundColor:'#F09595'},{label:'BSP fees',data:m.bsp.map(v=>-v/1e3),backgroundColor:'#FAC775'},{label:'Support',data:m.supp.map(v=>-v/1e3),backgroundColor:'#C07AF5'},{label:'Tx fees+BD',data:m.rev.map((_,i)=>(-m.tx[i]-m.bd[i])/1e3),backgroundColor:'#4A9EF5'}]);}
 
-function buildBS(m){
-  tbl([
-    {sec:true,label:'ASSETS'},{label:'Cash & equivalents',vals:m.cash},{label:'Trade receivables (DSO ~5 days)',vals:m.rev.map(r=>Math.round(r/365*5))},{label:'Total Current Assets',vals:m.currA,tot:true},
-    {label:'Retrofit net of depreciation',vals:m.rN},{label:'Company car net',vals:m.cN},{label:'Software intangible net',vals:m.swN},{label:'Total Non-Current Assets',vals:m.ncA,tot:true},
-    {label:'TOTAL ASSETS',vals:m.totA,tot:true},
-    {sec:true,label:'LIABILITIES'},{label:'Trade payables (DPO ~14 days)',vals:m.pay},{label:'Accrued liabilities',vals:m.acc},{label:'Total Liabilities',vals:m.totL,tot:true},
-    {sec:true,label:'EQUITY'},{label:'Paid-in capital (seed equity)',vals:[m.eq,m.eq,m.eq]},{label:'Retained earnings / (deficit)',vals:m.cumNI},{label:'Total Equity',vals:m.totE,tot:true},
-    {label:'TOTAL LIABILITIES + EQUITY',vals:m.totLE,tot:true},
-  ],'bsT');
-  mkSBar('assetC','asset',YEARS.map(String),[{label:'Cash',data:m.cash.map(v=>v/1e3),backgroundColor:'#00D4AA'},{label:'Receivables',data:m.rev.map(r=>Math.round(r/365*5/1e3)),backgroundColor:'#4A9EF5'},{label:'Fixed assets (net)',data:m.ncA.map(v=>Math.max(0,v)/1e3),backgroundColor:'#FAC775'}]);
-  mkLine('eqC','eq',YEARS.map(String),[{label:'Total equity',data:m.totE.map(v=>v/1e3),borderColor:'#00D4AA',backgroundColor:'rgba(0,212,170,.1)',fill:true,tension:.3,pointRadius:5},{label:'Paid-in capital',data:[1000,1000,1000],borderColor:'#4A9EF5',borderDash:[5,3],fill:false,tension:0,pointRadius:3}]);
-}
+function buildBS(m){tbl([{sec:true,label:'ASSETS'},{label:'Cash & equivalents',vals:m.cash},{label:'Trade receivables (DSO ~5 days)',vals:m.rev.map(r=>Math.round(r/365*5))},{label:'Total Current Assets',vals:m.currA,tot:true},{label:'Retrofit net of depreciation',vals:m.rN},{label:'Company car net',vals:m.cN},{label:'Software intangible net',vals:m.swN},{label:'Total Non-Current Assets',vals:m.ncA,tot:true},{label:'TOTAL ASSETS',vals:m.totA,tot:true},{sec:true,label:'LIABILITIES'},{label:'Trade payables (DPO ~14 days)',vals:m.pay},{label:'Accrued liabilities',vals:m.acc},{label:'Total Liabilities',vals:m.totL,tot:true},{sec:true,label:'EQUITY'},{label:'Paid-in capital (seed equity)',vals:YEARS.map(()=>m.eq)},{label:'Retained earnings / (deficit)',vals:m.cumNI},{label:'Total Equity',vals:m.totE,tot:true},{label:'TOTAL LIABILITIES + EQUITY',vals:m.totLE,tot:true}],'bsT');mkSBar('assetC','asset',YEARS.map(String),[{label:'Cash',data:m.cash.map(v=>v/1e3),backgroundColor:'#00D4AA'},{label:'Receivables',data:m.rev.map(r=>Math.round(r/365*5/1e3)),backgroundColor:'#4A9EF5'},{label:'Fixed assets (net)',data:m.ncA.map(v=>Math.max(0,v)/1e3),backgroundColor:'#FAC775'}]);mkLine('eqC','eq',YEARS.map(String),[{label:'Total equity',data:m.totE.map(v=>v/1e3),borderColor:'#00D4AA',backgroundColor:'rgba(0,212,170,.1)',fill:true,tension:.3,pointRadius:5},{label:'Paid-in capital',data:YEARS.map(()=>m.eq/1e3),borderColor:'#4A9EF5',borderDash:[5,3],fill:false,tension:0,pointRadius:3}]);}
 
-function buildCF(m){
-  const open=[0,...m.cash.slice(0,2)];
-  tbl([
-    {sec:true,label:'A. OPERATING CASH FLOW'},{label:'Net income / (loss)',vals:m.ni},{label:'Add: D&A & amortisation',vals:m.rDep.map((_,i)=>-(m.rDep[i]+m.cDep[i]+m.swAm[i]))},{label:'Change in working capital (recv/pay/acc)',vals:YEARS.map((_,i)=>{const pR=i===0?0:Math.round(m.rev[i-1]/365*5),pP=i===0?0:Math.round(-m.cogs[i-1]/365*14),pA=i===0?0:Math.round(-m.opex[i-1]/12);return(Math.round(-m.cogs[i]/365*14)-pP)+(Math.round(-m.opex[i]/12)-pA)-(Math.round(m.rev[i]/365*5)-pR);})},{label:'Net Operating Cash Flow',vals:m.opCF,tot:true},
-    {sec:true,label:'B. INVESTING CASH FLOW'},{label:'Bus retrofit capex',vals:[-m.rCap,0,0]},{label:'Company car capex',vals:[-m.cCap,0,0]},{label:'Software dev capitalised (1 FTE)',vals:m.swCap.map(v=>-v)},{label:'Net Investing Cash Flow',vals:m.invCF,tot:true},
-    {sec:true,label:'C. FINANCING CASH FLOW'},{label:'Equity raised (seed round)',vals:[m.eq,0,0]},{label:'Net Financing Cash Flow',vals:[m.eq,0,0],tot:true},
-    {sec:true,label:'SUMMARY'},{label:'Opening cash',vals:open},{label:'CLOSING CASH BALANCE',vals:m.cash,tot:true},{label:'Min cash buffer (covenant)',vals:[100000,100000,100000]},{label:'Buffer headroom',vals:m.cash.map(c=>c-100000),tot:true},
-  ],'cfT');
-  mkBar('cfBarC','cfBar',YEARS.map(String),[{label:'Operating CF',data:m.opCF.map(v=>v/1e3),backgroundColor:'#00D4AA'},{label:'Investing CF',data:m.invCF.map(v=>v/1e3),backgroundColor:'#F09595'},{label:'Financing CF',data:[m.eq/1e3,0,0],backgroundColor:'#4A9EF5'}]);
-  mkLine('cashC','cash',YEARS.map(String),[{label:'Closing cash',data:m.cash.map(v=>v/1e3),borderColor:'#00D4AA',backgroundColor:'rgba(0,212,170,.1)',fill:true,tension:.3,pointRadius:5},{label:'Min buffer (covenant)',data:[100,100,100],borderColor:'#F09595',borderDash:[6,3],fill:false,borderWidth:2,pointRadius:0}]);
-}
+function buildCF(m){const open=[0,...m.cash.slice(0,NY-1)];tbl([{sec:true,label:'A. OPERATING CASH FLOW'},{label:'Net income / (loss)',vals:m.ni},{label:'Add: D&A & amortisation',vals:m.rDep.map((_,i)=>-(m.rDep[i]+m.cDep[i]+m.swAm[i]))},{label:'Change in working capital',vals:YEARS.map((_,i)=>{const pR=i===0?0:Math.round(m.rev[i-1]/365*5),pP=i===0?0:Math.round(-m.cogs[i-1]/365*14),pA=i===0?0:Math.round(-m.opex[i-1]/12);return(Math.round(-m.cogs[i]/365*14)-pP)+(Math.round(-m.opex[i]/12)-pA)-(Math.round(m.rev[i]/365*5)-pR);})},{label:'Net Operating Cash Flow',vals:m.opCF,tot:true},{sec:true,label:'B. INVESTING CASH FLOW'},{label:'Bus retrofit capex',vals:YEARS.map((_,i)=>i===0?-m.rCap:0)},{label:'Company car capex',vals:YEARS.map((_,i)=>i===0?-m.cCap:0)},{label:'Software dev capitalised',vals:m.swCap.map(v=>-v)},{label:'Net Investing Cash Flow',vals:m.invCF,tot:true},{sec:true,label:'C. FINANCING CASH FLOW'},{label:'Equity raised (seed round)',vals:YEARS.map((_,i)=>i===0?m.eq:0)},{label:'Net Financing Cash Flow',vals:YEARS.map((_,i)=>i===0?m.eq:0),tot:true},{sec:true,label:'SUMMARY'},{label:'Opening cash',vals:open},{label:'CLOSING CASH BALANCE',vals:m.cash,tot:true},{label:'Min cash buffer (covenant)',vals:YEARS.map(()=>100000)},{label:'Buffer headroom',vals:m.cash.map(c=>c-100000),tot:true}],'cfT');mkBar('cfBarC','cfBar',YEARS.map(String),[{label:'Operating CF',data:m.opCF.map(v=>v/1e3),backgroundColor:'#00D4AA'},{label:'Investing CF',data:m.invCF.map(v=>v/1e3),backgroundColor:'#F09595'},{label:'Financing CF',data:YEARS.map((_,i)=>i===0?m.eq/1e3:0),backgroundColor:'#4A9EF5'}]);mkLine('cashC','cash',YEARS.map(String),[{label:'Closing cash',data:m.cash.map(v=>v/1e3),borderColor:'#00D4AA',backgroundColor:'rgba(0,212,170,.1)',fill:true,tension:.3,pointRadius:5},{label:'Min buffer (covenant)',data:YEARS.map(()=>100),borderColor:'#F09595',borderDash:[6,3],fill:false,borderWidth:2,pointRadius:0}]);}
 
-function irr(cfs){let r=0.5;for(let i=0;i<300;i++){const n=cfs.reduce((s,c,t)=>s+c/Math.pow(1+r,t),0),d=cfs.reduce((s,c,t)=>s-t*c/Math.pow(1+r,t+1),0);if(Math.abs(d)<1e-12)break;const nr=r-n/d;if(Math.abs(nr-r)<1e-10)break;r=nr;}return r;}
+function irr(cfs){let r=0.3;for(let i=0;i<500;i++){const n=cfs.reduce((s,c,t)=>s+c/Math.pow(1+r,t),0),d=cfs.reduce((s,c,t)=>s-t*c/Math.pow(1+r,t+1),0);if(Math.abs(d)<1e-12)break;const nr=r-n/d;if(Math.abs(nr-r)<1e-10)break;r=nr;if(r<-0.99)r=-0.99;if(r>10)r=10;}return r;}
 function npv(cfs,rate){return cfs.reduce((s,c,t)=>s+c/Math.pow(1+rate,t),0);}
 
+function calcBreakeven(){
+  const lF=+g('leaseFixed').value,lVp=+g('leaseVar').value/100;
+  const txRate=getA('a_txFee')/100,bdRate=getA('a_badDebt')/100;
+  const perBusRev=REV[0]/BASE.n;
+  const perBusLease=-(BASE.kwh*BASE.soc*lF*12)-(perBusRev*lVp);
+  const perBusTx=-perBusRev*txRate;
+  const perBusBd=-perBusRev*bdRate;
+  const truckCost=getA('a_truckCost'),truckY1=getA('a_truckY1');
+  const perBusTruck=-(truckY1*12*truckCost)/BASE.n;
+  const contribPB=perBusRev+perBusLease+perBusTx+perBusBd+perBusTruck;
+  const tHC=+g('techHC').value,ntHC=+g('ntechHC').value;
+  const techBase=getA('a_techSal'),ntechBase=getA('a_ntechSal');
+  const totalLabor=(tHC*techBase+ntHC*ntechBase)*(1+getA('a_empSS')/100+getA('a_esop')/100);
+  const gaBase=getA('a_office')+getA('a_legal')+getA('a_insurance')+getA('a_hrSw')+getA('a_otherGA');
+  const suppCallsBase=getA('a_suppCalls');
+  const fixedCosts=totalLabor+gaBase+getA('a_bspY1')+(suppCallsBase*12);
+  return contribPB>0?Math.ceil(fixedCosts/contribPB):Infinity;
+}
+
 function buildInv(m){
-  // ── REQUIRED INVESTMENT CALCULATION ────────────────────────────────────────
-  // Minimum equity needed so cash never falls below 10% of equity invested
-  // Binary search: find equity E such that closing_cash(E) >= 0.10*E in all years
-  function calcMinEquity(){
-    // Net cash flows independent of equity (except interest on equity balance)
-    // We'll iterate: try equity E, compute cash flows, check buffer
-    // Quick approach: find worst-case cumulative cash need
-    const iR=0.02, bufPct=0.10;
-    let E=100000, step=100000, found=false;
-    for(let iter=0;iter<200;iter++){
-      // Recompute with this equity
-      const ni2=[], cc2=[];
-      for(let i=0;i<3;i++){
-        const oc=i===0?E:cc2[i-1];
-        ni2.push(m.ebit[i]+oc*iR);
-        const da=-(m.rDep[i]+m.cDep[i]+m.swAm[i]);
-        const prevRecv=i===0?0:Math.round(m.rev[i-1]/365*5);
-        const prevPay=i===0?0:Math.round(-m.cogs[i-1]/365*14);
-        const prevAcc=i===0?0:Math.round(-m.opex[i-1]/12);
-        const wc=(Math.round(-m.cogs[i]/365*14)-prevPay)+(Math.round(-m.opex[i]/12)-prevAcc)-(Math.round(m.rev[i]/365*5)-prevRecv);
-        const op2=ni2[i]+da+wc;
-        cc2.push((i===0?0:cc2[i-1])+op2+m.invCF[i]+(i===0?E:0));
-      }
-      const minCash=Math.min(...cc2);
-      const buffer=E*bufPct;
-      if(minCash>=buffer){found=true;break;}
-      E+=step;
-    }
-    return Math.ceil(E/10000)*10000; // round up to nearest 10k
-  }
+  function calcMinEquity(){const iR=getA('a_intRate')/100,bufPct=getA('a_covenant')/100;let E=100000;for(let iter=0;iter<200;iter++){const cc2=[];for(let i=0;i<NY;i++){const oc=i===0?E:cc2[i-1];const ni2=m.ebit[i]+oc*iR;const da=-(m.rDep[i]+m.cDep[i]+m.swAm[i]);const pR=i===0?0:Math.round(m.rev[i-1]/365*5),pP=i===0?0:Math.round(-m.cogs[i-1]/365*14),pA=i===0?0:Math.round(-m.opex[i-1]/12);const wc=(Math.round(-m.cogs[i]/365*14)-pP)+(Math.round(-m.opex[i]/12)-pA)-(Math.round(m.rev[i]/365*5)-pR);const op2=ni2+da+wc;cc2.push((i===0?0:cc2[i-1])+op2+m.invCF[i]+(i===0?E:0));}if(Math.min(...cc2)>=E*bufPct)break;E+=50000;}return Math.ceil(E/10000)*10000;}
   const reqEquity=calcMinEquity();
-  // ──────────────────────────────────────────────────────────────────────────
-  const ev=m.ebitda[2];
-  // Populate required investment banner
+  const ev=m.ebitda[NY-1];
   g('reqInvAmt').textContent=fmtK(reqEquity);
-  // Breakeven: buses needed so annual opCF >= 0
-  // opex is fixed (doesn't scale with buses), but revenue and COGS scale with n
-  // Solve for n: rev(n) + cogs(n) + opex = 0
-  // rev scales linearly with n, cogs scales with n (lease, support), opex is fixed
-  // Simple: use current per-bus metrics
-  // Breakeven: scale-invariant unit economics
-  // Per-bus revenue = total revenue / n (both scale linearly with n, so ratio is constant)
-  // Variable COGS per bus = everything except BSP fixed fee (which doesn't scale)
-  // Fixed costs = opex (HC + G&A, not fleet-size dependent) + BSP fixed fee
-  const {sf:sfBE,n:nBE,kw:kwBE,sc:scBE}=getSF();
-  const revPB = m.rev[0]/nBE;                          // revenue per bus
-  const varCogsPB = (m.cogs[0]-m.bsp[0])/nBE;          // variable COGS per bus (excl. fixed BSP)
-  const contribPB = revPB + varCogsPB;                  // contribution margin per bus
-  const fixedCosts = Math.abs(m.opex[0]) + Math.abs(m.bsp[0]); // fixed overhead + BSP
-  // Compute breakeven using BASE fleet unit economics (n-invariant):
-  // contribPB is constant regardless of n (rev and var cogs both scale linearly)
-  // so breakeven is stable
-  const breakeven=contribPB>0?Math.ceil(fixedCosts/contribPB):Infinity;
+  const breakeven=calcBreakeven();
   g('breakevenBuses').textContent=isFinite(breakeven)?breakeven+' buses':'n/a';
-  const isFeasible=reqEquity<=2000000;
-  g('reqInvNote').textContent=`Minimum equity so cash never falls below 10% covenant. `+(reqEquity<1000000?'✓ Feasible within a €1M seed round.':reqEquity<=3000000?`Requires a larger round — consider ${Math.ceil(breakeven/10)*10}+ buses to reach EBITDA breakeven within €1M.`:'Requires significant capital — reduce fleet size or retrofit cost.');
+  g('reqInvNote').textContent='Minimum equity so cash never falls below 10% covenant. '+(reqEquity<1000000?'✓ Feasible within a €1M seed round.':reqEquity<=3000000?'Requires a larger round — consider '+Math.ceil(breakeven/10)*10+'+ buses to reach EBITDA breakeven within €1M.':'Requires significant capital — reduce fleet size or retrofit cost.');
   const baseOwn=0.40,baseEV=8;
-  const bCFs=[-m.eq,m.opCF[0]*baseOwn,m.opCF[1]*baseOwn,m.opCF[2]*baseOwn+ev*baseEV*baseOwn];
+  const bCFs=[-m.eq,...YEARS.map((_,i)=>m.opCF[i]*baseOwn)];bCFs[NY]+=ev*baseEV*baseOwn;
   const bIRR=irr(bCFs),bNPV=npv(bCFs,0.20),bRet=bCFs.slice(1).reduce((a,b)=>a+b,0);
-  // Colour-code KPI values
   function irrCls(r){return r>0.6?'kc-vg':r>0.4?'kc-g':r>0.2?'kc-n':r>0?'kc-lr':'kc-r';}
-  g('i_irr').textContent=`${(bIRR*100).toFixed(1)}%`;
-  g('i_irr').className='kv '+irrCls(bIRR);
-  // Show required equity (from calcModel's dynamic eq)
-  g('i_req_eq').textContent=fmtK(m.eq);
-  g('i_req_note').textContent=`Min. to keep cash ≥ 10% covenant`;
-  // Update CoC subtitle  
-  if(g('i_coc_s')) g('i_coc_s').textContent=`Total returned ÷ ${fmtK(m.eq)} invested`;
-  g('i_npv').textContent=fmtK(bNPV);
-  g('i_npv').className='kv '+(bNPV>500000?'kc-vg':bNPV>0?'kc-g':'kc-r');
-  g('i_coc').textContent=`${(bRet/m.eq).toFixed(1)}×`;
-  g('i_coc').className='kv '+(bRet/m.eq>3?'kc-vg':bRet/m.eq>1.5?'kc-g':bRet/m.eq>1?'kc-n':'kc-r');
-  if(g('i_irr_s')) g('i_irr_s').textContent=`40% ownership · ${fmtK(m.eq)} invested`;
-  g('i_tv') && (g('i_tv').textContent=fmtK(ev*baseEV));
-  g('i_ebitda').textContent=fmtK(ev);
-  g('i_ebitda').className='kv '+(ev>400000?'kc-vg':ev>100000?'kc-g':ev>0?'kc-n':'kc-r');
-
-  // Sensitivity matrix
+  g('i_irr').textContent=(bIRR*100).toFixed(1)+'%';g('i_irr').className='kv '+irrCls(bIRR);
+  g('i_req_eq').textContent=fmtK(m.eq);g('i_req_note').textContent='Min. to keep cash ≥ 10% covenant';
+  if(g('i_coc_s'))g('i_coc_s').textContent='Total returned ÷ '+fmtK(m.eq)+' invested';
+  g('i_npv').textContent=fmtK(bNPV);g('i_npv').className='kv '+(bNPV>500000?'kc-vg':bNPV>0?'kc-g':'kc-r');
+  g('i_coc').textContent=(bRet/m.eq).toFixed(1)+'×';g('i_coc').className='kv '+(bRet/m.eq>3?'kc-vg':bRet/m.eq>1.5?'kc-g':bRet/m.eq>1?'kc-n':'kc-r');
+  if(g('i_irr_s'))g('i_irr_s').textContent='40% ownership · '+fmtK(m.eq)+' invested';
+  g('i_ebitda').textContent=fmtK(ev);g('i_ebitda').className='kv '+(ev>400000?'kc-vg':ev>100000?'kc-g':ev>0?'kc-n':'kc-r');
+  const evLow=getA('a_evLow'),evHigh=getA('a_evHigh');
   const ownPcts=[0.15,0.20,0.30,0.40,0.50,0.60];
-  const evMs=[4,6,8,10,12,15];
-  let html=`<tr><th>Investor owns<br/>(for €1M invested)<br/><small>implies pre-money val →</small></th>${evMs.map(e=>`<th>${e}× EBITDA<br/><small>exit: ${fmtK(ev*e)}</small></th>`).join('')}</tr>`;
-  ownPcts.forEach(own=>{
-    const pm=Math.round(m.eq/own-m.eq);
-    html+=`<tr><th><strong>${Math.round(own*100)}%</strong><br/><small>pre-money: ${fmtK(pm)}</small></th>`;
-    evMs.forEach(evm=>{
-      const cfs=[-m.eq,m.opCF[0]*own,m.opCF[1]*own,m.opCF[2]*own+ev*evm*own];
-      const r=irr(cfs);
-      const isBase=Math.abs(own-baseOwn)<.01&&evm===baseEV;
-      // 5-tier colour: very green (>60%), green (40-60%), blue (20-40%), light red (0-20%), red (<0)
-      const c=isBase?'hi':r>0.6?'vg':r>0.4?'g':r>0.2?'b':r>0?'lr':'vr';
-      html+=`<td class="${c}">${isNaN(r)||!isFinite(r)?'n/a':(r*100).toFixed(0)+'%'}</td>`;
-    });
-    html+='</tr>';
-  });
+  const evMs=[evLow,Math.round(evLow+(evHigh-evLow)*0.2),Math.round(evLow+(evHigh-evLow)*0.4),Math.round(evLow+(evHigh-evLow)*0.6),Math.round(evLow+(evHigh-evLow)*0.8),evHigh];
+  const evMsU=[...new Set(evMs)].sort((a,b)=>a-b);
+  let html='<tr><th>Investor owns<br/>(for €1M invested)<br/><small>implies pre-money val →</small></th>'+evMsU.map(e=>'<th>'+e+'× EBITDA<br/><small>exit: '+fmtK(ev*e)+'</small></th>').join('')+'</tr>';
+  ownPcts.forEach(own=>{const pm=Math.round(m.eq/own-m.eq);html+='<tr><th><strong>'+Math.round(own*100)+'%</strong><br/><small>pre-money: '+fmtK(pm)+'</small></th>';evMsU.forEach(evm=>{const cfs=[-m.eq,...YEARS.map((_,i)=>m.opCF[i]*own)];cfs[NY]+=ev*evm*own;const r=irr(cfs);const isBase=Math.abs(own-baseOwn)<.01&&evm===baseEV;const c=isBase?'hi':r>0.6?'vg':r>0.4?'g':r>0.2?'b':r>0?'lr':'vr';html+='<td class="'+c+'">'+(isNaN(r)||!isFinite(r)?'n/a':(r*100).toFixed(0)+'%')+'</td>';});html+='</tr>';});
   g('sensT').innerHTML=html;
-
-  // Charts
-  const wf=[-m.eq/1e3,m.opCF[0]*baseOwn/1e3,m.opCF[1]*baseOwn/1e3,(m.opCF[2]*baseOwn+ev*baseEV*baseOwn)/1e3];
-  const cWf=g('invWfC');if(CH.iWf)CH.iWf.destroy();
-  CH.iWf=new Chart(cWf,{type:'bar',data:{labels:['Invested (t=0)','2027 FCF','2028 FCF','2029 FCF+Exit'],datasets:[{data:wf,backgroundColor:wf.map(v=>v<0?'rgba(240,149,149,.8)':'rgba(0,212,170,.8)'),borderWidth:0,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:i=>`€${i.raw.toFixed(0)}k`}}},scales:{x:{ticks:{color:'#7BA5C8',font:{size:10}},grid:{color:'rgba(26,58,92,.4)'}},y:{ticks:{color:'#7BA5C8',callback:v=>`€${v.toFixed(0)}k`},grid:{color:'rgba(26,58,92,.4)'}}}}});
-  const br=[-m.eq/1e3,(m.opCF[0]+m.opCF[1]+m.opCF[2])*baseOwn/1e3,ev*baseEV*baseOwn/1e3,wf.slice(1).reduce((a,b)=>a+b,0)];
-  const cBr=g('invBrC');if(CH.iBr)CH.iBr.destroy();
-  CH.iBr=new Chart(cBr,{type:'bar',data:{labels:['Equity in','3yr Op FCF (40%)','Exit value (40%)','Total returned'],datasets:[{data:br,backgroundColor:br.map((v,i)=>i===0?'rgba(240,149,149,.8)':i===3?'rgba(0,212,170,.9)':'rgba(74,158,245,.8)'),borderWidth:0,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:i=>`€${i.raw.toFixed(0)}k`}}},scales:{x:{ticks:{color:'#7BA5C8',font:{size:10}},grid:{color:'rgba(26,58,92,.4)'}},y:{ticks:{color:'#7BA5C8',callback:v=>`€${v.toFixed(0)}k`},grid:{color:'rgba(26,58,92,.4)'}}}}});
+  const wfL=['Invested (t=0)',...YEARS.map((y,i)=>i===NY-1?y+' FCF+Exit':y+' FCF')];
+  const wf=[-m.eq/1e3,...YEARS.map((_,i)=>{let v=m.opCF[i]*baseOwn;if(i===NY-1)v+=ev*baseEV*baseOwn;return v/1e3;})];
+  const cWf=g('invWfC');if(CH.iWf)CH.iWf.destroy();CH.iWf=new Chart(cWf,{type:'bar',data:{labels:wfL,datasets:[{data:wf,backgroundColor:wf.map(v=>v<0?'rgba(240,149,149,.8)':'rgba(0,212,170,.8)'),borderWidth:0,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:i=>'€'+i.raw.toFixed(0)+'k'}}},scales:{x:{ticks:{color:'#7BA5C8',font:{size:9}},grid:{color:'rgba(26,58,92,.4)'}},y:{ticks:{color:'#7BA5C8',callback:v=>'€'+v.toFixed(0)+'k'},grid:{color:'rgba(26,58,92,.4)'}}}}});
+  const opFCFTotal=YEARS.reduce((a,_,i)=>a+m.opCF[i]*baseOwn,0);
+  const br=[-m.eq/1e3,opFCFTotal/1e3,ev*baseEV*baseOwn/1e3,wf.slice(1).reduce((a,b)=>a+b,0)];
+  const cBr=g('invBrC');if(CH.iBr)CH.iBr.destroy();CH.iBr=new Chart(cBr,{type:'bar',data:{labels:['Equity in',NY+'yr Op FCF (40%)','Exit value (40%)','Total returned'],datasets:[{data:br,backgroundColor:br.map((v,i)=>i===0?'rgba(240,149,149,.8)':i===3?'rgba(0,212,170,.9)':'rgba(74,158,245,.8)'),borderWidth:0,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:i=>'€'+i.raw.toFixed(0)+'k'}}},scales:{x:{ticks:{color:'#7BA5C8',font:{size:9}},grid:{color:'rgba(26,58,92,.4)'}},y:{ticks:{color:'#7BA5C8',callback:v=>'€'+v.toFixed(0)+'k'},grid:{color:'rgba(26,58,92,.4)'}}}}});
 }
 
-function showPage(id,btn){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));g('page-'+id).classList.add('active');btn.classList.add('active');if(id==='financials')updateFinancials();}
+function updateExecSummary(m){
+  if(!m)m=calcModel();
+  const{sf,n}=getSF();const d=getRev(2027);
+  const revPerBus=Math.round(d.p50*1e6/n);
+  g('ex_rpb').textContent='€'+revPerBus.toLocaleString();
+  g('ex_rev').textContent=fmtK(d.p50*1e6);
+  g('ex_rev_sub').textContent=n+' buses · '+FLEETS[g('fleetSel').value].kwh+' kWh each';
+  g('ex_ebitda').textContent=fmtK(m.ebitda[0]);
+  g('ex_ebitda').style.color=m.ebitda[0]>0?'var(--green)':'var(--red)';
+  const breakeven=calcBreakeven();
+  g('ex_be').textContent=isFinite(breakeven)?breakeven+' buses':'n/a';
+  const p10Low=getRev(2027).p10,p90High=getRev(2031).p90;
+  const revLowPB=Math.round(p10Low*1e6/n),revHighPB=Math.round(p90High*1e6/n);
+  const totalRevMedian=YEARS.reduce((a,y)=>a+getRev(y).p50,0);
+  let f='';
+  f+='<div class="exec-bullet">📊 <strong>Revenue potential:</strong> The Monte Carlo simulation shows median revenue of <span class="num">€'+revPerBus.toLocaleString()+'</span> per bus per year (year 1), with a P10–P90 range of <span class="num">€'+revLowPB.toLocaleString()+'</span> to <span class="num">€'+revHighPB.toLocaleString()+'</span>. For the selected fleet of <span class="num">'+n+' buses</span>, this equals approximately <span class="num">'+fmtK(d.p50*1e6)+'</span> in annual revenue (median), totalling <span class="num">'+fmtK(totalRevMedian*1e6)+'</span> across the 5-year model horizon.</div>';
+  f+='<div class="exec-bullet">🔢 <strong>Critical mass:</strong> The model requires a minimum of approximately <span class="num">'+(isFinite(breakeven)?breakeven:'n/a')+' buses</span> to cover annual fixed operating costs (salaries, G&A, BSP fees, support). Below this threshold, the business generates negative EBITDA regardless of per-bus revenue.</div>';
+  f+='<div class="exec-bullet">💰 <strong>EBITDA trajectory:</strong> At the current configuration ('+n+' buses), year 1 EBITDA is <span class="num">'+fmtK(m.ebitda[0])+'</span>'+(m.ebitda[0]>0?' (positive)':' (negative — fleet size may need to increase)')+'. By year 5 (2031), EBITDA '+(m.ebitda[NY-1]>0?'reaches':'is projected at')+' <span class="num">'+fmtK(m.ebitda[NY-1])+'</span>, reflecting uniform 3% inflation applied to both revenues and costs.</div>';
+  f+='<div class="exec-bullet">🏦 <strong>Investment required:</strong> The model calculates a minimum seed equity of <span class="num">'+fmtK(m.eq)+'</span> to maintain the 10% cash covenant buffer throughout the 5-year operating period. The primary upfront cost driver is the V2G retrofit at <span class="num">€'+(+g('retrofitPB').value).toLocaleString()+'</span> per bus (total: <span class="num">'+fmtK(m.rCap)+'</span>).</div>';
+  if(m.ebitda[0]>0&&m.ebitda[NY-1]>0){const exitEV=m.ebitda[NY-1]*8;f+='<div class="exec-bullet">📈 <strong>Investor returns (base case):</strong> At 40% ownership and an 8× EBITDA exit multiple, the model projects a terminal value of <span class="num">'+fmtK(exitEV)+'</span>. With 5 years of operating cash flows plus exit proceeds, this scenario can deliver attractive investor returns — see the Investor Returns tab for the full IRR sensitivity matrix across 6×–20× multiples.</div>';}else{f+='<div class="exec-bullet">⚠️ <strong>Path to profitability:</strong> At the current fleet size, operating economics are challenging. Consider increasing the fleet above the breakeven threshold of <span class="num">'+(isFinite(breakeven)?breakeven:'n/a')+' buses</span>, or reducing FTE count / retrofit costs to achieve positive EBITDA.</div>';}
+  g('execFindings').innerHTML=f;
+}
+
+function showPage(id,btn){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));g('page-'+id).classList.add('active');btn.classList.add('active');if(id==='financials')updateFinancials();if(id==='exec'){const m=calcModel();updateExecSummary(m);}}
 function setRY(y,btn){ry=y;document.querySelectorAll('#page-revenue .ytb').forEach(b=>b.classList.remove('active'));btn.classList.add('active');updateRevPage();}
-function setFT(tab,btn){fs=tab;['pl','bs','cf','inv'].forEach(t=>g('fs-'+t).style.display=t===tab?'':'none');document.querySelectorAll('#page-financials .ytb').forEach(b=>b.classList.remove('active'));btn.classList.add('active');updateFinancials();}
-function onFleetChange(){
-  const fl=g('fleetSel').value, fb=FLEETS[fl];
-  // Update slider max to city's full fleet size
-  const sldr=g('nBuses');
-  sldr.max=fb.n;
-  // If current value exceeds new max, clamp it
-  if(+sldr.value>fb.n){ sldr.value=Math.min(50,fb.n); }
-  // Always update the display text to match the actual slider value
-  g('nBusesV').textContent=sldr.value+' buses';
-  updateAll();
-}
-function onBusChange(){
-  const n=+g('nBuses').value;
-  g('nBusesV').textContent=n+' buses';
-  updateAll();
-}
-function updateAll(){updateRevPage();if(g('page-financials').classList.contains('active'))updateFinancials();}
+function setFT(tab,btn){fs=tab;['pl','bs','cf','inv','assumptions'].forEach(t=>{const el=g('fs-'+t);if(el)el.style.display=t===tab?'':'none';});document.querySelectorAll('#page-financials .ytb').forEach(b=>b.classList.remove('active'));btn.classList.add('active');if(tab!=='assumptions')updateFinancials();}
+function onFleetChange(){const fl=g('fleetSel').value,fb=FLEETS[fl],sldr=g('nBuses');sldr.max=fb.n;if(+sldr.value>fb.n)sldr.value=Math.min(+sldr.value,fb.n);g('nBusesV').textContent=sldr.value+' buses';updateAll();}
+function onBusChange(){g('nBusesV').textContent=g('nBuses').value+' buses';updateAll();}
+function updateAll(){updateRevPage();if(g('page-financials').classList.contains('active'))updateFinancials();if(g('page-exec').classList.contains('active')){const m=calcModel();updateExecSummary(m);}}
 updateRevPage();
+(function(){const m=calcModel();updateExecSummary(m);})();
 </script>
 </body>
 </html>
