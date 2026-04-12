@@ -59,7 +59,7 @@ We wanted a color palette that looks amazing. And that represents what we believ
 
 ## 📧 Questions?
 
-Contact: antonschneider90@gmail.com
+Contact: homepageanton@gmail.com
 Location: London / Berlin
 
 ---
