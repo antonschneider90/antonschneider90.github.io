@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anton Schneider</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: linear-gradient(135deg, #003049 0%, #004566 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .password-container {
+            background: rgba(255, 255, 255, 0.98);
+            padding: 3rem;
+            border-radius: 20px;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #003049;
+            margin-bottom: 2rem;
+        }
+
+        .lock-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #D9FF00, #95D5B2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+            font-size: 2.5rem;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            color: #003049;
+            margin-bottom: 0.75rem;
+            font-weight: 700;
+        }
+
+        p {
+            color: #6B7280;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        input[type="password"] {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            border: 2px solid #E5E7EB;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: 'Space Grotesk', sans-serif;
+            transition: all 0.3s ease;
+            background: #F9FAFB;
+        }
+
+        input[type="password"]:focus {
+            outline: none;
+            border-color: #D9FF00;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(217, 255, 0, 0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, #D9FF00, #E5FF33);
+            color: #003049;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            font-family: 'Space Grotesk', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 24px rgba(217, 255, 0, 0.4);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 32px rgba(217, 255, 0, 0.6);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .error {
+            color: #EF4444;
+            font-size: 0.875rem;
+            margin-top: 0.75rem;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .hint {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #E5E7EB;
+            color: #9CA3AF;
+            font-size: 0.875rem;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="password-container">
+        <div class="logo">Anton Schneider</div>
+        
+        <div class="lock-icon">🔒</div>
+        
+        <h1>Site Preview</h1>
+        <p>This site is currently in preview mode. Please enter the password to continue.</p>
+        
+        <form id="passwordForm">
+            <div class="input-group">
+                <input 
+                    type="password" 
+                    id="passwordInput" 
+                    placeholder="Enter password"
+                    autocomplete="off"
+                    autofocus
+                >
+            </div>
+            
+            <button type="submit">Access Site</button>
+            
+            <div class="error" id="errorMessage">
+                ❌ Incorrect password. Please try again.
+            </div>
+        </form>
+        
+        <div class="hint">
+            Need access? Contact antonschneider90@gmail.com
+        </div>
+    </div>
+
+    <script>
+        const correctPassword = 'effzeh2026';
+        const form = document.getElementById('passwordForm');
+        const input = document.getElementById('passwordInput');
+        const error = document.getElementById('errorMessage');
+
+        // Check if already authenticated
+        if (sessionStorage.getItem('siteAccess') === 'granted') {
+            window.location.href = 'home.html';
+        }
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            if (input.value === correctPassword) {
+                // Store authentication in session
+                sessionStorage.setItem('siteAccess', 'granted');
+                // Redirect to actual site
+                window.location.href = 'home.html';
+            } else {
+                // Show error
+                error.classList.add('show');
+                input.value = '';
+                input.focus();
+                
+                // Shake animation
+                input.style.animation = 'shake 0.5s';
+                setTimeout(() => {
+                    input.style.animation = '';
+                }, 500);
+            }
+        });
+
+        // Hide error when typing
+        input.addEventListener('input', () => {
+            error.classList.remove('show');
+        });
+    </script>
+</body>
+</html>
