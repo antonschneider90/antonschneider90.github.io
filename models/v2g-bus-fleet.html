@@ -56,12 +56,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 .smat th,.smat td{padding:7px 10px;text-align:center;border:1px solid var(--border);}
 .smat th{background:var(--bg3);color:var(--muted);font-size:9px;letter-spacing:1px;}
 .smat td.hi{background:rgba(0,212,170,.18);color:var(--accent);font-weight:bold;}
-.smat td.vg{background:rgba(0,180,80,.22);color:#00c853;font-weight:bold;}
-.smat td.g{background:rgba(159,225,203,.15);color:#00a86b;}
-.smat td.b{background:rgba(74,158,245,.12);color:var(--a2);}
-.smat td.lr{background:rgba(240,149,149,.12);color:#e57373;}
-.smat td.r{background:rgba(240,149,149,.22);color:var(--red);}
-.smat td.vr{background:rgba(200,50,50,.28);color:#ff5252;font-weight:bold;}
+.smat td.vg{color:var(--text);}
+.smat td.g{color:var(--text);}
+.smat td.b{color:var(--text);}
+.smat td.lr{background:rgba(250,199,117,.12);color:var(--amber);}
+.smat td.r{color:var(--text);}
+.smat td.vr{background:rgba(240,149,149,.15);color:var(--red);}
 .kpi-num{display:block;font-weight:bold;}
 .kpi-num.kc-vg{color:#00c853;}.kpi-num.kc-g{color:#00a86b;}
 .kpi-num.kc-n{color:var(--amber);}.kpi-num.kc-lr{color:#e57373;}.kpi-num.kc-r{color:var(--red);}
@@ -251,26 +251,25 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
       </div>
     </div>
     <div class="callout">
-      <strong>How to read this:</strong> You invest <strong>€1 million</strong> in January 2027 in exchange for a % of the company (left axis — this is the key negotiation; the implied pre-money valuation is shown in brackets). At end of 2031 the business is sold at X × its 2031 EBITDA (top axis). Each cell shows your <strong>IRR</strong> (annualised return). Example: 40% ownership at 8× exit → IRR shown in the teal cell. The pre-money valuation embedded in each row tells you what you're implying the business is worth today for that ownership %.
+      <strong>IRR @ 30% / 16×:</strong> based on 30% ownership and 16× EV/EBITDA exit multiple. &nbsp;|&nbsp; <strong>NPV @ 20%:</strong> If you demand 20%/yr returns, this is how many extra euros this deal makes you vs. that alternative. Positive = beats your hurdle. &nbsp;|&nbsp; <strong>Cash-on-cash:</strong> Total cash you receive (operating dividends + exit) ÷ €1M invested. 3× means you tripled your money. &nbsp;|&nbsp; <strong>Terminal value:</strong> Estimated sale price of the whole business (2031 EBITDA × exit multiple). Your share is prorated by your ownership %.
     </div>
     <div class="kr">
-      <div class="kpi hi"><div class="kl">IRR @ 40% / 8×</div><div class="kv" id="i_irr">—</div><div class="ks" id="i_irr_s">Base case</div></div>
+      <div class="kpi hi"><div class="kl">IRR @ 30% / 16×</div><div class="kv" id="i_irr">—</div><div class="ks" id="i_irr_s">Base case</div></div>
       <div class="kpi po"><div class="kl">NPV @ 20% hurdle</div><div class="kv" id="i_npv">—</div><div class="ks">Extra value vs 20%/yr alt.</div></div>
       <div class="kpi wa"><div class="kl">Cash-on-cash</div><div class="kv" id="i_coc">—</div><div class="ks" id="i_coc_s">Total returned ÷ required equity</div></div>
       <div class="kpi"><div class="kl">Required equity raise</div><div class="kv" id="i_req_eq" style="color:var(--amber)">—</div><div class="ks" id="i_req_note">Min. to sustain operations</div></div>
       <div class="kpi"><div class="kl">2031 EBITDA</div><div class="kv" id="i_ebitda">—</div><div class="ks">Base for exit calc</div></div>
     </div>
+    <div class="g2">
+      <div class="card"><h3>Equity cash flows (€k) — 30% ownership base case</h3><div class="ch h240"><canvas id="invWfC"></canvas></div></div>
+      <div class="card"><h3>Value creation bridge (€k) — 30% ownership</h3><div class="ch h240"><canvas id="invBrC"></canvas></div></div>
+    </div>
+    <div class="callout">
+      <strong>How to read this:</strong> You invest <strong>€1 million</strong> in January 2027 in exchange for a % of the company (left axis — this is the key negotiation; the implied pre-money valuation is shown in brackets). At end of 2031 the business is sold at X × its 2031 EBITDA (top axis). Each cell shows your <strong>IRR</strong> (annualised return). Example: 30% ownership at 16× exit → IRR shown in the teal cell. The pre-money valuation embedded in each row tells you what you're implying the business is worth today for that ownership %.
+    </div>
     <div class="card" style="margin-bottom:12px;">
       <h3>IRR sensitivity — Investor ownership % (for €1M) vs EV/EBITDA exit multiple at end of 2031</h3>
-      <p style="font-size:10px;color:var(--muted);margin-bottom:10px;">Green >50% IRR · Blue 25–50% · Red &lt;25% · Teal = base case (40% / 8×). Pre-money valuation per row shown in brackets.</p>
       <div style="overflow-x:auto"><table class="smat" id="sensT"></table></div>
-    </div>
-    <div class="callout" style="margin-top:0;">
-      <strong>NPV @ 20%:</strong> If you demand 20%/yr returns, this is how many extra euros this deal makes you vs. that alternative. Positive = beats your hurdle. &nbsp;|&nbsp; <strong>Cash-on-cash:</strong> Total cash you receive (operating dividends + exit) ÷ €1M invested. 3× means you tripled your money. &nbsp;|&nbsp; <strong>Terminal value:</strong> Estimated sale price of the whole business (2031 EBITDA × exit multiple). Your share is prorated by your ownership %.
-    </div>
-    <div class="g2">
-      <div class="card"><h3>Equity cash flows (€k) — 40% ownership base case</h3><div class="ch h240"><canvas id="invWfC"></canvas></div></div>
-      <div class="card"><h3>Value creation bridge (€k) — 40% ownership</h3><div class="ch h240"><canvas id="invBrC"></canvas></div></div>
     </div>
   </div>
   <!-- ASSUMPTIONS TAB -->
@@ -285,7 +284,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
       <div class="assumption-row"><label>Non-technical FTE base salary (year 1)</label><input type="number" id="a_ntechSal" value="75000" step="1000" onchange="updateAll()"><div class="unit">€/year</div></div>
       <div class="assumption-row"><label>Employer social security contribution</label><input type="number" id="a_empSS" value="21" step="1" onchange="updateAll()"><div class="unit">% of salary</div></div>
       <div class="assumption-row"><label>ESOP cost (share-based compensation)</label><input type="number" id="a_esop" value="10" step="1" onchange="updateAll()"><div class="unit">% of salary</div></div>
-      <div class="assumption-row"><label>Software dev capitalisation rate</label><input type="number" id="a_swCapRate" value="121" step="1" onchange="updateAll()"><div class="unit">% of 1 tech FTE salary</div></div>
+      <div class="assumption-row"><label>Software dev capitalisation rate</label><input type="number" id="a_swCapRate" value="50" step="1" onchange="updateAll()"><div class="unit">% of 1 tech FTE salary</div></div>
     </div>
     <div class="card assumption-section">
       <h4>Inflation &amp; Growth</h4>
@@ -349,7 +348,7 @@ function sl(id,vid,sfx){g(vid).textContent=Number(g(id).value).toLocaleString()+
 function slF(id,vid,pfx,d){g(vid).textContent=pfx+parseFloat(g(id).value).toFixed(d);updateAll();}
 function slN(id,vid,sfx){g(vid).textContent=Number(g(id).value).toLocaleString()+sfx;updateAll();}
 function getA(id){return parseFloat(g(id).value);}
-const DEFAULTS={a_techSal:95000,a_ntechSal:75000,a_empSS:21,a_esop:10,a_swCapRate:121,a_inflation:3,a_retDep:8,a_carDep:5,a_swDep:3,a_office:18000,a_legal:30000,a_insurance:15000,a_hrSw:6000,a_otherGA:12000,a_txFee:0.15,a_bspY1:15000,a_bspAnn:8000,a_suppCalls:540,a_truckY1:15,a_truckCost:400,a_badDebt:0.5,a_carCap:35000,a_evLow:6,a_evHigh:20,a_intRate:2,a_covenant:10};
+const DEFAULTS={a_techSal:95000,a_ntechSal:75000,a_empSS:21,a_esop:10,a_swCapRate:50,a_inflation:3,a_retDep:8,a_carDep:5,a_swDep:3,a_office:18000,a_legal:30000,a_insurance:15000,a_hrSw:6000,a_otherGA:12000,a_txFee:0.15,a_bspY1:15000,a_bspAnn:8000,a_suppCalls:540,a_truckY1:15,a_truckCost:400,a_badDebt:0.5,a_carCap:35000,a_evLow:6,a_evHigh:20,a_intRate:2,a_covenant:10};
 function resetAssumptions(){Object.entries(DEFAULTS).forEach(([id,val])=>{g(id).value=val;});g('leaseFixed').value=0.08;g('lFV').textContent='€0.08';g('leaseVar').value=8;g('lVV').textContent='8%';g('retrofitPB').value=8000;g('retV').textContent='8,000 €';g('techHC').value=2;g('techV').textContent='2';g('ntechHC').value=2;g('ntechV').textContent='2';updateAll();}
 
 function getSF(){const fl=g('fleetSel').value,fb=FLEETS[fl],n=+g('nBuses').value,kw=fb.kwh,na=+g('nightA').value/100,da=+g('dayA').value/100,rt=+g('rtEff').value/100,sc=+g('socW').value/100;const sf=(n*kw*sc)/(BASE.n*BASE.kwh*BASE.soc)*(na*(9/24)+da*(6/24))/(BASE.night*(9/24)+BASE.day*(6/24))*Math.pow(rt/BASE.rt,1.5);return{sf,n,kw,sc};}
@@ -390,18 +389,20 @@ function calcModel(){
   const empSS=gP.map(p=>p*empSSRate),esopC=gP.map(p=>p*esopRate);
   const swCapRate=getA('a_swCapRate')/100;
   const swCap=sT.map(s=>s*swCapRate);
-  const labNet=gP.map((_,i)=>gP[i]+empSS[i]+esopC[i]-swCap[i]);
+  // labNet: gross pay + employer SS + ESOP, then ADD BACK sw capitalisation (moves cost from P&L to capex)
+  const labNet=gP.map((_,i)=>gP[i]+empSS[i]+esopC[i]+swCap[i]);
   const gaBase=getA('a_office')+getA('a_legal')+getA('a_insurance')+getA('a_hrSw')+getA('a_otherGA');
   const ga=YEARS.map((_,i)=>-(gaBase*Math.pow(1+inflRate,i)));
   const swDepYrs=getA('a_swDep');
   const swAm=YEARS.map((_,i)=>{let t=0;for(let j=0;j<=i;j++){if(i-j<swDepYrs)t+=-(swCap[j]/swDepYrs);}return t;});
-  const opex=rev.map((_,i)=>labNet[i]+ga[i]+swAm[i]);
+  // Opex excludes software amortisation (swAm belongs below EBITDA with D&A)
+  const opex=rev.map((_,i)=>labNet[i]+ga[i]);
   const ebitda=rev.map((_,i)=>gp[i]+opex[i]);
   const rPB=+g('retrofitPB').value,rCap=rPB*n,cCap=getA('a_carCap');
   const retDepYrs=getA('a_retDep'),carDepYrs=getA('a_carDep');
   const rDep=YEARS.map((_,i)=>i<retDepYrs?-rCap/retDepYrs:0);
   const cDep=YEARS.map((_,i)=>i<carDepYrs?-cCap/carDepYrs:0);
-  const ebit=rev.map((_,i)=>ebitda[i]+rDep[i]+cDep[i]);
+  const ebit=rev.map((_,i)=>ebitda[i]+rDep[i]+cDep[i]+swAm[i]);
   const iR=getA('a_intRate')/100,bufPct=getA('a_covenant')/100;
   const invCF=YEARS.map((_,i)=>i===0?-(rCap+cCap+swCap[0]):-swCap[i]);
   function findMinEquity(){let E=100000;for(let iter=0;iter<300;iter++){const cc2=[];for(let i=0;i<NY;i++){const oc=i===0?E:cc2[i-1];const ni2=ebit[i]+oc*iR;const da2=-(rDep[i]+cDep[i]+swAm[i]);const op2=ni2+da2;cc2.push((i===0?0:cc2[i-1])+op2+invCF[i]+(i===0?E:0));}if(Math.min(...cc2)>=E*bufPct)break;E+=50000;}return Math.ceil(E/50000)*50000;}
@@ -435,7 +436,7 @@ function mkBar(id,key,labels,datasets){const ctx=g(id);if(CH[key])CH[key].destro
 function mkSBar(id,key,labels,datasets){const ctx=g(id);if(CH[key])CH[key].destroy();CH[key]=new Chart(ctx,{type:'bar',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7BA5C8',font:{size:10},usePointStyle:true}}},scales:{x:{stacked:true,ticks:{color:'#7BA5C8'},grid:{color:'rgba(26,58,92,.4)'}},y:{stacked:true,ticks:{color:'#7BA5C8',callback:v=>'€'+Math.abs(v).toFixed(0)+'k'},grid:{color:'rgba(26,58,92,.4)'}}}}});}
 function mkLine(id,key,labels,datasets){const ctx=g(id);if(CH[key])CH[key].destroy();CH[key]=new Chart(ctx,{type:'line',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#7BA5C8',font:{size:10},usePointStyle:true}}},scales:{x:{ticks:{color:'#7BA5C8'},grid:{color:'rgba(26,58,92,.4)'}},y:{ticks:{color:'#7BA5C8',callback:v=>'€'+Math.abs(v).toFixed(0)+'k'},grid:{color:'rgba(26,58,92,.4)'}}}}});}
 
-function buildPL(m){tbl([{sec:true,label:'REVENUE'},{label:'Spot arbitrage',vals:m.arb,ind:true},{label:'aFRR balancing',vals:m.afrr,ind:true},{label:'Peak shaving',vals:m.peak,ind:true},{label:'Total Revenue',vals:m.rev,tot:true},{sec:true,label:'COST OF GOODS SOLD'},{label:'Transaction fees',vals:m.tx,ind:true},{label:'BSP / network access fees',vals:m.bsp,ind:true},{label:'Battery lease — fixed (capacity payment)',vals:m.lFixed,ind:true},{label:'Battery lease — variable (revenue share)',vals:m.lVar,ind:true},{label:'Customer support (calls + truck rolls)',vals:m.supp,ind:true},{label:'Bad debt provision',vals:m.bd,ind:true},{label:'Total COGS',vals:m.cogs,tot:true},{label:'GROSS PROFIT',vals:m.gp,tot:true},{label:'Gross margin %',vals:m.gp.map((_,i)=>m.gp[i]/m.rev[i]),pct:true},{sec:true,label:'OPERATING EXPENSES'},{label:'Labour — net of dev capitalisation',vals:m.labNet,ind:true},{label:'G&A',vals:m.ga,ind:true},{label:'Software amortisation',vals:m.swAm,ind:true},{label:'Total Opex',vals:m.opex,tot:true},{label:'EBITDA',vals:m.ebitda,tot:true},{label:'EBITDA margin %',vals:m.ebitda.map((_,i)=>m.ebitda[i]/m.rev[i]),pct:true},{label:'D&A — retrofit depreciation',vals:m.rDep},{label:'D&A — car depreciation',vals:m.cDep},{label:'EBIT',vals:m.ebit,tot:true},{label:'NET INCOME / (LOSS)',vals:m.ni,tot:true}],'plT');mkBar('plBarC','plBar',YEARS.map(String),[{label:'Revenue',data:m.rev.map(v=>v/1e3),backgroundColor:'rgba(0,212,170,.7)'},{label:'COGS',data:m.cogs.map(v=>v/1e3),backgroundColor:'rgba(240,149,149,.7)'},{label:'Opex',data:m.opex.map(v=>v/1e3),backgroundColor:'rgba(192,122,245,.7)'},{label:'EBITDA',data:m.ebitda.map(v=>v/1e3),backgroundColor:'rgba(74,158,245,.7)'}]);mkSBar('cogsC','cogs',YEARS.map(String),[{label:'Battery lease',data:m.lease.map(v=>-v/1e3),backgroundColor:'#F09595'},{label:'BSP fees',data:m.bsp.map(v=>-v/1e3),backgroundColor:'#FAC775'},{label:'Support',data:m.supp.map(v=>-v/1e3),backgroundColor:'#C07AF5'},{label:'Tx fees+BD',data:m.rev.map((_,i)=>(-m.tx[i]-m.bd[i])/1e3),backgroundColor:'#4A9EF5'}]);}
+function buildPL(m){tbl([{sec:true,label:'REVENUE'},{label:'Spot arbitrage',vals:m.arb,ind:true},{label:'aFRR balancing',vals:m.afrr,ind:true},{label:'Peak shaving',vals:m.peak,ind:true},{label:'Total Revenue',vals:m.rev,tot:true},{sec:true,label:'COST OF GOODS SOLD'},{label:'Transaction fees',vals:m.tx,ind:true},{label:'BSP / network access fees',vals:m.bsp,ind:true},{label:'Battery lease — fixed (capacity payment)',vals:m.lFixed,ind:true},{label:'Battery lease — variable (revenue share)',vals:m.lVar,ind:true},{label:'Customer support (calls + truck rolls)',vals:m.supp,ind:true},{label:'Bad debt provision',vals:m.bd,ind:true},{label:'Total COGS',vals:m.cogs,tot:true},{label:'GROSS PROFIT',vals:m.gp,tot:true},{label:'Gross margin %',vals:m.gp.map((_,i)=>m.gp[i]/m.rev[i]),pct:true},{sec:true,label:'OPERATING EXPENSES'},{label:'Labour — net of dev capitalisation',vals:m.labNet,ind:true},{label:'G&A',vals:m.ga,ind:true},{label:'Total Opex',vals:m.opex,tot:true},{label:'EBITDA',vals:m.ebitda,tot:true},{label:'EBITDA margin %',vals:m.ebitda.map((_,i)=>m.ebitda[i]/m.rev[i]),pct:true},{sec:true,label:'DEPRECIATION & AMORTISATION'},{label:'D&A — retrofit depreciation',vals:m.rDep,ind:true},{label:'D&A — car depreciation',vals:m.cDep,ind:true},{label:'D&A — software amortisation',vals:m.swAm,ind:true},{label:'EBIT',vals:m.ebit,tot:true},{label:'NET INCOME / (LOSS)',vals:m.ni,tot:true}],'plT');mkBar('plBarC','plBar',YEARS.map(String),[{label:'Revenue',data:m.rev.map(v=>v/1e3),backgroundColor:'rgba(0,212,170,.7)'},{label:'COGS',data:m.cogs.map(v=>v/1e3),backgroundColor:'rgba(240,149,149,.7)'},{label:'Opex',data:m.opex.map(v=>v/1e3),backgroundColor:'rgba(192,122,245,.7)'},{label:'EBITDA',data:m.ebitda.map(v=>v/1e3),backgroundColor:'rgba(74,158,245,.7)'}]);mkSBar('cogsC','cogs',YEARS.map(String),[{label:'Battery lease',data:m.lease.map(v=>-v/1e3),backgroundColor:'#F09595'},{label:'BSP fees',data:m.bsp.map(v=>-v/1e3),backgroundColor:'#FAC775'},{label:'Support',data:m.supp.map(v=>-v/1e3),backgroundColor:'#C07AF5'},{label:'Tx fees+BD',data:m.rev.map((_,i)=>(-m.tx[i]-m.bd[i])/1e3),backgroundColor:'#4A9EF5'}]);}
 
 function buildBS(m){tbl([{sec:true,label:'ASSETS'},{label:'Cash & equivalents',vals:m.cash},{label:'Trade receivables (DSO ~5 days)',vals:m.rev.map(r=>Math.round(r/365*5))},{label:'Total Current Assets',vals:m.currA,tot:true},{label:'Retrofit net of depreciation',vals:m.rN},{label:'Company car net',vals:m.cN},{label:'Software intangible net',vals:m.swN},{label:'Total Non-Current Assets',vals:m.ncA,tot:true},{label:'TOTAL ASSETS',vals:m.totA,tot:true},{sec:true,label:'LIABILITIES'},{label:'Trade payables (DPO ~14 days)',vals:m.pay},{label:'Accrued liabilities',vals:m.acc},{label:'Total Liabilities',vals:m.totL,tot:true},{sec:true,label:'EQUITY'},{label:'Paid-in capital (seed equity)',vals:YEARS.map(()=>m.eq)},{label:'Retained earnings / (deficit)',vals:m.cumNI},{label:'Total Equity',vals:m.totE,tot:true},{label:'TOTAL LIABILITIES + EQUITY',vals:m.totLE,tot:true}],'bsT');mkSBar('assetC','asset',YEARS.map(String),[{label:'Cash',data:m.cash.map(v=>v/1e3),backgroundColor:'#00D4AA'},{label:'Receivables',data:m.rev.map(r=>Math.round(r/365*5/1e3)),backgroundColor:'#4A9EF5'},{label:'Fixed assets (net)',data:m.ncA.map(v=>Math.max(0,v)/1e3),backgroundColor:'#FAC775'}]);mkLine('eqC','eq',YEARS.map(String),[{label:'Total equity',data:m.totE.map(v=>v/1e3),borderColor:'#00D4AA',backgroundColor:'rgba(0,212,170,.1)',fill:true,tension:.3,pointRadius:5},{label:'Paid-in capital',data:YEARS.map(()=>m.eq/1e3),borderColor:'#4A9EF5',borderDash:[5,3],fill:false,tension:0,pointRadius:3}]);}
 
@@ -471,7 +472,7 @@ function buildInv(m){
   const breakeven=calcBreakeven();
   g('breakevenBuses').textContent=isFinite(breakeven)?breakeven+' buses':'n/a';
   g('reqInvNote').textContent='Minimum equity so cash never falls below 10% covenant. '+(reqEquity<1000000?'✓ Feasible within a €1M seed round.':reqEquity<=3000000?'Requires a larger round — consider '+Math.ceil(breakeven/10)*10+'+ buses to reach EBITDA breakeven within €1M.':'Requires significant capital — reduce fleet size or retrofit cost.');
-  const baseOwn=0.40,baseEV=8;
+  const baseOwn=0.30,baseEV=16;
   const bCFs=[-m.eq,...YEARS.map((_,i)=>m.opCF[i]*baseOwn)];bCFs[NY]+=ev*baseEV*baseOwn;
   const bIRR=irr(bCFs),bNPV=npv(bCFs,0.20),bRet=bCFs.slice(1).reduce((a,b)=>a+b,0);
   function irrCls(r){return r>0.6?'kc-vg':r>0.4?'kc-g':r>0.2?'kc-n':r>0?'kc-lr':'kc-r';}
@@ -480,21 +481,51 @@ function buildInv(m){
   if(g('i_coc_s'))g('i_coc_s').textContent='Total returned ÷ '+fmtK(m.eq)+' invested';
   g('i_npv').textContent=fmtK(bNPV);g('i_npv').className='kv '+(bNPV>500000?'kc-vg':bNPV>0?'kc-g':'kc-r');
   g('i_coc').textContent=(bRet/m.eq).toFixed(1)+'×';g('i_coc').className='kv '+(bRet/m.eq>3?'kc-vg':bRet/m.eq>1.5?'kc-g':bRet/m.eq>1?'kc-n':'kc-r');
-  if(g('i_irr_s'))g('i_irr_s').textContent='40% ownership · '+fmtK(m.eq)+' invested';
+  if(g('i_irr_s'))g('i_irr_s').textContent='30% ownership · '+fmtK(m.eq)+' invested';
   g('i_ebitda').textContent=fmtK(ev);g('i_ebitda').className='kv '+(ev>400000?'kc-vg':ev>100000?'kc-g':ev>0?'kc-n':'kc-r');
-  const evLow=getA('a_evLow'),evHigh=getA('a_evHigh');
-  const ownPcts=[0.15,0.20,0.30,0.40,0.50,0.60];
-  const evMs=[evLow,Math.round(evLow+(evHigh-evLow)*0.2),Math.round(evLow+(evHigh-evLow)*0.4),Math.round(evLow+(evHigh-evLow)*0.6),Math.round(evLow+(evHigh-evLow)*0.8),evHigh];
-  const evMsU=[...new Set(evMs)].sort((a,b)=>a-b);
-  let html='<tr><th>Investor owns<br/>(for €1M invested)<br/><small>implies pre-money val →</small></th>'+evMsU.map(e=>'<th>'+e+'× EBITDA<br/><small>exit: '+fmtK(ev*e)+'</small></th>').join('')+'</tr>';
-  ownPcts.forEach(own=>{const pm=Math.round(m.eq/own-m.eq);html+='<tr><th><strong>'+Math.round(own*100)+'%</strong><br/><small>pre-money: '+fmtK(pm)+'</small></th>';evMsU.forEach(evm=>{const cfs=[-m.eq,...YEARS.map((_,i)=>m.opCF[i]*own)];cfs[NY]+=ev*evm*own;const r=irr(cfs);const isBase=Math.abs(own-baseOwn)<.01&&evm===baseEV;const c=isBase?'hi':r>0.6?'vg':r>0.4?'g':r>0.2?'b':r>0?'lr':'vr';html+='<td class="'+c+'">'+(isNaN(r)||!isFinite(r)?'n/a':(r*100).toFixed(0)+'%')+'</td>';});html+='</tr>';});
+  // Fixed multiples and ownership rows
+  const ownPcts=[0.20,0.30,0.40,0.50];
+  const evMs=[8,12,16,20,24];
+  let html='<tr><th>Investor owns<br/>(for €1M invested)<br/><small>implies pre-money val →</small></th>'+evMs.map(e=>'<th>'+e+'× EBITDA<br/><small>exit: '+fmtK(ev*e)+'</small></th>').join('')+'</tr>';
+  ownPcts.forEach(own=>{const pm=Math.round(m.eq/own-m.eq);html+='<tr><th><strong>'+Math.round(own*100)+'%</strong><br/><small>pre-money: '+fmtK(pm)+'</small></th>';evMs.forEach(evm=>{const cfs=[-m.eq,...YEARS.map((_,i)=>m.opCF[i]*own)];cfs[NY]+=ev*evm*own;const r=irr(cfs);const isBase=Math.abs(own-baseOwn)<.01&&evm===baseEV;
+  const c=isBase?'hi':'';
+  // Gradient: dark red at -100%, orange at 0%, greenish-yellow at 20%, bright green at 40%+
+  function irrColor(r){
+    if(isNaN(r)||!isFinite(r)) return 'var(--muted)';
+    // Clamp to [-1, 0.5] for color mapping
+    const v=Math.max(-1,Math.min(0.5,r));
+    let rr,gg,bb;
+    if(v<0){
+      // -1 (dark red) → 0 (orange): lerp from #cc2222 to #e8a030
+      const t=(v+1); // 0 at -1, 1 at 0
+      rr=Math.round(204+(232-204)*t);
+      gg=Math.round(34+(160-34)*t);
+      bb=Math.round(34+(48-34)*t);
+    } else if(v<0.20){
+      // 0 (orange) → 0.20 (green-yellow): lerp from #e8a030 to #7ebc3a
+      const t=v/0.20;
+      rr=Math.round(232+(126-232)*t);
+      gg=Math.round(160+(188-160)*t);
+      bb=Math.round(48+(58-48)*t);
+    } else {
+      // 0.20 (green-yellow) → 0.50+ (bright green): lerp from #7ebc3a to #00c853
+      const t=Math.min(1,(v-0.20)/0.30);
+      rr=Math.round(126+(0-126)*t);
+      gg=Math.round(188+(200-188)*t);
+      bb=Math.round(58+(83-58)*t);
+    }
+    return 'rgb('+rr+','+gg+','+bb+')';
+  }
+  const fc=irrColor(r);
+  const val=isNaN(r)||!isFinite(r)?'n/a':(r*100).toFixed(0)+'%';
+  html+='<td class="'+c+'"><span style="color:'+fc+'">'+val+'</span></td>';});html+='</tr>';});
   g('sensT').innerHTML=html;
   const wfL=['Invested (t=0)',...YEARS.map((y,i)=>i===NY-1?y+' FCF+Exit':y+' FCF')];
   const wf=[-m.eq/1e3,...YEARS.map((_,i)=>{let v=m.opCF[i]*baseOwn;if(i===NY-1)v+=ev*baseEV*baseOwn;return v/1e3;})];
   const cWf=g('invWfC');if(CH.iWf)CH.iWf.destroy();CH.iWf=new Chart(cWf,{type:'bar',data:{labels:wfL,datasets:[{data:wf,backgroundColor:wf.map(v=>v<0?'rgba(240,149,149,.8)':'rgba(0,212,170,.8)'),borderWidth:0,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:i=>'€'+i.raw.toFixed(0)+'k'}}},scales:{x:{ticks:{color:'#7BA5C8',font:{size:9}},grid:{color:'rgba(26,58,92,.4)'}},y:{ticks:{color:'#7BA5C8',callback:v=>'€'+v.toFixed(0)+'k'},grid:{color:'rgba(26,58,92,.4)'}}}}});
   const opFCFTotal=YEARS.reduce((a,_,i)=>a+m.opCF[i]*baseOwn,0);
   const br=[-m.eq/1e3,opFCFTotal/1e3,ev*baseEV*baseOwn/1e3,wf.slice(1).reduce((a,b)=>a+b,0)];
-  const cBr=g('invBrC');if(CH.iBr)CH.iBr.destroy();CH.iBr=new Chart(cBr,{type:'bar',data:{labels:['Equity in',NY+'yr Op FCF (40%)','Exit value (40%)','Total returned'],datasets:[{data:br,backgroundColor:br.map((v,i)=>i===0?'rgba(240,149,149,.8)':i===3?'rgba(0,212,170,.9)':'rgba(74,158,245,.8)'),borderWidth:0,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:i=>'€'+i.raw.toFixed(0)+'k'}}},scales:{x:{ticks:{color:'#7BA5C8',font:{size:9}},grid:{color:'rgba(26,58,92,.4)'}},y:{ticks:{color:'#7BA5C8',callback:v=>'€'+v.toFixed(0)+'k'},grid:{color:'rgba(26,58,92,.4)'}}}}});
+  const cBr=g('invBrC');if(CH.iBr)CH.iBr.destroy();CH.iBr=new Chart(cBr,{type:'bar',data:{labels:['Equity in',NY+'yr Op FCF (30%)','Exit value (30%)','Total returned'],datasets:[{data:br,backgroundColor:br.map((v,i)=>i===0?'rgba(240,149,149,.8)':i===3?'rgba(0,212,170,.9)':'rgba(74,158,245,.8)'),borderWidth:0,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:i=>'€'+i.raw.toFixed(0)+'k'}}},scales:{x:{ticks:{color:'#7BA5C8',font:{size:9}},grid:{color:'rgba(26,58,92,.4)'}},y:{ticks:{color:'#7BA5C8',callback:v=>'€'+v.toFixed(0)+'k'},grid:{color:'rgba(26,58,92,.4)'}}}}});
 }
 
 function updateExecSummary(m){
@@ -513,8 +544,8 @@ function updateExecSummary(m){
   const totalRevMedian=YEARS.reduce((a,y)=>a+getRev(y).p50,0);
   let f='';
   f+='<div class="exec-bullet">📊 <strong>Revenue potential:</strong> The Monte Carlo simulation shows median revenue of <span class="num">€'+revPerBus.toLocaleString()+'</span> per bus per year (year 1), with a P10–P90 range of <span class="num">€'+revLowPB.toLocaleString()+'</span> to <span class="num">€'+revHighPB.toLocaleString()+'</span>. For the selected fleet of <span class="num">'+n+' buses</span>, this equals approximately <span class="num">'+fmtK(d.p50*1e6)+'</span> in annual revenue (median), totalling <span class="num">'+fmtK(totalRevMedian*1e6)+'</span> across the 5-year model horizon.</div>';
-  f+='<div class="exec-bullet">🔢 <strong>Critical mass:</strong> The model requires a minimum of approximately <span class="num">'+(isFinite(breakeven)?breakeven:'n/a')+' buses</span> to cover annual fixed operating costs (salaries, G&A, BSP fees, support).</div>';
-  f+='<div class="exec-bullet">💰 <strong>EBITDA trajectory:</strong> At the current configuration ('+n+' buses), year 1 EBITDA is <span class="num">'+fmtK(m.ebitda[0])+'</span>'+(m.ebitda[0]>0?' (positive)':' (negative — fleet size may need to increase)')+'. By year 5 (2031), EBITDA '+(m.ebitda[NY-1]>0?'reaches':'is projected at')+' <span class="num">'+fmtK(m.ebitda[NY-1])+'</span>, reflecting uniform 3% inflation applied to both revenues and costs. Reminder: this model shows a pilot with one city only.</div>';
+  f+='<div class="exec-bullet">🔢 <strong>Critical mass:</strong> The model requires a minimum of approximately <span class="num">'+(isFinite(breakeven)?breakeven:'n/a')+' buses</span> to cover annual fixed operating costs (salaries, G&A, BSP fees, support). Below this threshold, the business generates negative EBITDA regardless of per-bus revenue.</div>';
+  f+='<div class="exec-bullet">💰 <strong>EBITDA trajectory:</strong> At the current configuration ('+n+' buses), year 1 EBITDA is <span class="num">'+fmtK(m.ebitda[0])+'</span>'+(m.ebitda[0]>0?' (positive)':' (negative — fleet size may need to increase)')+'. By year 5 (2031), EBITDA '+(m.ebitda[NY-1]>0?'reaches':'is projected at')+' <span class="num">'+fmtK(m.ebitda[NY-1])+'</span>, reflecting uniform 3% inflation applied to both revenues and costs.</div>';
   f+='<div class="exec-bullet">🏦 <strong>Investment required:</strong> The model calculates a minimum seed equity of <span class="num">'+fmtK(m.eq)+'</span> to maintain the 10% cash covenant buffer throughout the 5-year operating period. The primary upfront cost driver is the V2G retrofit at <span class="num">€'+(+g('retrofitPB').value).toLocaleString()+'</span> per bus (total: <span class="num">'+fmtK(m.rCap)+'</span>).</div>';
   if(m.ebitda[0]>0&&m.ebitda[NY-1]>0){const exitEV=m.ebitda[NY-1]*8;f+='<div class="exec-bullet">📈 <strong>Investor returns (base case):</strong> At 40% ownership and an 8× EBITDA exit multiple, the model projects a terminal value of <span class="num">'+fmtK(exitEV)+'</span>. With 5 years of operating cash flows plus exit proceeds, this scenario can deliver attractive investor returns — see the Investor Returns tab for the full IRR sensitivity matrix across 6×–20× multiples.</div>';}else{f+='<div class="exec-bullet">⚠️ <strong>Path to profitability:</strong> At the current fleet size, operating economics are challenging. Consider increasing the fleet above the breakeven threshold of <span class="num">'+(isFinite(breakeven)?breakeven:'n/a')+' buses</span>, or reducing FTE count / retrofit costs to achieve positive EBITDA.</div>';}
   g('execFindings').innerHTML=f;
