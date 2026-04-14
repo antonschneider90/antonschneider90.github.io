@@ -97,8 +97,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 <body>
 <div class="nav">
   <div class="nav-brand">Bus Battery Trading</div>
-  <button class="tab-btn" onclick="showPage('exec',this)">Exec Summary</button>
-  <button class="tab-btn active" onclick="showPage('revenue',this)">Revenue Model (MC)</button>
+  <button class="tab-btn active" onclick="showPage('exec',this)">Exec Summary</button>
+  <button class="tab-btn" onclick="showPage('revenue',this)">Revenue Model (MC)</button>
   <button class="tab-btn" onclick="showPage('financials',this)">Financial Statements</button>
   <div style="display:flex;align-items:center;gap:12px;margin-left:auto;padding:0 8px;">
     <div style="font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;white-space:nowrap;">City / Operator</div>
@@ -118,7 +118,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 </div>
 
 <!-- PAGE 0: EXEC SUMMARY -->
-<div id="page-exec" class="page">
+<div id="page-exec" class="page active">
   <div style="margin-top:14px;">
     <div class="cp">
       <div class="cp-t">Executive Summary — V2G Bus Fleet Energy Trading</div>
@@ -152,7 +152,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
 </div>
 
 <!-- PAGE 1: REVENUE -->
-<div id="page-revenue" class="page active">
+<div id="page-revenue" class="page">
   <div class="cp" style="margin-top:14px;">
     <div class="cp-t">Fleet &amp; Operational Parameters</div>
     <div class="cg">
