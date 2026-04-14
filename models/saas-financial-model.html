@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>SaaS 5-Year Financial Model — Template</title>
-<script src="../auth-check.js"></script>    
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 :root{--bg:#0B1929;--bg2:#132D45;--bg3:#1A3A55;--accent:#00E6C3;--a2:#5B8FA8;--a3:#7BAFC8;--text:#E8F0F2;--muted:#5B8FA8;--border:#1E4A6E;--red:#FF7B7B;--green:#00E6C3;--amber:#FFD166;--font:'Space Grotesk',sans-serif;}
@@ -84,7 +83,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
     <div class="cg">
       <div class="ctrl"><label>Subscription price ($/mo)</label><div class="rr"><input type="range" id="price" min="29" max="299" value="99" step="10" oninput="slD('price','priceV','$')"><span class="rv" id="priceV">$99</span></div></div>
       <div class="ctrl"><label>Monthly ARPU increase (%)</label><div class="rr"><input type="range" id="arpuInc" min="0" max="5" value="0.5" step="0.1" oninput="slP('arpuInc','arpuIncV')"><span class="rv" id="arpuIncV">0.5%</span></div></div>
-      <div class="ctrl"><label>Monthly churn rate (%)</label><div class="rr"><input type="range" id="churn" min="1" max="10" value="3.5" step="0.5" oninput="slP('churn','churnV')"><span class="rv" id="churnV">3.5%</span></div></div>
+      <div class="ctrl"><label>Monthly churn rate (%)</label><div class="rr"><input type="range" id="churn" min="1" max="10" value="3.0" step="0.5" oninput="slP('churn','churnV')"><span class="rv" id="churnV">3.0%</span></div></div>
       <div class="ctrl"><label>CAC ($)</label><div class="rr"><input type="range" id="cac" min="100" max="1500" value="450" step="50" oninput="slD('cac','cacV','$')"><span class="rv" id="cacV">$450</span></div></div>
       <div class="ctrl"><label>Initial customers</label><div class="rr"><input type="range" id="initCust" min="0" max="200" value="50" step="10" oninput="slI('initCust','initCustV')"><span class="rv" id="initCustV">50</span></div></div>
     </div>
@@ -230,9 +229,9 @@ function slP(id,vid){g(vid).textContent=parseFloat(g(id).value)+'%';updateAll();
 function getNewPerMo(){return[+g('nc1').value,+g('nc2').value,+g('nc3').value,+g('nc4').value,+g('nc5').value];}
 
 function resetAll(){
-  var d={price:99,arpuInc:0.5,churn:3.5,cac:450,initCust:50,nc1:15,nc2:20,nc3:25,nc4:30,nc5:35,opexSal:25000,opexHost:2000,opexOther:3000,seedFund:100000,costGrowth:5,a_procFee:2.9,a_hostPerCust:5,a_suppPerCust:3,a_salGrowth:5,a_swTools:1000,a_mktPct:0,a_capex:10000,a_depYrs:3,a_intRate:1,a_covenant:10};
+  var d={price:99,arpuInc:0.5,churn:3.0,cac:450,initCust:50,nc1:15,nc2:20,nc3:25,nc4:30,nc5:35,opexSal:25000,opexHost:2000,opexOther:3000,seedFund:100000,costGrowth:5,a_procFee:2.9,a_hostPerCust:5,a_suppPerCust:3,a_salGrowth:5,a_swTools:1000,a_mktPct:0,a_capex:10000,a_depYrs:3,a_intRate:1,a_covenant:10};
   Object.entries(d).forEach(function(e){g(e[0]).value=e[1];});
-  g('priceV').textContent='$99';g('arpuIncV').textContent='0.5%';g('churnV').textContent='3.5%';g('cacV').textContent='$450';g('initCustV').textContent='50';
+  g('priceV').textContent='$99';g('arpuIncV').textContent='0.5%';g('churnV').textContent='3.0%';g('cacV').textContent='$450';g('initCustV').textContent='50';
   g('nc1V').textContent='15';g('nc2V').textContent='20';g('nc3V').textContent='25';g('nc4V').textContent='30';g('nc5V').textContent='35';
   g('opexSalV').textContent='$25,000';g('opexHostV').textContent='$2,000';g('opexOtherV').textContent='$3,000';g('seedFundV').textContent='$100,000';g('costGrowthV').textContent='5%';
   updateAll();
