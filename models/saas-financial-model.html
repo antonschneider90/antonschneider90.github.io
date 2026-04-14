@@ -1,558 +1,449 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SaaS 5-Year Financial Model - Anton Schneider</title>
-    <script src="../auth-check.js"></script>
-    <link rel="stylesheet" href="../styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        .model-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 4rem 2rem;
-        }
-        .model-header {
-            text-align: center;
-            margin-bottom: 3rem;
-        }
-        .model-header h1 {
-            font-size: 2.5rem;
-            font-weight: 800;
-            margin-bottom: 0.5rem;
-            color: var(--dark);
-        }
-        .model-header p {
-            font-size: 1.125rem;
-            color: var(--gray-600);
-        }
-        .controls-section {
-            background: var(--white);
-            padding: 2.5rem;
-            border-radius: 16px;
-            margin-bottom: 2.5rem;
-            border: 2px solid var(--gray-200);
-        }
-        .controls-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
-        }
-        .control-group {
-            margin-bottom: 0;
-        }
-        .control-group label {
-            display: block;
-            font-weight: 700;
-            margin-bottom: 0.75rem;
-            color: var(--dark);
-            font-size: 0.9375rem;
-        }
-        .value-display {
-            display: inline-block;
-            margin-left: 0.5rem;
-            color: var(--primary);
-            font-weight: 700;
-            font-family: var(--font-mono);
-        }
-        .control-group input[type="range"] {
-            width: 100%;
-            height: 6px;
-            border-radius: 3px;
-            background: var(--gray-200);
-            outline: none;
-            -webkit-appearance: none;
-        }
-        .control-group input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: var(--primary);
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .control-group input[type="range"]::-webkit-slider-thumb:hover {
-            background: var(--primary-dark);
-            transform: scale(1.1);
-        }
-        .control-helper {
-            font-size: 0.8125rem;
-            color: var(--gray-600);
-            margin-top: 0.375rem;
-        }
-        .charts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-        .chart-card {
-            background: var(--white);
-            padding: 2rem;
-            border-radius: 16px;
-            border: 2px solid var(--gray-200);
-        }
-        .chart-card h3 {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin-bottom: 1.5rem;
-            color: var(--dark);
-        }
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        .metric-card {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            padding: 1.75rem;
-            border-radius: 12px;
-            color: var(--white);
-        }
-        .metric-card.negative {
-            background: linear-gradient(135deg, var(--accent), var(--accent-light));
-        }
-        .metric-card.neutral {
-            background: linear-gradient(135deg, var(--gray-700), var(--gray-800));
-        }
-        .metric-label {
-            font-size: 0.875rem;
-            opacity: 0.9;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-        }
-        .metric-value {
-            font-size: 2rem;
-            font-weight: 800;
-            font-family: var(--font-mono);
-        }
-        .btn-update {
-            background: var(--primary);
-            color: var(--white);
-            padding: 1rem 2.5rem;
-            border: none;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-block;
-            margin-top: 1.5rem;
-        }
-        .btn-update:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px rgba(0, 102, 255, 0.3);
-        }
-        .insights {
-            background: var(--gray-100);
-            padding: 2rem;
-            border-radius: 12px;
-            margin-top: 2rem;
-            border-left: 4px solid var(--primary);
-        }
-        .insights h3 {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            color: var(--dark);
-        }
-        .insight-text {
-            color: var(--gray-800);
-            line-height: 1.7;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SaaS 5-Year Financial Model — Template</title>
+<script src="../auth-check.js"></script>    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{--bg:#0B1929;--bg2:#132D45;--bg3:#1A3A55;--accent:#00E6C3;--a2:#5B8FA8;--a3:#7BAFC8;--text:#E8F0F2;--muted:#5B8FA8;--border:#1E4A6E;--red:#FF7B7B;--green:#00E6C3;--amber:#FFD166;--font:'Space Grotesk',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13px;}
+.nav{background:var(--bg2);border-bottom:2px solid var(--accent);display:flex;align-items:stretch;padding:0 20px;flex-wrap:wrap;}
+.nav-brand{color:var(--accent);font-size:11px;font-weight:bold;letter-spacing:4px;text-transform:uppercase;padding:14px 20px 14px 0;border-right:1px solid var(--border);margin-right:16px;align-self:center;}
+.tab-btn{padding:14px 18px;font-family:var(--font);font-size:11px;font-weight:bold;color:var(--muted);background:transparent;border:none;border-bottom:3px solid transparent;cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:all .15s;margin-bottom:-2px;}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+.page{display:none;padding:14px 20px;max-width:1300px;margin:0 auto;}.page.active{display:block;}
+.cp{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:14px;}
+.cp-t{font-size:9.5px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;font-weight:bold;}
+.cg{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
+.ctrl{min-width:0;}.ctrl label{display:block;font-size:9px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px;overflow-wrap:break-word;line-height:1.4;}
+.ctrl .rr{display:flex;flex-direction:column;align-items:stretch;gap:2px;}.ctrl .rr input[type=range]{width:100%;accent-color:var(--accent);height:4px;}
+.ctrl .rv{font-size:12px;color:var(--accent);font-weight:bold;margin-top:2px;}
+.cn{grid-column:1/-1;font-size:9.5px;color:var(--muted);font-style:italic;margin-top:4px;}
+.chk{padding:7px 14px;border-radius:6px;font-size:11px;font-weight:bold;margin-bottom:12px;border:1px solid;}
+.ok{background:rgba(0,230,195,.1);color:var(--accent);border-color:var(--accent);}
+.er{background:rgba(255,123,123,.1);color:var(--red);border-color:var(--red);}
+.yt{display:flex;gap:6px;margin-bottom:12px;}
+.ytb{padding:5px 14px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:var(--font);font-size:11px;cursor:pointer;}
+.ytb.active{background:var(--accent);border-color:var(--accent);color:#0A1628;font-weight:bold;}
+.kr{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:12px;}
+.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;}
+.kpi .kl{font-size:8.5px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px;}
+.kpi .kv{font-size:21px;font-weight:bold;}.kpi .ks{font-size:10px;color:var(--muted);margin-top:3px;}
+.kpi.hi{border-color:var(--accent);}.kpi.hi .kv{color:var(--accent);}
+.kpi.wa .kv{color:var(--amber);}.kpi.po .kv{color:var(--green);}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px;}
+.card h3{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+.ch{position:relative;}.ch.h240{height:240px;}.ch.h260{height:260px;}
+.stmt{width:100%;border-collapse:collapse;font-size:12px;}
+.stmt th{text-align:left;padding:5px 8px;font-size:9px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;border-bottom:1px solid var(--border);}
+.stmt th.r{text-align:right;}.stmt td{padding:5px 8px;border-bottom:1px solid rgba(91,143,168,.25);}.stmt td.r{text-align:right;}
+.stmt tr.sec td{background:#0F2233;font-size:8.5px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;padding:3px 8px;font-weight:bold;}
+.stmt tr.tot td{background:rgba(220,233,247,.06);font-weight:bold;border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.stmt td.pos{color:var(--green);}.stmt td.neg{color:var(--red);}.stmt td.ind{padding-left:20px;}
+.callout{background:var(--bg3);border-left:3px solid var(--a2);border-radius:4px;padding:10px 14px;font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:12px;}.callout strong{color:var(--text);}
+.smat{border-collapse:collapse;width:100%;font-size:11px;}
+.smat th,.smat td{padding:7px 10px;text-align:center;border:1px solid var(--border);}
+.smat th{background:var(--bg3);color:var(--muted);font-size:9px;letter-spacing:1px;}
+.smat td.hi{background:rgba(0,230,195,.18);font-weight:bold;}
+.cost-slider-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+.cost-slider-item{display:flex;flex-direction:column;min-width:0;}
+.cost-slider-item label{display:block;font-size:9px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px;min-height:28px;line-height:1.3;overflow-wrap:break-word;}
+.cost-slider-item .rr{display:flex;flex-direction:column;align-items:stretch;gap:2px;}
+.cost-slider-item .rv{font-size:12px;color:var(--accent);font-weight:bold;white-space:nowrap;margin-top:2px;}
+.cost-slider-item input[type=range]{width:100%;accent-color:var(--accent);height:4px;}
+.assumption-section{margin-bottom:18px;}
+.assumption-section h4{font-size:10px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border);}
+.assumption-row{display:grid;grid-template-columns:280px 1fr 120px;align-items:center;padding:4px 0;border-bottom:1px solid rgba(91,143,168,.2);gap:12px;}
+.assumption-row label{font-size:11px;color:var(--muted);}
+.assumption-row input{background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:4px;padding:4px 8px;font-family:var(--font);font-size:12px;width:100%;}
+.assumption-row .unit{font-size:10px;color:var(--muted);text-align:right;}
+.reset-btn{background:var(--bg3);border:1px solid var(--accent);color:var(--accent);padding:6px 16px;border-radius:4px;font-family:var(--font);font-size:11px;font-weight:bold;cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:all .15s;}
+.reset-btn:hover{background:var(--accent);color:#0A1628;}
+/* Sticky first column for quarterly table */
+.sticky-wrap{overflow-x:auto;max-width:100%;}
+.sticky-wrap table{border-collapse:separate;border-spacing:0;}
+.sticky-wrap th:first-child,.sticky-wrap td:first-child{position:sticky;left:0;z-index:2;background:var(--bg2);border-right:2px solid var(--border);}
+.sticky-wrap tr.tot td:first-child{background:var(--bg2);}
+</style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="container">
-            <a href="../index.html" class="logo">
-                <span class="logo-bracket">[</span>
-                <span class="logo-text">Anton Schneider</span>
-                <span class="logo-bracket">]</span>
-            </a>
-            <ul class="nav-links">
-                <li><a href="../index.html#energy-models">Energy Models</a></li>
-                <li><a href="../index.html#financial-models">Financial Models</a></li>
-                <li><a href="../index.html#blog">Blog</a></li>
-                <li><a href="../index.html#about">About</a></li>
-            </ul>
-        </div>
-    </nav>
+<div class="nav">
+  <div class="nav-brand">SaaS Financial Model</div>
+  <button class="tab-btn active" onclick="showPage('revenue',this)">Revenue Model</button>
+  <button class="tab-btn" onclick="showPage('financials',this)">Financial Statements</button>
+</div>
 
-    <div class="model-container" style="margin-top: 100px;">
-        <div class="model-header">
-            <h1>💰 SaaS 5-Year Financial Model</h1>
-            <p>Model monthly recurring revenue, customer acquisition costs, churn, and path to profitability</p>
-        </div>
-
-        <!-- Key Metrics Dashboard -->
-        <div class="metrics-grid" id="key-metrics">
-            <!-- Populated by JavaScript -->
-        </div>
-
-        <!-- Controls -->
-        <div class="controls-section">
-            <h3 style="margin-bottom: 2rem; font-size: 1.5rem; font-weight: 700;">Adjust Model Assumptions</h3>
-            
-            <div class="controls-grid">
-                <div class="control-group">
-                    <label>
-                        Monthly Subscription Price
-                        <span class="value-display" id="price-value">$99</span>
-                    </label>
-                    <input type="range" id="price" min="29" max="299" value="99" step="10">
-                    <div class="control-helper">Average revenue per customer per month</div>
-                </div>
-
-                <div class="control-group">
-                    <label>
-                        Customer Acquisition Cost (CAC)
-                        <span class="value-display" id="cac-value">$450</span>
-                    </label>
-                    <input type="range" id="cac" min="100" max="1500" value="450" step="50">
-                    <div class="control-helper">Total cost to acquire one customer</div>
-                </div>
-
-                <div class="control-group">
-                    <label>
-                        Monthly Churn Rate
-                        <span class="value-display" id="churn-value">3.5%</span>
-                    </label>
-                    <input type="range" id="churn" min="1" max="10" value="3.5" step="0.5">
-                    <div class="control-helper">% of customers lost each month</div>
-                </div>
-
-                <div class="control-group">
-                    <label>
-                        Initial Customers (Year 1)
-                        <span class="value-display" id="initial-value">50</span>
-                    </label>
-                    <input type="range" id="initial" min="10" max="200" value="50" step="10">
-                    <div class="control-helper">Starting customer base</div>
-                </div>
-
-                <div class="control-group">
-                    <label>
-                        New Customers per Month (Growth Rate)
-                        <span class="value-display" id="growth-value">15</span>
-                    </label>
-                    <input type="range" id="growth" min="5" max="100" value="15" step="5">
-                    <div class="control-helper">New customer acquisitions monthly</div>
-                </div>
-
-                <div class="control-group">
-                    <label>
-                        Operating Expenses (Monthly)
-                        <span class="value-display" id="opex-value">$30,000</span>
-                    </label>
-                    <input type="range" id="opex" min="10000" max="100000" value="30000" step="5000">
-                    <div class="control-helper">Salaries, hosting, overhead, etc.</div>
-                </div>
-            </div>
-
-            <button class="btn-update" onclick="updateModel()">Update Projections</button>
-        </div>
-
-        <!-- Charts -->
-        <div class="charts-grid">
-            <div class="chart-card">
-                <h3>📈 Revenue & Expenses (5-Year)</h3>
-                <canvas id="revenueChart"></canvas>
-            </div>
-
-            <div class="chart-card">
-                <h3>💰 Monthly Profit/Loss</h3>
-                <canvas id="profitChart"></canvas>
-            </div>
-
-            <div class="chart-card">
-                <h3>👥 Customer Growth</h3>
-                <canvas id="customersChart"></canvas>
-            </div>
-
-            <div class="chart-card">
-                <h3>🔥 Cash Burn vs Runway</h3>
-                <canvas id="cashChart"></canvas>
-            </div>
-        </div>
-
-        <!-- Insights -->
-        <div class="insights">
-            <h3>📊 Key Insights</h3>
-            <div class="insight-text" id="insights-text">
-                Adjust the parameters above to see how they impact profitability timeline and cash requirements.
-            </div>
-        </div>
-
-        <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--gray-200);">
-            <a href="../index.html#financial-models" style="color: var(--primary); text-decoration: none; font-weight: 700;">← Back to Financial Models</a>
-        </div>
+<!-- PAGE 1: REVENUE MODEL -->
+<div id="page-revenue" class="page active">
+  <div class="cp" style="margin-top:14px;">
+    <div class="cp-t">SaaS Revenue Assumptions</div>
+    <div class="cg">
+      <div class="ctrl"><label>Subscription price ($/mo)</label><div class="rr"><input type="range" id="price" min="29" max="299" value="99" step="10" oninput="slD('price','priceV','$')"><span class="rv" id="priceV">$99</span></div></div>
+      <div class="ctrl"><label>Monthly ARPU increase (%)</label><div class="rr"><input type="range" id="arpuInc" min="0" max="5" value="0.5" step="0.1" oninput="slP('arpuInc','arpuIncV')"><span class="rv" id="arpuIncV">0.5%</span></div></div>
+      <div class="ctrl"><label>Monthly churn rate (%)</label><div class="rr"><input type="range" id="churn" min="1" max="10" value="3.5" step="0.5" oninput="slP('churn','churnV')"><span class="rv" id="churnV">3.5%</span></div></div>
+      <div class="ctrl"><label>CAC ($)</label><div class="rr"><input type="range" id="cac" min="100" max="1500" value="450" step="50" oninput="slD('cac','cacV','$')"><span class="rv" id="cacV">$450</span></div></div>
+      <div class="ctrl"><label>Initial customers</label><div class="rr"><input type="range" id="initCust" min="0" max="200" value="50" step="10" oninput="slI('initCust','initCustV')"><span class="rv" id="initCustV">50</span></div></div>
     </div>
+    <div class="cg" style="margin-top:8px;">
+      <div class="ctrl"><label>New cust / mo (yr 1)</label><div class="rr"><input type="range" id="nc1" min="0" max="100" value="15" step="5" oninput="slI('nc1','nc1V')"><span class="rv" id="nc1V">15</span></div></div>
+      <div class="ctrl"><label>New cust / mo (yr 2)</label><div class="rr"><input type="range" id="nc2" min="0" max="100" value="20" step="5" oninput="slI('nc2','nc2V')"><span class="rv" id="nc2V">20</span></div></div>
+      <div class="ctrl"><label>New cust / mo (yr 3)</label><div class="rr"><input type="range" id="nc3" min="0" max="100" value="25" step="5" oninput="slI('nc3','nc3V')"><span class="rv" id="nc3V">25</span></div></div>
+      <div class="ctrl"><label>New cust / mo (yr 4)</label><div class="rr"><input type="range" id="nc4" min="0" max="100" value="30" step="5" oninput="slI('nc4','nc4V')"><span class="rv" id="nc4V">30</span></div></div>
+      <div class="ctrl"><label>New cust / mo (yr 5)</label><div class="rr"><input type="range" id="nc5" min="0" max="100" value="35" step="5" oninput="slI('nc5','nc5V')"><span class="rv" id="nc5V">35</span></div></div>
+    </div>
+    <div class="cn">&#x1F4A1; <strong>LTV</strong> = Monthly price &divide; churn. | <strong>LTV:CAC &gt; 3&times;</strong> = healthy unit economics. | <strong>ARPU increase</strong> compounds monthly (upsells, price increases). | New customers per month set independently for each year.</div>
+  </div>
+  <div class="kr">
+    <div class="kpi hi"><div class="kl">Year 5 ARR</div><div class="kv" id="r_arr">&mdash;</div><div class="ks">Annual recurring revenue</div></div>
+    <div class="kpi po"><div class="kl">Year 5 customers</div><div class="kv" id="r_cust">&mdash;</div><div class="ks">End of period</div></div>
+    <div class="kpi wa"><div class="kl">LTV : CAC</div><div class="kv" id="r_ltv">&mdash;</div><div class="ks" id="r_ltv_s">Customer lifetime value ratio</div></div>
+    <div class="kpi"><div class="kl">LTV</div><div class="kv" id="r_ltvAbs">&mdash;</div><div class="ks">Customer lifetime value</div></div>
+    <div class="kpi"><div class="kl">CAC payback</div><div class="kv" id="r_payback">&mdash;</div><div class="ks">Months to recover CAC</div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><h3>MRR growth over 60 months ($)</h3><div class="ch h260"><canvas id="mrrC"></canvas></div></div>
+    <div class="card"><h3>Net customer adds &mdash; new vs churned (quarterly)</h3><div class="ch h260"><canvas id="netAddC"></canvas></div></div>
+  </div>
+  <div class="card" style="margin-bottom:12px;">
+    <h3>Quarterly customer &amp; revenue waterfall</h3>
+    <div class="sticky-wrap"><table class="stmt" id="qtrT" style="font-size:11px;"></table></div>
+  </div>
+  <div class="g2">
+    <div class="card"><h3>ARR by year ($)</h3><div class="ch h240"><canvas id="arrC"></canvas></div></div>
+    <div class="card"><h3>Revenue per customer (ARPU) trend &mdash; monthly</h3><div class="ch h240"><canvas id="arpuC"></canvas></div></div>
+  </div>
+</div>
 
-    <script src="../script.js"></script>
-    <script>
-        let charts = {
-            revenue: null,
-            profit: null,
-            customers: null,
-            cash: null
-        };
+<!-- PAGE 2: FINANCIAL STATEMENTS -->
+<div id="page-financials" class="page">
+  <div class="cp" style="margin-top:14px;">
+    <div class="cp-t">Key Cost Assumptions</div>
+    <div class="cost-slider-grid">
+      <div class="cost-slider-item"><label>Monthly opex &mdash; salaries ($)</label><div class="rr"><input type="range" id="opexSal" min="5000" max="80000" value="25000" step="1000" oninput="slD('opexSal','opexSalV','$')"><span class="rv" id="opexSalV">$25,000</span></div></div>
+      <div class="cost-slider-item"><label>Monthly opex &mdash; hosting ($)</label><div class="rr"><input type="range" id="opexHost" min="500" max="10000" value="2000" step="500" oninput="slD('opexHost','opexHostV','$')"><span class="rv" id="opexHostV">$2,000</span></div></div>
+      <div class="cost-slider-item"><label>Monthly opex &mdash; other ($)</label><div class="rr"><input type="range" id="opexOther" min="500" max="10000" value="3000" step="500" oninput="slD('opexOther','opexOtherV','$')"><span class="rv" id="opexOtherV">$3,000</span></div></div>
+      <div class="cost-slider-item"><label>Seed funding ($)</label><div class="rr"><input type="range" id="seedFund" min="0" max="500000" value="100000" step="10000" oninput="slD('seedFund','seedFundV','$')"><span class="rv" id="seedFundV">$100,000</span></div></div>
+      <div class="cost-slider-item"><label>Annual cost growth (%)</label><div class="rr"><input type="range" id="costGrowth" min="0" max="20" value="5" step="1" oninput="slP('costGrowth','costGrowthV')"><span class="rv" id="costGrowthV">5%</span></div></div>
+    </div>
+  </div>
+  <div id="fsChk" class="chk ok">&#x2713; No model errors &mdash; P&amp;L, Balance Sheet and Cash Flow tie out</div>
+  <div class="yt">
+    <button class="ytb active" onclick="setFT('pl',this)">P&amp;L</button>
+    <button class="ytb" onclick="setFT('bs',this)">Balance Sheet</button>
+    <button class="ytb" onclick="setFT('cf',this)">Cash Flow</button>
+    <button class="ytb" onclick="setFT('inv',this)">Investor Returns</button>
+    <button class="ytb" onclick="setFT('assumptions',this)">Assumptions</button>
+  </div>
+  <div id="fs-pl">
+    <div class="g2">
+      <div class="card"><h3>P&amp;L waterfall ($k)</h3><div class="ch h240"><canvas id="plBarC"></canvas></div></div>
+      <div class="card"><h3>COGS breakdown ($k)</h3><div class="ch h240"><canvas id="cogsBarC"></canvas></div></div>
+    </div>
+    <div class="card"><h3>Profit &amp; Loss Statement (USD)</h3><table class="stmt" id="plT"></table></div>
+  </div>
+  <div id="fs-bs" style="display:none">
+    <div class="g2">
+      <div class="card"><h3>Asset composition ($k)</h3><div class="ch h240"><canvas id="assetC"></canvas></div></div>
+      <div class="card"><h3>Equity build-up ($k)</h3><div class="ch h240"><canvas id="eqC"></canvas></div></div>
+    </div>
+    <div class="card"><h3>Balance Sheet (USD)</h3><table class="stmt" id="bsT"></table></div>
+  </div>
+  <div id="fs-cf" style="display:none">
+    <div class="g2">
+      <div class="card"><h3>Cash flow components ($k)</h3><div class="ch h240"><canvas id="cfBarC"></canvas></div></div>
+      <div class="card"><h3>Closing cash ($k)</h3><div class="ch h240"><canvas id="cashC"></canvas></div></div>
+    </div>
+    <div class="card"><h3>Cash Flow Statement (USD)</h3><table class="stmt" id="cfT"></table></div>
+  </div>
+  <div id="fs-inv" style="display:none">
+    <div id="reqInvBanner" style="background:rgba(255,209,102,.08);border:1px solid rgba(255,209,102,.4);border-radius:8px;padding:14px 18px;margin-bottom:12px;display:flex;align-items:center;gap:20px;">
+      <div style="flex:1;">
+        <div style="font-size:9px;color:var(--amber);letter-spacing:3px;text-transform:uppercase;margin-bottom:4px;font-weight:bold;">Required investment to sustain operations</div>
+        <div style="font-size:22px;font-weight:bold;color:var(--amber)" id="reqInvAmt">&mdash;</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:3px;" id="reqInvNote"></div>
+      </div>
+    </div>
+    <div class="callout">
+      <strong>IRR @ 30% / 16&times;:</strong> based on 30% ownership and 16&times; EV/EBITDA exit multiple. &nbsp;|&nbsp; <strong>NPV @ 20%:</strong> If you demand 20%/yr returns, this is how many extra dollars this deal makes you vs. that alternative. Positive = beats your hurdle. &nbsp;|&nbsp; <strong>Cash-on-cash:</strong> Total cash you receive (operating dividends + exit) &divide; invested. 3&times; means you tripled your money. &nbsp;|&nbsp; <strong>Terminal value:</strong> Estimated sale price (Year 5 EBITDA &times; exit multiple). Your share is prorated by ownership %.
+    </div>
+    <div class="kr">
+      <div class="kpi hi"><div class="kl">IRR @ 30% / 16&times;</div><div class="kv" id="i_irr">&mdash;</div><div class="ks" id="i_irr_s">Base case</div></div>
+      <div class="kpi po"><div class="kl">NPV @ 20% hurdle</div><div class="kv" id="i_npv">&mdash;</div><div class="ks">Extra value vs 20%/yr alt.</div></div>
+      <div class="kpi wa"><div class="kl">Cash-on-cash</div><div class="kv" id="i_coc">&mdash;</div><div class="ks" id="i_coc_s">Total returned &divide; equity</div></div>
+      <div class="kpi"><div class="kl">Required equity raise</div><div class="kv" id="i_req_eq" style="color:var(--amber)">&mdash;</div><div class="ks" id="i_req_note">Min. to sustain operations</div></div>
+      <div class="kpi"><div class="kl">Year 5 EBITDA</div><div class="kv" id="i_ebitda">&mdash;</div><div class="ks">Base for exit calc</div></div>
+    </div>
+    <div class="g2">
+      <div class="card"><h3>Equity cash flows ($k) &mdash; 30% ownership base case</h3><div class="ch h240"><canvas id="invWfC"></canvas></div></div>
+      <div class="card"><h3>Value creation bridge ($k) &mdash; 30% ownership</h3><div class="ch h240"><canvas id="invBrC"></canvas></div></div>
+    </div>
+    <div class="callout">
+      <strong>How to read this:</strong> You invest the <strong>required equity</strong> at the start in exchange for a % of the company (left axis). At end of Year 5 the business is sold at X &times; its Year 5 EBITDA (top axis). Each cell shows your <strong>IRR</strong> (annualised return). Example: 30% ownership at 16&times; exit &rarr; IRR shown in the teal cell. The pre-money valuation embedded in each row tells you what you're implying the business is worth today for that ownership %.
+    </div>
+    <div class="card" style="margin-bottom:12px;">
+      <h3>IRR sensitivity &mdash; Investor ownership % vs EV/EBITDA exit multiple at end of Year 5</h3>
+      <div style="overflow-x:auto"><table class="smat" id="sensT"></table></div>
+    </div>
+  </div>
+  <div id="fs-assumptions" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div style="font-size:10px;color:var(--muted);">Edit assumptions below. Changes are reflected immediately.</div>
+      <button class="reset-btn" onclick="resetAll()">&#x21BA; Reset to Default</button>
+    </div>
+    <div class="card assumption-section"><h4>Revenue</h4>
+      <div class="assumption-row"><label>Payment processing fee</label><input type="number" id="a_procFee" value="2.9" step="0.1" onchange="updateAll()"><div class="unit">% of revenue</div></div>
+    </div>
+    <div class="card assumption-section"><h4>Cost of Goods Sold</h4>
+      <div class="assumption-row"><label>Hosting cost per customer / month</label><input type="number" id="a_hostPerCust" value="5" step="1" onchange="updateAll()"><div class="unit">$/cust/month</div></div>
+      <div class="assumption-row"><label>Customer support cost per customer / month</label><input type="number" id="a_suppPerCust" value="3" step="0.5" onchange="updateAll()"><div class="unit">$/cust/month</div></div>
+    </div>
+    <div class="card assumption-section"><h4>Operating Expenses</h4>
+      <div class="assumption-row"><label>Annual salary growth rate</label><input type="number" id="a_salGrowth" value="5" step="1" onchange="updateAll()"><div class="unit">%</div></div>
+      <div class="assumption-row"><label>Software / tools (monthly)</label><input type="number" id="a_swTools" value="1000" step="100" onchange="updateAll()"><div class="unit">$/month</div></div>
+      <div class="assumption-row"><label>Marketing spend (% of revenue)</label><input type="number" id="a_mktPct" value="0" step="1" onchange="updateAll()"><div class="unit">%</div></div>
+    </div>
+    <div class="card assumption-section"><h4>Capital &amp; Depreciation</h4>
+      <div class="assumption-row"><label>Initial equipment / setup capex</label><input type="number" id="a_capex" value="10000" step="1000" onchange="updateAll()"><div class="unit">$ (year 1)</div></div>
+      <div class="assumption-row"><label>Depreciation period</label><input type="number" id="a_depYrs" value="3" step="1" min="1" max="10" onchange="updateAll()"><div class="unit">years</div></div>
+      <div class="assumption-row"><label>Interest rate on cash</label><input type="number" id="a_intRate" value="1" step="0.5" onchange="updateAll()"><div class="unit">%</div></div>
+    </div>
+    <div class="card assumption-section"><h4>Investor Returns</h4>
+      <div class="assumption-row"><label>Cash covenant buffer</label><input type="number" id="a_covenant" value="10" step="1" onchange="updateAll()"><div class="unit">% of equity</div></div>
+    </div>
+  </div>
+</div>
 
-        // Update value displays
-        const inputs = ['price', 'cac', 'churn', 'initial', 'growth', 'opex'];
-        inputs.forEach(id => {
-            const input = document.getElementById(id);
-            const display = document.getElementById(`${id}-value`);
-            
-            input.addEventListener('input', (e) => {
-                let value = e.target.value;
-                if (id === 'churn') {
-                    display.textContent = value + '%';
-                } else if (id === 'price' || id === 'cac' || id === 'opex') {
-                    display.textContent = '$' + parseInt(value).toLocaleString();
-                } else {
-                    display.textContent = value;
-                }
-            });
-        });
+<script>
+const YEARS=[1,2,3,4,5],YR_LABELS=['Year 1','Year 2','Year 3','Year 4','Year 5'],NY=5;
+let fs='pl';const CH={};const g=id=>document.getElementById(id);
+const fmtK=v=>Math.abs(v)>=1e6?'$'+(v/1e6).toFixed(2)+'M':(Math.abs(v)>=1000?'$'+Math.round(v/1e3)+'k':'$'+Math.round(v));
+const fmtN=v=>{if(v==null)return'\u2014';const a=Math.abs(Math.round(v));return v>=0?'$'+a.toLocaleString():'($'+a.toLocaleString()+')';};
+const cl=v=>v>=0?'pos':'neg';
+function getA(id){return parseFloat(g(id).value);}
+function slD(id,vid,pfx){g(vid).textContent=pfx+parseInt(g(id).value).toLocaleString();updateAll();}
+function slI(id,vid){g(vid).textContent=g(id).value;updateAll();}
+function slP(id,vid){g(vid).textContent=parseFloat(g(id).value)+'%';updateAll();}
+function getNewPerMo(){return[+g('nc1').value,+g('nc2').value,+g('nc3').value,+g('nc4').value,+g('nc5').value];}
 
-        function calculateFinancials() {
-            const price = parseFloat(document.getElementById('price').value);
-            const cac = parseFloat(document.getElementById('cac').value);
-            const churnRate = parseFloat(document.getElementById('churn').value) / 100;
-            const initialCustomers = parseFloat(document.getElementById('initial').value);
-            const monthlyNewCustomers = parseFloat(document.getElementById('growth').value);
-            const monthlyOpex = parseFloat(document.getElementById('opex').value);
+function resetAll(){
+  var d={price:99,arpuInc:0.5,churn:3.5,cac:450,initCust:50,nc1:15,nc2:20,nc3:25,nc4:30,nc5:35,opexSal:25000,opexHost:2000,opexOther:3000,seedFund:100000,costGrowth:5,a_procFee:2.9,a_hostPerCust:5,a_suppPerCust:3,a_salGrowth:5,a_swTools:1000,a_mktPct:0,a_capex:10000,a_depYrs:3,a_intRate:1,a_covenant:10};
+  Object.entries(d).forEach(function(e){g(e[0]).value=e[1];});
+  g('priceV').textContent='$99';g('arpuIncV').textContent='0.5%';g('churnV').textContent='3.5%';g('cacV').textContent='$450';g('initCustV').textContent='50';
+  g('nc1V').textContent='15';g('nc2V').textContent='20';g('nc3V').textContent='25';g('nc4V').textContent='30';g('nc5V').textContent='35';
+  g('opexSalV').textContent='$25,000';g('opexHostV').textContent='$2,000';g('opexOtherV').textContent='$3,000';g('seedFundV').textContent='$100,000';g('costGrowthV').textContent='5%';
+  updateAll();
+}
 
-            const months = 60; // 5 years
-            let customers = initialCustomers;
-            
-            const data = {
-                months: [],
-                customers: [],
-                revenue: [],
-                expenses: [],
-                profit: [],
-                cash: [],
-                cumulativeProfit: 0,
-                cumulativeCash: 100000 // Start with $100k funding
-            };
+function simMonthly(){
+  const basePrice=+g('price').value,churnRate=+g('churn').value/100,initC=+g('initCust').value;
+  const ncByYr=getNewPerMo(),arpuMoInc=+g('arpuInc').value/100;
+  let cust=initC;
+  const months=[],custs=[],mrrs=[],newA=[],churnA=[],arpus=[];
+  const qtrs=[];let qNew=0,qChurned=0,qStart=0,qRev=0,qCustSum=0,qArpuSum=0;
+  for(var m=1;m<=60;m++){
+    var yr=Math.ceil(m/12)-1;
+    var effPrice=basePrice*Math.pow(1+arpuMoInc,m-1);
+    var effNew=ncByYr[yr]||0;
+    var startC=cust,lost=Math.round(cust*churnRate);
+    cust=Math.max(0,cust-lost+effNew);
+    var mrr=cust*effPrice;
+    months.push(m);custs.push(cust);mrrs.push(mrr);newA.push(effNew);churnA.push(lost);arpus.push(effPrice);
+    var moInQ=(m-1)%3;
+    if(moInQ===0){qNew=0;qChurned=0;qStart=startC;qRev=0;qCustSum=0;qArpuSum=0;}
+    qNew+=effNew;qChurned+=lost;qRev+=mrr;qCustSum+=cust;qArpuSum+=effPrice;
+    if(moInQ===2){
+      var qNum=Math.ceil(m/3),yrN=Math.ceil(qNum/4),qInY=((qNum-1)%4)+1;
+      qtrs.push({label:'Y'+yrN+'Q'+qInY,startCust:qStart,newCust:qNew,churnedCust:qChurned,endCust:cust,mrr:mrr,arpu:effPrice,netAdd:qNew-qChurned,rev:qRev,avgCust:Math.round(qCustSum/3),avgArpu:qArpuSum/3});
+    }
+  }
+  return{months,custs,mrrs,newA,churnA,arpus,qtrs};
+}
 
-            for (let month = 1; month <= months; month++) {
-                // Customer dynamics
-                const churnLoss = customers * churnRate;
-                customers = customers - churnLoss + monthlyNewCustomers;
-                
-                // Financials
-                const revenue = customers * price;
-                const acquisitionCost = monthlyNewCustomers * cac;
-                const totalExpenses = monthlyOpex + acquisitionCost;
-                const profit = revenue - totalExpenses;
-                
-                data.cumulativeCash += profit;
-                
-                data.months.push(month);
-                data.customers.push(Math.round(customers));
-                data.revenue.push(revenue);
-                data.expenses.push(totalExpenses);
-                data.profit.push(profit);
-                data.cash.push(data.cumulativeCash);
-                
-                data.cumulativeProfit += profit;
-            }
+function updateRevPage(){
+  var sim=simMonthly();
+  var basePrice=+g('price').value,churnRate=+g('churn').value/100,cacVal=+g('cac').value;
+  var ltv=basePrice/churnRate,ltvCac=ltv/cacVal,endCust=sim.custs[59],endArpu=sim.arpus[59];
+  var arr=endCust*endArpu*12;
+  g('r_arr').textContent=fmtK(arr);g('r_cust').textContent=endCust.toLocaleString();
+  g('r_ltv').textContent=ltvCac.toFixed(1)+'\u00d7';
+  g('r_ltv').style.color=ltvCac>=3?'var(--green)':ltvCac>=1?'var(--amber)':'var(--red)';
+  g('r_ltv_s').textContent=ltvCac>=3?'Healthy (\u22653\u00d7)':ltvCac>=1?'Marginal (1-3\u00d7)':'Unsustainable (<1\u00d7)';
+  g('r_ltvAbs').textContent=fmtK(ltv);g('r_payback').textContent=(cacVal/basePrice).toFixed(1)+' mo';
 
-            return data;
-        }
+  var c1=g('mrrC');if(CH.mrr)CH.mrr.destroy();
+  CH.mrr=new Chart(c1,{type:'line',data:{labels:sim.months.map(function(m){return'M'+m;}),datasets:[{label:'MRR',data:sim.mrrs,borderColor:'#00E6C3',backgroundColor:'rgba(0,230,195,.1)',fill:true,tension:.3,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5B8FA8',font:{size:9},maxTicksLimit:12},grid:{color:'rgba(91,143,168,.4)'}},y:{ticks:{color:'#5B8FA8',callback:function(v){return'$'+(v/1e3).toFixed(0)+'k';}},grid:{color:'rgba(91,143,168,.4)'}}}}});
 
-        function updateMetrics(data) {
-            const ltv = (parseFloat(document.getElementById('price').value) / (parseFloat(document.getElementById('churn').value) / 100));
-            const cac = parseFloat(document.getElementById('cac').value);
-            const ltvCacRatio = ltv / cac;
-            
-            const finalMonthProfit = data.profit[data.profit.length - 1];
-            const breakEvenMonth = data.profit.findIndex(p => p > 0);
-            const finalCash = data.cash[data.cash.length - 1];
-            const finalCustomers = data.customers[data.customers.length - 1];
+  var qL=sim.qtrs.map(function(q){return q.label;});
+  var c2=g('netAddC');if(CH.netAdd)CH.netAdd.destroy();
+  CH.netAdd=new Chart(c2,{type:'bar',data:{labels:qL,datasets:[{label:'New customers',data:sim.qtrs.map(function(q){return q.newCust;}),backgroundColor:'rgba(0,230,195,.7)'},{label:'Churned',data:sim.qtrs.map(function(q){return-q.churnedCust;}),backgroundColor:'rgba(255,123,123,.7)'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#5B8FA8',font:{size:10},usePointStyle:true}}},scales:{x:{stacked:true,ticks:{color:'#5B8FA8',font:{size:8}},grid:{color:'rgba(91,143,168,.4)'}},y:{stacked:true,ticks:{color:'#5B8FA8'},grid:{color:'rgba(91,143,168,.4)'}}}}});
 
-            const metricsHTML = `
-                <div class="metric-card">
-                    <div class="metric-label">LTV:CAC Ratio</div>
-                    <div class="metric-value">${ltvCacRatio.toFixed(1)}x</div>
-                </div>
-                <div class="metric-card ${breakEvenMonth > 0 && breakEvenMonth < 60 ? '' : 'negative'}">
-                    <div class="metric-label">Break-Even Month</div>
-                    <div class="metric-value">${breakEvenMonth > 0 && breakEvenMonth < 60 ? breakEvenMonth : 'Never'}</div>
-                </div>
-                <div class="metric-card ${finalMonthProfit > 0 ? '' : 'negative'}">
-                    <div class="metric-label">Year 5 Monthly Profit</div>
-                    <div class="metric-value">$${(finalMonthProfit / 1000).toFixed(0)}k</div>
-                </div>
-                <div class="metric-card neutral">
-                    <div class="metric-label">Year 5 Customers</div>
-                    <div class="metric-value">${finalCustomers.toLocaleString()}</div>
-                </div>
-                <div class="metric-card ${finalCash > 0 ? '' : 'negative'}">
-                    <div class="metric-label">Final Cash Position</div>
-                    <div class="metric-value">$${(finalCash / 1000).toFixed(0)}k</div>
-                </div>
-                <div class="metric-card neutral">
-                    <div class="metric-label">Customer Lifetime Value</div>
-                    <div class="metric-value">$${ltv.toFixed(0)}</div>
-                </div>
-            `;
+  // Quarterly waterfall table with sticky first column
+  var t=g('qtrT');
+  var hdr='<thead><tr><th style="min-width:150px;"></th>'+sim.qtrs.map(function(q){return'<th class="r" style="font-size:8px;padding:3px 5px;min-width:65px;">'+q.label+'</th>';}).join('')+'</tr></thead>';
+  var rows=[
+    {l:'Starting customers',v:sim.qtrs.map(function(q){return q.startCust;})},
+    {l:'+ New sign-ups',v:sim.qtrs.map(function(q){return q.newCust;}),c:'pos'},
+    {l:'\u2212 Churned',v:sim.qtrs.map(function(q){return q.churnedCust;}),c:'neg'},
+    {l:'Ending customers',v:sim.qtrs.map(function(q){return q.endCust;}),tot:true},
+    {l:'Net adds',v:sim.qtrs.map(function(q){return q.netAdd;}),dyn:true},
+    {l:'Revenue (quarterly)',v:sim.qtrs.map(function(q){return q.rev;}),money:true},
+    {l:'Avg customers',v:sim.qtrs.map(function(q){return q.avgCust;})},
+    {l:'Avg ARPU (monthly)',v:sim.qtrs.map(function(q){return q.avgArpu;}),dollar:true},
+    {l:'End-of-quarter MRR',v:sim.qtrs.map(function(q){return q.mrr;}),money:true},
+    {l:'ARR (MRR \u00d7 12)',v:sim.qtrs.map(function(q){return q.mrr*12;}),money:true}
+  ];
+  var body='<tbody>';
+  rows.forEach(function(r){
+    body+='<tr class="'+(r.tot?'tot':'')+'"><td style="white-space:nowrap;">'+r.l+'</td>';
+    r.v.forEach(function(v){
+      var d,cls='';
+      if(r.money)d=fmtK(v);else if(r.dollar)d='$'+v.toFixed(0);else d=Math.round(v).toLocaleString();
+      if(r.dyn)cls=v>0?'pos':v<0?'neg':'';else if(r.c)cls=r.c;
+      body+='<td class="r '+cls+'" style="font-size:11px;padding:3px 5px;">'+d+'</td>';
+    });
+    body+='</tr>';
+  });
+  t.innerHTML=hdr+body+'</tbody>';
 
-            document.getElementById('key-metrics').innerHTML = metricsHTML;
+  var annARR=[];for(var y=0;y<5;y++){var q=sim.qtrs[y*4+3];annARR.push(q?q.mrr*12:0);}
+  var c3=g('arrC');if(CH.arrY)CH.arrY.destroy();
+  CH.arrY=new Chart(c3,{type:'bar',data:{labels:YR_LABELS,datasets:[{label:'ARR',data:annARR.map(function(v){return v/1e3;}),backgroundColor:'rgba(0,230,195,.7)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5B8FA8'},grid:{color:'rgba(91,143,168,.4)'}},y:{ticks:{color:'#5B8FA8',callback:function(v){return'$'+v.toFixed(0)+'k';}},grid:{color:'rgba(91,143,168,.4)'}}}}});
 
-            // Update insights
-            let insights = '';
-            
-            if (ltvCacRatio < 3) {
-                insights += '⚠️ LTV:CAC ratio below 3x indicates acquisition costs are too high relative to customer value. ';
-            } else {
-                insights += '✅ Healthy LTV:CAC ratio above 3x shows sustainable unit economics. ';
-            }
+  var c4=g('arpuC');if(CH.arpu)CH.arpu.destroy();
+  CH.arpu=new Chart(c4,{type:'line',data:{labels:sim.months.map(function(m){return'M'+m;}),datasets:[{label:'ARPU',data:sim.arpus,borderColor:'#FFD166',backgroundColor:'rgba(255,209,102,.1)',fill:true,tension:.3,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5B8FA8',font:{size:9},maxTicksLimit:12},grid:{color:'rgba(91,143,168,.4)'}},y:{ticks:{color:'#5B8FA8',callback:function(v){return'$'+v.toFixed(0);}},grid:{color:'rgba(91,143,168,.4)'}}}}});
+}
 
-            if (breakEvenMonth > 0 && breakEvenMonth < 60) {
-                insights += `📈 Model shows profitability by month ${breakEvenMonth} (Year ${Math.ceil(breakEvenMonth/12)}). `;
-            } else {
-                insights += '📉 Model does not reach profitability within 5 years - consider reducing costs or increasing prices. ';
-            }
+function calcModel(){
+  var basePrice=+g('price').value,churnRate=+g('churn').value/100,cacVal=+g('cac').value,initC=+g('initCust').value;
+  var ncByYr=getNewPerMo(),arpuMoInc=+g('arpuInc').value/100;
+  var salMo=+g('opexSal').value,hostMo=+g('opexHost').value,otherMo=+g('opexOther').value;
+  var costGr=+g('costGrowth').value/100,seed=+g('seedFund').value;
+  var procFee=getA('a_procFee')/100;
+  var hostPC=getA('a_hostPerCust'),suppPC=getA('a_suppPerCust');
+  var salGr=getA('a_salGrowth')/100,swTools=getA('a_swTools'),mktPct=getA('a_mktPct')/100;
+  var capex=getA('a_capex'),depYrs=getA('a_depYrs'),intRate=getA('a_intRate')/100;
+  var annRev=[],annCustEnd=[],annCustAvg=[],annNewCust=[],annLostCust=[];
+  var cust=initC,globalMonth=0;
+  for(var yr=0;yr<NY;yr++){
+    var effNew=ncByYr[yr]||0;
+    var yrRev=0,yrNew=0,yrLost=0,custSum=0;
+    for(var m=0;m<12;m++){
+      globalMonth++;
+      var effPrice=basePrice*Math.pow(1+arpuMoInc,globalMonth-1);
+      var lost=Math.round(cust*churnRate);
+      cust=Math.max(0,cust-lost+effNew);
+      yrRev+=cust*effPrice;yrNew+=effNew;yrLost+=lost;custSum+=cust;
+    }
+    annRev.push(yrRev);annCustEnd.push(cust);annCustAvg.push(Math.round(custSum/12));annNewCust.push(yrNew);annLostCust.push(yrLost);
+  }
+  var cogsHost=annCustAvg.map(function(c){return-(c*hostPC*12);}),cogsSupp=annCustAvg.map(function(c){return-(c*suppPC*12);});
+  var cogsProc=annRev.map(function(r){return-(r*procFee);}),cogsCAC=annNewCust.map(function(n){return-(n*cacVal);});
+  var cogs=annRev.map(function(_,i){return cogsHost[i]+cogsSupp[i]+cogsProc[i]+cogsCAC[i];});
+  var gp=annRev.map(function(r,i){return r+cogs[i];});
+  var opSal=YEARS.map(function(_,i){return-(salMo*12*Math.pow(1+salGr,i));});
+  var opHost=YEARS.map(function(_,i){return-(hostMo*12*Math.pow(1+costGr,i));});
+  var opOther=YEARS.map(function(_,i){return-(otherMo*12*Math.pow(1+costGr,i));});
+  var opSw=YEARS.map(function(_,i){return-(swTools*12*Math.pow(1+costGr,i));});
+  var opMkt=annRev.map(function(r){return-(r*mktPct);});
+  var opex=YEARS.map(function(_,i){return opSal[i]+opHost[i]+opOther[i]+opSw[i]+opMkt[i];});
+  var ebitda=annRev.map(function(r,i){return gp[i]+opex[i];});
+  var dep=YEARS.map(function(_,i){return i<depYrs?-capex/depYrs:0;});
+  var ebit=ebitda.map(function(e,i){return e+dep[i];});
+  var invCF=YEARS.map(function(_,i){return i===0?-capex:0;});var eq=seed;
+  var recv=annRev.map(function(r){return Math.round(r/365*15);});
+  var pay=cogs.map(function(c){return-Math.round(c/365*14);}),acc=opex.map(function(o){return-Math.round(o/12);});
+  var ni=[],cc=[],opCF=[];
+  for(var i=0;i<NY;i++){var oc=i===0?eq:cc[i-1];ni.push(ebit[i]+oc*intRate);var da=-dep[i];var pR=i===0?0:recv[i-1],pP=i===0?0:pay[i-1],pA=i===0?0:acc[i-1];var wc=(pay[i]-pP)+(acc[i]-pA)-(recv[i]-pR);var op=ni[i]+da+wc;opCF.push(op);cc.push((i===0?0:cc[i-1])+op+invCF[i]+(i===0?eq:0));}
+  var cash=cc.map(function(v){return Math.round(v);}),currA=cash.map(function(c,i){return c+recv[i];});
+  var capN=YEARS.map(function(_,i){var d=Math.min(i+1,depYrs)*(capex/depYrs);return Math.max(0,capex-d);});
+  var ncA=capN,totA=currA.map(function(c,i){return c+ncA[i];});
+  var totL=pay.map(function(p,i){return p+acc[i];}),cumNI=ni.map(function(_,i){return ni.slice(0,i+1).reduce(function(a,b){return a+b;},0);});
+  var totE=cumNI.map(function(c){return eq+c;}),totLE=totL.map(function(l,i){return l+totE[i];});
+  return{annRev:annRev,cogs:cogs,cogsHost:cogsHost,cogsSupp:cogsSupp,cogsProc:cogsProc,cogsCAC:cogsCAC,gp:gp,opex:opex,opSal:opSal,opHost:opHost,opOther:opOther,opSw:opSw,opMkt:opMkt,ebitda:ebitda,dep:dep,ebit:ebit,ni:ni,opCF:opCF,invCF:invCF,cash:cash,currA:currA,ncA:ncA,capN:capN,totA:totA,pay:pay,acc:acc,totL:totL,totE:totE,totLE:totLE,cumNI:cumNI,eq:eq,recv:recv};
+}
 
-            if (finalCash < 0) {
-                insights += '🚨 Cash runway insufficient - additional funding needed before break-even. ';
-            } else {
-                insights += `💰 Ending with $${(finalCash/1000).toFixed(0)}k in cash reserves. `;
-            }
+function updateFinancials(){var m=calcModel();var ok=YEARS.every(function(_,i){return Math.abs(m.totA[i]-m.totLE[i])<10;});var el=g('fsChk');el.className='chk '+(ok?'ok':'er');el.textContent=ok?'\u2713 No model errors \u2014 P&L, Balance Sheet and Cash Flow tie out':'\u2717 Model error \u2014 check assumptions';if(fs==='pl')buildPL(m);else if(fs==='bs')buildBS(m);else if(fs==='cf')buildCF(m);else if(fs==='inv')buildInv(m);}
 
-            document.getElementById('insights-text').innerHTML = insights;
-        }
+function tbl(rows,id){var t=g(id);t.innerHTML='<thead><tr><th>Line item</th>'+YR_LABELS.map(function(y){return'<th class="r">'+y+'</th>';}).join('')+'</tr></thead>';var tb=document.createElement('tbody');rows.forEach(function(r){var tr=document.createElement('tr');if(r.sec){tr.className='sec';tr.innerHTML='<td colspan="'+(NY+1)+'">'+r.label+'</td>';}else{tr.className=r.tot?'tot':'';var ic=r.ind?'ind':'';tr.innerHTML='<td class="'+ic+'">'+r.label+'</td>'+(r.pct?r.vals.map(function(v){return'<td class="r">'+(v*100).toFixed(1)+'%</td>';}):r.vals.map(function(v){return'<td class="r '+cl(v)+'">'+fmtN(v)+'</td>';})).join('');}tb.appendChild(tr);});t.appendChild(tb);}
+function mkBar(id,key,labels,ds){var c=g(id);if(CH[key])CH[key].destroy();CH[key]=new Chart(c,{type:'bar',data:{labels:labels,datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#5B8FA8',font:{size:10},usePointStyle:true}}},scales:{x:{ticks:{color:'#5B8FA8'},grid:{color:'rgba(91,143,168,.4)'}},y:{ticks:{color:'#5B8FA8',callback:function(v){return'$'+Math.abs(v).toFixed(0)+'k';}},grid:{color:'rgba(91,143,168,.4)'}}}}});}
+function mkSBar(id,key,labels,ds){var c=g(id);if(CH[key])CH[key].destroy();CH[key]=new Chart(c,{type:'bar',data:{labels:labels,datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#5B8FA8',font:{size:10},usePointStyle:true}}},scales:{x:{stacked:true,ticks:{color:'#5B8FA8'},grid:{color:'rgba(91,143,168,.4)'}},y:{stacked:true,ticks:{color:'#5B8FA8',callback:function(v){return'$'+Math.abs(v).toFixed(0)+'k';}},grid:{color:'rgba(91,143,168,.4)'}}}}});}
+function mkLine(id,key,labels,ds){var c=g(id);if(CH[key])CH[key].destroy();CH[key]=new Chart(c,{type:'line',data:{labels:labels,datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#5B8FA8',font:{size:10},usePointStyle:true}}},scales:{x:{ticks:{color:'#5B8FA8'},grid:{color:'rgba(91,143,168,.4)'}},y:{ticks:{color:'#5B8FA8',callback:function(v){return'$'+Math.abs(v).toFixed(0)+'k';}},grid:{color:'rgba(91,143,168,.4)'}}}}});}
 
-        function updateModel() {
-            const data = calculateFinancials();
-            updateMetrics(data);
+function buildPL(m){tbl([{sec:true,label:'REVENUE'},{label:'Subscription revenue',vals:m.annRev,ind:true},{label:'Total Revenue',vals:m.annRev,tot:true},{sec:true,label:'COST OF GOODS SOLD'},{label:'Hosting (per customer)',vals:m.cogsHost,ind:true},{label:'Customer support (per customer)',vals:m.cogsSupp,ind:true},{label:'Payment processing fees',vals:m.cogsProc,ind:true},{label:'Customer acquisition (CAC)',vals:m.cogsCAC,ind:true},{label:'Total COGS',vals:m.cogs,tot:true},{label:'GROSS PROFIT',vals:m.gp,tot:true},{label:'Gross margin %',vals:m.gp.map(function(v,i){return v/m.annRev[i];}),pct:true},{sec:true,label:'OPERATING EXPENSES'},{label:'Salaries & wages',vals:m.opSal,ind:true},{label:'Hosting & infrastructure (fixed)',vals:m.opHost,ind:true},{label:'Other G&A',vals:m.opOther,ind:true},{label:'Software & tools',vals:m.opSw,ind:true},{label:'Marketing (% of revenue)',vals:m.opMkt,ind:true},{label:'Total Opex',vals:m.opex,tot:true},{label:'EBITDA',vals:m.ebitda,tot:true},{label:'EBITDA margin %',vals:m.ebitda.map(function(v,i){return v/m.annRev[i];}),pct:true},{sec:true,label:'DEPRECIATION'},{label:'Equipment depreciation',vals:m.dep,ind:true},{label:'EBIT',vals:m.ebit,tot:true},{label:'NET INCOME / (LOSS)',vals:m.ni,tot:true}],'plT');
+  // Waterfall: Revenue → COGS → Opex → EBITDA for Year 1, 3, 5 using floating bars
+  var wfLabels=[],wfData=[],wfColors=[];
+  [0,2,4].forEach(function(yi,gi){
+    var rev=m.annRev[yi]/1e3,cg=m.cogs[yi]/1e3,ox=m.opex[yi]/1e3,eb=m.ebitda[yi]/1e3;
+    // cg and ox are negative from the model
+    var gpLevel=rev+cg; // revenue + cogs (cogs negative) = gross profit
+    var ebLevel=gpLevel+ox; // gross profit + opex (opex negative) = ebitda
+    // Revenue: 0 to rev
+    wfLabels.push('Revenue');wfData.push([0,rev]);wfColors.push('rgba(0,230,195,.8)');
+    // COGS: hangs from rev down to gpLevel
+    wfLabels.push('COGS');wfData.push([gpLevel,rev]);wfColors.push('rgba(255,123,123,.8)');
+    // Opex: hangs from gpLevel down to ebLevel
+    wfLabels.push('Opex');wfData.push([ebLevel,gpLevel]);wfColors.push('rgba(142,124,195,.8)');
+    // EBITDA: from 0 to eb (goes below 0 if negative)
+    wfLabels.push('EBITDA');wfData.push(eb>=0?[0,eb]:[eb,0]);wfColors.push(eb>=0?'rgba(0,230,195,.9)':'rgba(255,123,123,.9)');
+    // Add empty spacer bar between year groups (except after last)
+    if(gi<2){wfLabels.push('');wfData.push([0,0]);wfColors.push('rgba(0,0,0,0)');}
+  });
+  var wfCtx=g('plBarC');if(CH.plBar)CH.plBar.destroy();
+  var ySepPlugin={id:'ySep',afterDraw:function(chart){var c2=chart.ctx,yA=chart.scales.y,md=chart.getDatasetMeta(0);[4,9].forEach(function(i){if(md.data[i]){var x=md.data[i].x;c2.save();c2.strokeStyle='rgba(91,143,168,.35)';c2.lineWidth=1;c2.setLineDash([4,3]);c2.beginPath();c2.moveTo(x,yA.top);c2.lineTo(x,yA.bottom);c2.stroke();c2.restore();}});var gs=[{s:0,e:3,t:'Year 1'},{s:5,e:8,t:'Year 3'},{s:10,e:13,t:'Year 5'}];c2.save();c2.fillStyle='#5B8FA8';c2.font='500 11px Space Grotesk,sans-serif';c2.textAlign='center';gs.forEach(function(gr){if(md.data[gr.s]&&md.data[gr.e])c2.fillText(gr.t,(md.data[gr.s].x+md.data[gr.e].x)/2,yA.top-8);});c2.restore();}};
+  CH.plBar=new Chart(wfCtx,{type:'bar',data:{labels:wfLabels,datasets:[{data:wfData,backgroundColor:wfColors,borderWidth:0,borderRadius:2,barPercentage:0.75}]},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:20}},plugins:{legend:{display:false},tooltip:{callbacks:{label:function(item){var d=item.raw;var v=d[1]-d[0];return(v<0?'-':'')+'$'+Math.abs(v).toFixed(0)+'k';}}}},scales:{x:{ticks:{color:'#5B8FA8',font:{size:9}},grid:{display:false}},y:{ticks:{color:'#5B8FA8',callback:function(v){return(v<0?'-':'')+'$'+Math.abs(v).toFixed(0)+'k';}},grid:{color:'rgba(91,143,168,.2)'}}}},plugins:[ySepPlugin]});
+  mkSBar('cogsBarC','cogsBar',YR_LABELS,[{label:'CAC',data:m.cogsCAC.map(function(v){return-v/1e3;}),backgroundColor:'#FF7B7B'},{label:'Hosting',data:m.cogsHost.map(function(v){return-v/1e3;}),backgroundColor:'#FFD166'},{label:'Support',data:m.cogsSupp.map(function(v){return-v/1e3;}),backgroundColor:'#8E7CC3'},{label:'Processing',data:m.cogsProc.map(function(v){return-v/1e3;}),backgroundColor:'#3D7A9E'}]);}
+function buildBS(m){tbl([{sec:true,label:'ASSETS'},{label:'Cash & equivalents',vals:m.cash},{label:'Accounts receivable',vals:m.recv},{label:'Total Current Assets',vals:m.currA,tot:true},{label:'Equipment net of depreciation',vals:m.capN},{label:'TOTAL ASSETS',vals:m.totA,tot:true},{sec:true,label:'LIABILITIES'},{label:'Accounts payable',vals:m.pay},{label:'Accrued liabilities',vals:m.acc},{label:'Total Liabilities',vals:m.totL,tot:true},{sec:true,label:'EQUITY'},{label:'Paid-in capital (seed)',vals:YEARS.map(function(){return m.eq;})},{label:'Retained earnings',vals:m.cumNI},{label:'Total Equity',vals:m.totE,tot:true},{label:'TOTAL LIABILITIES + EQUITY',vals:m.totLE,tot:true}],'bsT');mkSBar('assetC','asset',YR_LABELS,[{label:'Cash',data:m.cash.map(function(v){return v/1e3;}),backgroundColor:'#00E6C3'},{label:'Receivables',data:m.recv.map(function(v){return v/1e3;}),backgroundColor:'#3D7A9E'},{label:'Fixed assets',data:m.ncA.map(function(v){return Math.max(0,v)/1e3;}),backgroundColor:'#FFD166'}]);mkLine('eqC','eq',YR_LABELS,[{label:'Total equity',data:m.totE.map(function(v){return v/1e3;}),borderColor:'#00E6C3',backgroundColor:'rgba(0,230,195,.1)',fill:true,tension:.3,pointRadius:5},{label:'Paid-in capital',data:YEARS.map(function(){return m.eq/1e3;}),borderColor:'#3D7A9E',borderDash:[5,3],fill:false,tension:0,pointRadius:3}]);}
+function buildCF(m){var open=[0].concat(m.cash.slice(0,NY-1));tbl([{sec:true,label:'A. OPERATING CASH FLOW'},{label:'Net income / (loss)',vals:m.ni},{label:'Add: Depreciation',vals:m.dep.map(function(v){return-v;})},{label:'Change in working capital',vals:YEARS.map(function(_,i){var pR=i===0?0:m.recv[i-1],pP=i===0?0:m.pay[i-1],pA=i===0?0:m.acc[i-1];return(m.pay[i]-pP)+(m.acc[i]-pA)-(m.recv[i]-pR);})},{label:'Net Operating Cash Flow',vals:m.opCF,tot:true},{sec:true,label:'B. INVESTING CASH FLOW'},{label:'Equipment capex',vals:YEARS.map(function(_,i){return i===0?-getA('a_capex'):0;})},{label:'Net Investing Cash Flow',vals:m.invCF,tot:true},{sec:true,label:'C. FINANCING CASH FLOW'},{label:'Equity raised (seed)',vals:YEARS.map(function(_,i){return i===0?m.eq:0;})},{label:'Net Financing Cash Flow',vals:YEARS.map(function(_,i){return i===0?m.eq:0;}),tot:true},{sec:true,label:'SUMMARY'},{label:'Opening cash',vals:open},{label:'CLOSING CASH BALANCE',vals:m.cash,tot:true}],'cfT');mkBar('cfBarC','cfBar',YR_LABELS,[{label:'Operating CF',data:m.opCF.map(function(v){return v/1e3;}),backgroundColor:'#00E6C3'},{label:'Investing CF',data:m.invCF.map(function(v){return v/1e3;}),backgroundColor:'#FF7B7B'},{label:'Financing CF',data:YEARS.map(function(_,i){return i===0?m.eq/1e3:0;}),backgroundColor:'#3D7A9E'}]);mkLine('cashC','cash',YR_LABELS,[{label:'Closing cash',data:m.cash.map(function(v){return v/1e3;}),borderColor:'#00E6C3',backgroundColor:'rgba(0,230,195,.1)',fill:true,tension:.3,pointRadius:5}]);}
 
-            const labels = data.months.map(m => `M${m}`);
+function irr(cfs){var r=0.3;for(var i=0;i<500;i++){var n=0,d=0;for(var t=0;t<cfs.length;t++){n+=cfs[t]/Math.pow(1+r,t);d-=t*cfs[t]/Math.pow(1+r,t+1);}if(Math.abs(d)<1e-12)break;var nr=r-n/d;if(Math.abs(nr-r)<1e-10)break;r=nr;if(r<-0.99)r=-0.99;if(r>10)r=10;}return r;}
+function npv(cfs,rate){var s=0;for(var t=0;t<cfs.length;t++)s+=cfs[t]/Math.pow(1+rate,t);return s;}
 
-            // Revenue Chart
-            if (charts.revenue) charts.revenue.destroy();
-            charts.revenue = new Chart(document.getElementById('revenueChart'), {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Revenue',
-                        data: data.revenue,
-                        borderColor: '#0066FF',
-                        backgroundColor: 'rgba(0, 102, 255, 0.1)',
-                        fill: true,
-                        tension: 0.4
-                    }, {
-                        label: 'Expenses',
-                        data: data.expenses,
-                        borderColor: '#FF3D00',
-                        backgroundColor: 'rgba(255, 61, 0, 0.1)',
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: { legend: { position: 'bottom' } },
-                    scales: {
-                        y: { 
-                            beginAtZero: true,
-                            ticks: { callback: value => '$' + (value/1000).toFixed(0) + 'k' }
-                        }
-                    }
-                }
-            });
+function buildInv(m){
+  // Min equity so cash never falls below covenant buffer
+  var bufPct=getA('a_covenant')/100,intR=getA('a_intRate')/100;
+  function calcMinEq(){var E=10000;for(var iter=0;iter<300;iter++){var cc2=[];for(var i=0;i<NY;i++){var oc=i===0?E:cc2[i-1];var ni2=m.ebit[i]+oc*intR;var da=-m.dep[i];var pR=i===0?0:m.recv[i-1],pP=i===0?0:m.pay[i-1],pA=i===0?0:m.acc[i-1];var wc=(m.pay[i]-pP)+(m.acc[i]-pA)-(m.recv[i]-pR);var op2=ni2+da+wc;cc2.push((i===0?0:cc2[i-1])+op2+m.invCF[i]+(i===0?E:0));}if(Math.min.apply(null,cc2)>=E*bufPct)break;E+=10000;}return Math.ceil(E/10000)*10000;}
+  var reqEq=calcMinEq();
+  var ev=m.ebitda[NY-1];
+  g('reqInvAmt').textContent=fmtK(reqEq);
+  g('reqInvNote').textContent='Minimum equity so cash never falls below '+Math.round(bufPct*100)+'% covenant buffer throughout the 5-year operating period.';
+  var baseOwn=0.30,baseEV=16;
+  var bCFs=[-reqEq];for(var i=0;i<NY;i++){var v=m.opCF[i]*baseOwn;if(i===NY-1)v+=ev*baseEV*baseOwn;bCFs.push(v);}
+  var bIRR=irr(bCFs),bNPV=npv(bCFs,0.20),bRet=0;for(var i=1;i<bCFs.length;i++)bRet+=bCFs[i];
+  function irrCls(r){return r>0.6?'kc-vg':r>0.4?'kc-g':r>0.2?'kc-n':r>0?'kc-lr':'kc-r';}
+  g('i_irr').textContent=(bIRR*100).toFixed(1)+'%';g('i_irr').className='kv '+irrCls(bIRR);
+  g('i_req_eq').textContent=fmtK(reqEq);g('i_req_note').textContent='Min. to keep cash \u2265 '+Math.round(bufPct*100)+'% covenant';
+  if(g('i_coc_s'))g('i_coc_s').textContent='Total returned \u00f7 '+fmtK(reqEq)+' invested';
+  g('i_npv').textContent=fmtK(bNPV);g('i_npv').className='kv '+(bNPV>500000?'kc-vg':bNPV>0?'kc-g':'kc-r');
+  g('i_coc').textContent=(bRet/reqEq).toFixed(1)+'\u00d7';g('i_coc').className='kv '+(bRet/reqEq>3?'kc-vg':bRet/reqEq>1.5?'kc-g':bRet/reqEq>1?'kc-n':'kc-r');
+  if(g('i_irr_s'))g('i_irr_s').textContent='30% ownership \u00b7 '+fmtK(reqEq)+' invested';
+  g('i_ebitda').textContent=fmtK(ev);g('i_ebitda').className='kv '+(ev>400000?'kc-vg':ev>100000?'kc-g':ev>0?'kc-n':'kc-r');
+  // Sensitivity matrix
+  var ownPcts=[0.20,0.30,0.40,0.50];
+  var evMs=[8,12,16,20,24];
+  var html='<tr><th>Investor owns<br/>(invested: '+fmtK(reqEq)+')<br/><small>implies pre-money val \u2192</small></th>'+evMs.map(function(e){return'<th>'+e+'\u00d7 EBITDA<br/><small>exit: '+fmtK(ev*e)+'</small></th>';}).join('')+'</tr>';
+  ownPcts.forEach(function(own){var pm=Math.round(reqEq/own-reqEq);html+='<tr><th><strong>'+Math.round(own*100)+'%</strong><br/><small>pre-money: '+fmtK(pm)+'</small></th>';evMs.forEach(function(evm){var cfs=[-reqEq];for(var i=0;i<NY;i++){var v=m.opCF[i]*own;if(i===NY-1)v+=ev*evm*own;cfs.push(v);}var r=irr(cfs);var isBase=Math.abs(own-baseOwn)<0.01&&evm===baseEV;
+  var c=isBase?'hi':'';
+  function irrColor(r){if(isNaN(r)||!isFinite(r))return'var(--muted)';var v=Math.max(-1,Math.min(0.5,r));var rr,gg,bb;if(v<0){var t=(v+1);rr=Math.round(204+(232-204)*t);gg=Math.round(34+(160-34)*t);bb=Math.round(34+(48-34)*t);}else if(v<0.20){var t=v/0.20;rr=Math.round(232+(126-232)*t);gg=Math.round(160+(188-160)*t);bb=Math.round(48+(58-48)*t);}else{var t=Math.min(1,(v-0.20)/0.30);rr=Math.round(126+(0-126)*t);gg=Math.round(188+(200-188)*t);bb=Math.round(58+(83-58)*t);}return'rgb('+rr+','+gg+','+bb+')';}
+  var fc=irrColor(r);var val=isNaN(r)||!isFinite(r)?'n/a':(r*100).toFixed(0)+'%';
+  html+='<td class="'+c+'"><span style="color:'+fc+'">'+val+'</span></td>';});html+='</tr>';});
+  g('sensT').innerHTML=html;
+  // Charts
+  var wfL=['Invested'];for(var i=0;i<NY;i++)wfL.push(i===NY-1?'Y'+(i+1)+' FCF+Exit':'Y'+(i+1)+' FCF');
+  var wf=[-reqEq/1e3];for(var i=0;i<NY;i++){var v=m.opCF[i]*baseOwn;if(i===NY-1)v+=ev*baseEV*baseOwn;wf.push(v/1e3);}
+  var cWf=g('invWfC');if(CH.iWf)CH.iWf.destroy();CH.iWf=new Chart(cWf,{type:'bar',data:{labels:wfL,datasets:[{data:wf,backgroundColor:wf.map(function(v){return v<0?'rgba(255,123,123,.8)':'rgba(0,230,195,.8)';}),borderWidth:0,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(i){return'$'+i.raw.toFixed(0)+'k';}}}},scales:{x:{ticks:{color:'#5B8FA8',font:{size:9}},grid:{color:'rgba(91,143,168,.4)'}},y:{ticks:{color:'#5B8FA8',callback:function(v){return'$'+v.toFixed(0)+'k';}},grid:{color:'rgba(91,143,168,.4)'}}}}});
+  var opTotal=0;for(var i=0;i<NY;i++)opTotal+=m.opCF[i]*baseOwn;
+  var br=[-reqEq/1e3,opTotal/1e3,ev*baseEV*baseOwn/1e3,wf.slice(1).reduce(function(a,b){return a+b;},0)];
+  var cBr=g('invBrC');if(CH.iBr)CH.iBr.destroy();CH.iBr=new Chart(cBr,{type:'bar',data:{labels:['Equity in',NY+'yr Op FCF (30%)','Exit value (30%)','Total returned'],datasets:[{data:br,backgroundColor:br.map(function(v,i){return i===0?'rgba(255,123,123,.8)':i===3?'rgba(0,230,195,.9)':'rgba(91,143,168,.8)';}),borderWidth:0,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(i){return'$'+i.raw.toFixed(0)+'k';}}}},scales:{x:{ticks:{color:'#5B8FA8',font:{size:9}},grid:{color:'rgba(91,143,168,.4)'}},y:{ticks:{color:'#5B8FA8',callback:function(v){return'$'+v.toFixed(0)+'k';}},grid:{color:'rgba(91,143,168,.4)'}}}}});
+}
 
-            // Profit Chart
-            if (charts.profit) charts.profit.destroy();
-            charts.profit = new Chart(document.getElementById('profitChart'), {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Monthly Profit',
-                        data: data.profit,
-                        backgroundColor: data.profit.map(p => p >= 0 ? 'rgba(16, 185, 129, 0.7)' : 'rgba(255, 61, 0, 0.7)'),
-                        borderColor: data.profit.map(p => p >= 0 ? '#10B981' : '#FF3D00'),
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { 
-                            ticks: { callback: value => '$' + (value/1000).toFixed(0) + 'k' }
-                        }
-                    }
-                }
-            });
-
-            // Customers Chart
-            if (charts.customers) charts.customers.destroy();
-            charts.customers = new Chart(document.getElementById('customersChart'), {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Total Customers',
-                        data: data.customers,
-                        borderColor: '#0066FF',
-                        backgroundColor: 'rgba(0, 102, 255, 0.1)',
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true } }
-                }
-            });
-
-            // Cash Chart
-            if (charts.cash) charts.cash.destroy();
-            charts.cash = new Chart(document.getElementById('cashChart'), {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Cash Position',
-                        data: data.cash,
-                        borderColor: '#10B981',
-                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { 
-                            ticks: { callback: value => '$' + (value/1000).toFixed(0) + 'k' }
-                        }
-                    }
-                }
-            });
-        }
-
-        // Initial load
-        updateModel();
-    </script>
+function showPage(id,btn){document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});g('page-'+id).classList.add('active');btn.classList.add('active');if(id==='financials')updateFinancials();if(id==='revenue')updateRevPage();}
+function setFT(tab,btn){fs=tab;['pl','bs','cf','inv','assumptions'].forEach(function(t){var el=g('fs-'+t);if(el)el.style.display=t===tab?'':'none';});document.querySelectorAll('#page-financials .ytb').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');if(tab!=='assumptions')updateFinancials();}
+function updateAll(){updateRevPage();if(g('page-financials').classList.contains('active'))updateFinancials();}
+updateRevPage();
+</script>
 </body>
 </html>
