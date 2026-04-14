@@ -168,10 +168,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
       </div>
     </div>
     <div class="callout">
-      <strong>IRR @ 30% / 16&times;:</strong> based on 30% ownership and 16&times; EV/EBITDA exit multiple. &nbsp;|&nbsp; <strong>NPV @ 20%:</strong> If you demand 20%/yr returns, this is how many extra dollars this deal makes you vs. that alternative. Positive = beats your hurdle. &nbsp;|&nbsp; <strong>Cash-on-cash:</strong> Total cash you receive (operating dividends + exit) &divide; invested. 3&times; means you tripled your money. &nbsp;|&nbsp; <strong>Terminal value:</strong> Estimated sale price (Year 5 EBITDA &times; exit multiple). Your share is prorated by ownership %.
+      <strong>IRR @ 30% / 12&times;:</strong> based on 30% ownership and 12&times; EV/EBITDA exit multiple. &nbsp;|&nbsp; <strong>NPV @ 20%:</strong> If you demand 20%/yr returns, this is how many extra dollars this deal makes you vs. that alternative. Positive = beats your hurdle. &nbsp;|&nbsp; <strong>Cash-on-cash:</strong> Total cash you receive (operating dividends + exit) &divide; invested. 3&times; means you tripled your money. &nbsp;|&nbsp; <strong>Terminal value:</strong> Estimated sale price (Year 5 EBITDA &times; exit multiple). Your share is prorated by ownership %.
     </div>
     <div class="kr">
-      <div class="kpi hi"><div class="kl">IRR @ 30% / 16&times;</div><div class="kv" id="i_irr">&mdash;</div><div class="ks" id="i_irr_s">Base case</div></div>
+      <div class="kpi hi"><div class="kl">IRR @ 30% / 12&times;</div><div class="kv" id="i_irr">&mdash;</div><div class="ks" id="i_irr_s">Base case</div></div>
       <div class="kpi po"><div class="kl">NPV @ 20% hurdle</div><div class="kv" id="i_npv">&mdash;</div><div class="ks">Extra value vs 20%/yr alt.</div></div>
       <div class="kpi wa"><div class="kl">Cash-on-cash</div><div class="kv" id="i_coc">&mdash;</div><div class="ks" id="i_coc_s">Total returned &divide; equity</div></div>
       <div class="kpi"><div class="kl">Required equity raise</div><div class="kv" id="i_req_eq" style="color:var(--amber)">&mdash;</div><div class="ks" id="i_req_note">Min. to sustain operations</div></div>
@@ -182,7 +182,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13
       <div class="card"><h3>Value creation bridge ($k) &mdash; 30% ownership</h3><div class="ch h240"><canvas id="invBrC"></canvas></div></div>
     </div>
     <div class="callout">
-      <strong>How to read this:</strong> You invest the <strong>required equity</strong> at the start in exchange for a % of the company (left axis). At end of Year 5 the business is sold at X &times; its Year 5 EBITDA (top axis). Each cell shows your <strong>IRR</strong> (annualised return). Example: 30% ownership at 16&times; exit &rarr; IRR shown in the teal cell. The pre-money valuation embedded in each row tells you what you're implying the business is worth today for that ownership %.
+      <strong>How to read this:</strong> You invest the <strong>required equity</strong> at the start in exchange for a % of the company (left axis). At end of Year 5 the business is sold at X &times; its Year 5 EBITDA (top axis). Each cell shows your <strong>IRR</strong> (annualised return). Example: 30% ownership at 12&times; exit &rarr; IRR shown in the teal cell. The pre-money valuation embedded in each row tells you what you're implying the business is worth today for that ownership %.
     </div>
     <div class="card" style="margin-bottom:12px;">
       <h3>IRR sensitivity &mdash; Investor ownership % vs EV/EBITDA exit multiple at end of Year 5</h3>
@@ -410,7 +410,7 @@ function buildInv(m){
   var ev=m.ebitda[NY-1];
   g('reqInvAmt').textContent=fmtK(reqEq);
   g('reqInvNote').textContent='Minimum equity so cash never falls below '+Math.round(bufPct*100)+'% covenant buffer throughout the 5-year operating period.';
-  var baseOwn=0.30,baseEV=16;
+  var baseOwn=0.30,baseEV=12;
   var bCFs=[-reqEq];for(var i=0;i<NY;i++){var v=m.opCF[i]*baseOwn;if(i===NY-1)v+=ev*baseEV*baseOwn;bCFs.push(v);}
   var bIRR=irr(bCFs),bNPV=npv(bCFs,0.20),bRet=0;for(var i=1;i<bCFs.length;i++)bRet+=bCFs[i];
   function irrCls(r){return r>0.6?'kc-vg':r>0.4?'kc-g':r>0.2?'kc-n':r>0?'kc-lr':'kc-r';}
@@ -423,7 +423,7 @@ function buildInv(m){
   g('i_ebitda').textContent=fmtK(ev);g('i_ebitda').className='kv '+(ev>400000?'kc-vg':ev>100000?'kc-g':ev>0?'kc-n':'kc-r');
   // Sensitivity matrix
   var ownPcts=[0.20,0.30,0.40,0.50];
-  var evMs=[8,12,16,20,24];
+  var evMs=[4,8,12,16,20];
   var html='<tr><th>Investor owns<br/>(invested: '+fmtK(reqEq)+')<br/><small>implies pre-money val \u2192</small></th>'+evMs.map(function(e){return'<th>'+e+'\u00d7 EBITDA<br/><small>exit: '+fmtK(ev*e)+'</small></th>';}).join('')+'</tr>';
   ownPcts.forEach(function(own){var pm=Math.round(reqEq/own-reqEq);html+='<tr><th><strong>'+Math.round(own*100)+'%</strong><br/><small>pre-money: '+fmtK(pm)+'</small></th>';evMs.forEach(function(evm){var cfs=[-reqEq];for(var i=0;i<NY;i++){var v=m.opCF[i]*own;if(i===NY-1)v+=ev*evm*own;cfs.push(v);}var r=irr(cfs);var isBase=Math.abs(own-baseOwn)<0.01&&evm===baseEV;
   var c=isBase?'hi':'';
