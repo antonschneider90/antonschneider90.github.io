@@ -5,7 +5,7 @@ const blogPosts = [
     slug: "automated-data-updates-for-reports-and-models",
     date: "2026-04-15",
     category: "Finance & Entrepreneurship",
-    excerpt: "FP&A teams spend 69% of their time on manual data gathering. Enterprise tools cost $60K+ per year. What if you just need to plug new data into a model you're iterating on?"
+    excerpt: "FP&A teams spend 69% of their time on manual data gathering. Enterprise tools cost $50,000+ per year. What if you just need to plug new data into a model you're iterating on?"
 },
    {
     title: "Driving Impact in the Energy Markets",
