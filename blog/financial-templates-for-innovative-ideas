@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Templates for Innovative Ideas - Anton Schneider</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        .blog-post {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+        }
+        .blog-post-header {
+            margin-bottom: 2.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .blog-post-meta {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .blog-post-title {
+            font-size: 2.25rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 0;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .blog-post-body h2 {
+            font-size: 1.35rem;
+            font-weight: 600;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .blog-post-body p {
+            font-size: 1.05rem;
+            line-height: 1.75;
+            color: #374151;
+            margin-bottom: 1.25rem;
+        }
+        .blog-post-body a {
+            color: #2563eb;
+            text-decoration: underline;
+        }
+        .blog-post-body a:hover {
+            color: #1d4ed8;
+        }
+        .blog-post-footer {
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e5e7eb;
+            font-size: 0.95rem;
+            color: #6b7280;
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: #6b7280;
+            text-decoration: none;
+            margin-bottom: 2rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .back-link:hover {
+            color: #111827;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="../index.html" class="logo">
+                <span class="logo-text">Anton Schneider</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="../index.html#models">Models</a></li>
+                <li><a href="../blog.html">Blog</a></li>
+                <li><a href="../index.html#about">About</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section style="padding-top: 120px; background: white; min-height: 100vh;">
+        <div class="blog-post">
+            <a href="../blog.html" class="back-link">← Back to Blog</a>
+
+            <div class="blog-post-header">
+                <div class="blog-post-meta">
+                    <span>Apr 15, 2026</span>
+                    <span>•</span>
+                    <span>Finance & Entrepreneurship</span>
+                    <span>•</span>
+                    <span>2 min read</span>
+                </div>
+                <h1 class="blog-post-title">Financial Templates for Innovative Ideas</h1>
+            </div>
+
+            <div class="blog-post-body">
+                <h2>Seeing Hundreds of Business Plans — From the Other Side of the Table</h2>
+
+                <p>
+                    Early in my career, I worked in private equity at UBS. My job was to analyze hundreds of pre-IPO tech business plans and identify the most attractive ones. I loved it. I got to see innovative companies from all sorts of industries — health care, data analytics, social media, electric mobility — and learn what made their financials tick.
+                </p>
+
+                <p>
+                    Over time, I realized that I wanted to be on the other side. Not evaluating business plans, but building them. Working directly inside companies, helping them find investors, scale their product, and grow their customer base.
+                </p>
+
+                <h2>Employee #1</h2>
+
+                <p>
+                    So I partnered up with friends in Munich who were founding a food ordering business, and I joined as employee #1. Having seen so many business plans during my time in private equity, I had a solid sense of what it takes to raise money. How to structure a financial model. How to run scenarios that surface the real risks and opportunities. What strategy and KPIs to present to investors.
+                </p>
+
+                <p>
+                    What I didn't have was templates. I couldn't take models from other companies and repurpose them — I had to build everything from scratch.
+                </p>
+
+                <h2>Sharing the Playbook</h2>
+
+                <p>
+                    That experience is why I now like to share my work. Too many founders have great ideas but lack the financial background to turn them into a compelling model. They know their product inside out, but struggle to translate that into a P&L, a cash flow forecast, or a set of investor-ready scenarios.
+                </p>
+
+                <p>
+                    I've created a <a href="../models/saas-financial-model.html">SaaS financial template</a> with an interactive dashboard, available on this site. It lets you adjust key metrics — subscription price, churn, customer acquisition cost — and instantly see how they affect your financial statements and investor returns. I hope it helps founders play with their numbers, understand their business model better, and get a clearer picture of how to pitch it. This model is for monthly subscription business. Please reach out if you have other interesting use cases you'd like to discuss.
+                </p>
+
+                <h2>Why Europe Needs More of This</h2>
+
+                <p>
+                    I believe in the power of entrepreneurship: finding new solutions to problems and unlocking new economic sectors. And I see tremendous potential in Europe specifically.
+                </p>
+
+                <p>
+                    The European startup ecosystem has matured significantly. The continent now counts over 400 unicorns. Venture capital investment reached roughly €66 billion in 2025, and the region's share of global VC has grown from 5% two decades ago to about 20% today. In 2025, Germany overtook the UK in VC deal value for the first time, and French and German firms dominated the top European fundraising rankings.
+                </p>
+
+                <p>
+                    But the gap with the US remains wide. American tech companies attracted $177 billion in private investment in just the first nine months of 2025 — almost double the prior year. US tech funding runs at roughly 0.6–0.7% of GDP, while the UK sits at 0.35% and most of continental Europe well below that. European VC fundraising hit its lowest level in a decade in 2025, and institutional investors still allocate far less to venture capital than their US counterparts. The structural funding gap for rounds above $15 million is estimated at around $75 billion.
+                </p>
+
+                <p>
+                    There are reasons for optimism. US investors are increasingly participating in European deals, drawn by lower valuations and strong technical talent. The EU adopted a Startup and Scaleup Strategy in late 2025 to put entrepreneurship at the centre of its competitiveness agenda. Energy, defence, and AI are attracting record investment across the continent.
+                </p>
+
+                <p>
+                    Europe doesn't lack ideas or talent. What it often lacks is the financial infrastructure — the templates, the playbooks, the tools — that make it easier for founders to go from concept to funded company. That's a small gap I'd like to help close.
+                </p>
+
+                <p>
+                    Please reach out if you have feedback, questions, or are interested in collaborating.
+                </p>
+            </div>
+
+            <div class="blog-post-footer">
+                <p>Anton Schneider — <a href="https://antonschneider.com">antonschneider.com</a></p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-text">
+                    <p>&copy; 2026 Anton Schneider</p>
+                    <p class="footer-location">London / Berlin</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
