@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automated Data Updates for Reports and Models - Anton Schneider</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        .blog-post {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+        }
+        .blog-post-header {
+            margin-bottom: 2.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .blog-post-meta {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .blog-post-title {
+            font-size: 2.25rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 0;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .blog-post-body h2 {
+            font-size: 1.35rem;
+            font-weight: 600;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .blog-post-body p {
+            font-size: 1.05rem;
+            line-height: 1.75;
+            color: #374151;
+            margin-bottom: 1.25rem;
+        }
+        .blog-post-body a {
+            color: #2563eb;
+            text-decoration: underline;
+        }
+        .blog-post-body a:hover {
+            color: #1d4ed8;
+        }
+        .blog-post-footer {
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e5e7eb;
+            font-size: 0.95rem;
+            color: #6b7280;
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: #6b7280;
+            text-decoration: none;
+            margin-bottom: 2rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .back-link:hover {
+            color: #111827;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="../index.html" class="logo">
+                <span class="logo-text">Anton Schneider</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="../index.html#models">Models</a></li>
+                <li><a href="../blog.html">Blog</a></li>
+                <li><a href="../index.html#about">About</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section style="padding-top: 120px; background: white; min-height: 100vh;">
+        <div class="blog-post">
+            <a href="../blog.html" class="back-link">← Back to Blog</a>
+
+            <div class="blog-post-header">
+                <div class="blog-post-meta">
+                    <span>Apr 15, 2026</span>
+                    <span>•</span>
+                    <span>FP&amp;A &amp; Automation</span>
+                    <span>•</span>
+                    <span>2 min read</span>
+                </div>
+                <h1 class="blog-post-title">Automated Data Updates for Reports and Models</h1>
+            </div>
+
+            <div class="blog-post-body">
+                <h2>The FP&A Time Sink</h2>
+
+                <p>
+                    During my time in FP&A, one task consumed more hours than anything else: getting fresh data into the format that the C-Suite wanted to see. It sounds simple. It never was.
+                </p>
+
+                <p>
+                    It meant pulling data from multiple sources — if you were lucky, just two databases (one for customer data, one for financials). Often it was more. It meant building the framework that the data would flow into: a full P&L, then slicing that P&L into the KPIs that leadership actually tracked. And it meant that every month, when a new set of actuals landed, you were back doing manual work. Pulling another month of data. Dragging formulas one column to the right. Updating the current-month flag in the model. Rinse and repeat.
+                </p>
+
+                <p>
+                    This isn't a personal quirk — it's an industry-wide problem. The 2025 FP&A Trends Survey found that only 31% of FP&A professionals' time goes to value-added activities like analysis and storytelling. The remaining 69% is spent on manual data gathering, reconciliation, and reporting. Other research puts it even starker: 75% of FP&A time goes to tasks that add no direct value. The cost of this inefficiency across US companies alone has been estimated at $7.8 billion per year.
+                </p>
+
+                <h2>The Tools That Help — and Where They Fall Short</h2>
+
+                <p>
+                    The good news is that I was able to automate a significant chunk of this work using SQL, connecting databases directly to tables and slide decks. And there are excellent software platforms — like Pigment, Anaplan, Tableau — that can dramatically speed up the path from raw data to updated reporting.
+                </p>
+
+                <p>
+                    But these tools come with trade-offs. Enterprise FP&A platforms like Anaplan and Pigment typically start at $60,000 to $100,000 per year. They often require dedicated technical staff or external consultants to build and maintain the models. Implementation can take months. They're powerful solutions for large organisations with mature finance functions and the budget to match.
+                </p>
+
+                <p>
+                    What if you're not there yet? What if you're a startup, a small team, or a solo founder who just wants to plug new data into a business model you've been iterating on? The enterprise tools are overkill. But the alternative — manually updating spreadsheets — is a time sink that doesn't scale.
+                </p>
+
+                <h2>What I Want to Build Next</h2>
+
+                <p>
+                    This gap is what I want to explore as my next project. I experienced it again firsthand when building the <a href="../models/v2g-bus-fleet.html">V2G energy model</a>. The Monte Carlo simulation had run. The financial model was built. But what if I just wanted to add a few new data points to the simulation? Or feed in an updated electricity price curve? The model wasn't set up to make that easy.
+                </p>
+
+                <p>
+                    I'm currently thinking about what a lightweight solution could look like. The framework needs to be agile — designed so that updating the data that feeds a model is as simple as dropping in a new file or pointing to a new source. AI could play a role here too, helping to parse incoming data and get it into the right format automatically, without needing a custom ETL pipeline for every use case.
+                </p>
+
+                <p>
+                    The FP&A industry is moving in this direction. AI agents that can monitor data, flag anomalies, and draft reports are no longer theoretical — they're being deployed in enterprise settings today. The question is how to bring that capability down to the level of individual models and dashboards, where most early-stage founders and small teams actually work.
+                </p>
+
+                <p>
+                    Stay tuned for new models and dashboards on this. And please reach out if you have ideas — I'd love to hear how others are solving this problem.
+                </p>
+            </div>
+
+            <div class="blog-post-footer">
+                <p>Anton Schneider — <a href="https://antonschneider.com">antonschneider.com</a></p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-text">
+                    <p>&copy; 2026 Anton Schneider</p>
+                    <p class="footer-location">London / Berlin</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
