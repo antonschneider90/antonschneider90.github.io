@@ -3,14 +3,14 @@ const blogPosts = [
    {
     title: "Driving Impact in the Energy Markets",
     slug: "driving-impact-in-the-energy-markets",
-    date: "2026-04-15",
+    date: "2026-04-14",
     category: "Energy Markets",
     excerpt: "Energy markets are in turmoil. Again. The 2026 Iran war, the unresolved fallout from Russia's invasion of Ukraine, and political backlash against climate policy — why I got involved and what V2G can do."
 },
 {
     title: "Financial Templates for Innovative Ideas",
     slug: "financial-templates-for-innovative-ideas",
-    date: "2026-04-15",
+    date: "2026-03-28",
     category: "Finance & Entrepreneurship",
     excerpt: "I spent years analyzing pre-IPO business plans at UBS. Then I became employee #1 at a startup and had to build my own from scratch. Here's why I'm sharing the playbook."
 }
