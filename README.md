@@ -68,7 +68,6 @@ The design uses a palette inspired by renewable energy sources:
 I'm currently exploring new opportunities in strategic finance and energy/climate tech across London and Continental Europe. Happy to collaborate, chat, or hear feedback on the models.
 
 Contact: homepageanton@gmail.com
-Location: London / Berlin
 
 ---
 
