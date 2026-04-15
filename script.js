@@ -13,7 +13,8 @@ const blogPosts = [
     date: "2026-04-15",
     category: "Finance & Entrepreneurship",
     excerpt: "I spent years analyzing pre-IPO business plans at UBS. Then I became employee #1 at a startup and had to build my own from scratch. Here's why I'm sharing the playbook."
-};
+}
+];
 
 // Load recent blog posts on homepage
 function loadRecentBlogPosts() {
