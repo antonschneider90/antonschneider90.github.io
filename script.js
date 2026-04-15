@@ -1,5 +1,12 @@
 // Blog posts data
 const blogPosts = [
+   {
+    title: "Driving Impact in the Energy Markets",
+    slug: "driving-impact-in-the-energy-markets",
+    date: "2026-04-15",
+    category: "Energy Markets",
+    excerpt: "Energy markets are in turmoil. Again. The 2026 Iran war, the unresolved fallout from Russia's invasion of Ukraine, and political backlash against climate policy — why I got involved and what V2G can do."
+},
     {
         title: "Why Vehicle-to-Grid Makes Sense for Public Transport",
         date: "2026-04-05",
