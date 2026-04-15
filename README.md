@@ -1,6 +1,6 @@
 # Anton Schneider — Finance, AI & Energy Portfolio 🧠⚡
 
-A personal portfolio of interactive financial models, tools, and writing — built to explore ideas at the intersection of finance, technology, and energy.
+A personal portfolio of interactive financial models, tools, and writing — built to explore ideas on finance, technology, and energy.
 
 ## 🔭 What This Is
 
