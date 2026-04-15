@@ -7,28 +7,13 @@ const blogPosts = [
     category: "Energy Markets",
     excerpt: "Energy markets are in turmoil. Again. The 2026 Iran war, the unresolved fallout from Russia's invasion of Ukraine, and political backlash against climate policy — why I got involved and what V2G can do."
 },
-    {
-        title: "Why Vehicle-to-Grid Makes Sense for Public Transport",
-        date: "2026-04-05",
-        category: "Energy Systems",
-        excerpt: "Electric buses sit idle for 16+ hours per day. With bidirectional charging, they can become distributed energy storage assets. Here's the economic case.",
-        slug: "v2g-public-transport"
-    },
-    {
-        title: "From ISPs to Energy: The Surprising Similarities",
-        date: "2026-03-28",
-        category: "Business Models",
-        excerpt: "Fiber networks and power grids have more in common than you'd think. Both require massive upfront capital and monetize through subscriptions. The playbook transfers.",
-        slug: "isp-to-energy-transition"
-    },
-    {
-        title: "Forecasting in Energy Markets: Lessons from Tech",
-        date: "2026-03-15",
-        category: "Analytics",
-        excerpt: "At Google Fiber, forecasting drove profitability. In energy, it's even more critical—imbalances cost money. Here's how the technical skills translate.",
-        slug: "forecasting-energy-markets"
-    }
-];
+{
+    title: "Financial Templates for Innovative Ideas",
+    slug: "financial-templates-for-innovative-ideas",
+    date: "2026-04-15",
+    category: "Finance & Entrepreneurship",
+    excerpt: "I spent years analyzing pre-IPO business plans at UBS. Then I became employee #1 at a startup and had to build my own from scratch. Here's why I'm sharing the playbook."
+};
 
 // Load recent blog posts on homepage
 function loadRecentBlogPosts() {
