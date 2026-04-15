@@ -1,9 +1,16 @@
 // Blog posts data
 const blogPosts = [
+{
+    title: "Automated Data Updates for Reports and Models",
+    slug: "automated-data-updates-for-reports-and-models",
+    date: "2026-04-15",
+    category: "FP&A & Automation",
+    excerpt: "FP&A teams spend 69% of their time on manual data gathering. Enterprise tools cost $60K+ per year. What if you just need to plug new data into a model you're iterating on?"
+},
    {
     title: "Driving Impact in the Energy Markets",
     slug: "driving-impact-in-the-energy-markets",
-    date: "2026-04-14",
+    date: "2026-04-13",
     category: "Energy Markets",
     excerpt: "Energy markets are in turmoil. Again. The 2026 Iran war, the unresolved fallout from Russia's invasion of Ukraine, and political backlash against climate policy — why I got involved and what V2G can do."
 },
