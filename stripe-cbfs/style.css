@@ -266,6 +266,7 @@ main {
   margin-bottom: 20px;
   line-height: 1.5;
 }
+.sheet-scenario-note:empty { display: none; }
 
 /* ============================================================
    KPI CARDS
@@ -364,9 +365,12 @@ main {
    ============================================================ */
 .table-scroll {
   overflow-x: auto;
+  overflow-y: visible;
   background: white;
   border: 1px solid var(--grey-soft);
   border-radius: var(--radius);
+  max-width: 100%;
+  position: relative;
 }
 table.data-table {
   width: 100%;
@@ -404,7 +408,9 @@ table.data-table {
   white-space: nowrap;
 }
 .data-table td:first-child { text-align: left; font-weight: 500; padding-left: 20px; color: var(--navy); }
-.data-table tr:hover { background: var(--off-white); }
+/* Hover effect only on body rows, not header rows */
+.data-table tbody tr:hover td:not(.sticky-col) { background: var(--off-white); }
+.data-table tbody tr:hover td.sticky-col { background: var(--off-white); }
 .data-table .section-row td {
   background: var(--navy);
   color: white;
@@ -415,6 +421,7 @@ table.data-table {
   padding: 10px 20px;
 }
 .data-table .section-row td:first-child { padding-left: 20px; }
+.data-table tbody tr.section-row:hover td { background: var(--navy); }
 .data-table .sub-header-row td {
   background: var(--purple-soft);
   color: var(--navy);
@@ -423,6 +430,7 @@ table.data-table {
   padding: 8px 20px;
   letter-spacing: 0.04em;
 }
+.data-table tbody tr.sub-header-row:hover td { background: var(--purple-soft); }
 .data-table .bold-row td { font-weight: 600; }
 .data-table .indent { padding-left: 36px; font-style: italic; color: var(--navy-60); }
 
@@ -433,6 +441,61 @@ table.data-table {
 
 .data-table td.pos { color: var(--green); font-weight: 500; }
 .data-table td.neg { color: var(--red); font-weight: 500; }
+
+/* Centered headers (for Scenarios tab) */
+.data-table th.center-header { text-align: center; }
+
+/* Sticky first column (for CYO and Scenarios tables) */
+.data-table .sticky-col {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: white;
+  box-shadow: 2px 0 4px rgba(10, 37, 64, 0.05);
+}
+.data-table thead .sticky-col { background: var(--navy); z-index: 3; }
+.data-table tbody .sticky-col { text-align: left; }
+.data-table .section-row .sticky-col { background: var(--navy); color: white; z-index: 2; }
+.data-table .sub-header-row .sticky-col { background: var(--purple-soft); color: var(--navy); z-index: 2; }
+
+/* Sticky thead for CYO table */
+.cyo-table thead { position: sticky; top: 0; z-index: 10; }
+.cyo-table thead th { background: var(--navy); }
+.cyo-table thead .sub-header-sticky th { background: var(--navy); color: white; font-weight: 500; }
+.cyo-table thead .gap-col { background: var(--navy); }
+.cyo-table tbody .gap-col { background: white; border-bottom: none; padding: 0; width: 8px; }
+.cyo-table tbody tr:hover .gap-col { background: var(--off-white); }
+
+/* CYO specific: compact cells to fit 4 blocks × 4 cols + gaps */
+.cyo-table {
+  font-size: 11.5px;
+}
+.cyo-table th, .cyo-table td {
+  padding: 7px 6px;
+}
+.cyo-table td:first-child, .cyo-table th:first-child {
+  padding-left: 16px;
+  padding-right: 10px;
+  min-width: 220px;
+  max-width: 260px;
+}
+.cyo-table .block-header {
+  padding: 8px 6px;
+  font-size: 10.5px;
+}
+
+/* Scenarios table: compact + sticky */
+.scenarios-table {
+  font-size: 12px;
+}
+.scenarios-table th, .scenarios-table td {
+  padding: 8px 7px;
+}
+.scenarios-table .sticky-col {
+  min-width: 180px;
+  max-width: 220px;
+  padding-left: 16px;
+}
 
 /* Unit econ "pill" values for LTV/CAC */
 .ratio-pill {
