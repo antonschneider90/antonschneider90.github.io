@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stripe CBFS — Forecast Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <!-- Loading overlay -->
+  <div id="loading-overlay" class="loading">
+    <div class="loading-inner">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">Loading CBFS model data...</div>
+      <div class="loading-subtext" id="loading-status">Connecting to Google Sheets</div>
+    </div>
+  </div>
+
+  <!-- Error overlay -->
+  <div id="error-overlay" class="error-overlay hidden">
+    <div class="error-inner">
+      <h2>Could not load data</h2>
+      <p id="error-message"></p>
+      <button onclick="location.reload()">Try again</button>
+    </div>
+  </div>
+
+  <header class="top-bar">
+    <div class="brand">
+      <div class="brand-mark">CBFS</div>
+      <div class="brand-text">
+        <div class="brand-title">Stripe Forecast Model</div>
+        <div class="brand-sub">Anton Schneider · EMEA Strategic Finance Take-Home</div>
+      </div>
+    </div>
+
+    <div class="top-controls">
+      <div class="check-badge" id="check-badge">
+        <span class="check-dot"></span>
+        <span class="check-label" id="check-label">—</span>
+      </div>
+      <div class="scenario-toggle" role="tablist" aria-label="Scenario">
+        <button class="scen-btn" data-scenario="Bear" aria-label="Bear scenario">Bear</button>
+        <button class="scen-btn active" data-scenario="Base" aria-label="Base scenario">Base</button>
+        <button class="scen-btn" data-scenario="Bull" aria-label="Bull scenario">Bull</button>
+      </div>
+      <button class="refresh-btn" id="refresh-btn" title="Refresh data from Sheet">
+        <span class="refresh-icon">↻</span>
+        <span>Refresh</span>
+      </button>
+    </div>
+  </header>
+
+  <nav class="tab-nav" role="tablist">
+    <button class="tab-btn active" data-tab="overview">Overview</button>
+    <button class="tab-btn" data-tab="current">Current Year</button>
+    <button class="tab-btn" data-tab="forecast">Forecast Years</button>
+    <button class="tab-btn" data-tab="unit-econ">Unit Economics</button>
+    <button class="tab-btn" data-tab="scenarios">Scenarios</button>
+    <button class="tab-btn" data-tab="sensitivity">Sensitivity</button>
+  </nav>
+
+  <main id="main-content">
+    <!-- ===================== OVERVIEW ===================== -->
+    <section class="tab-panel active" id="tab-overview">
+      <div class="panel-header">
+        <div>
+          <h1>Executive Summary</h1>
+          <div class="panel-meta" id="overview-meta"></div>
+        </div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">2024 Revenue</div>
+          <div class="kpi-value" id="kpi-rev">—</div>
+          <div class="kpi-detail" id="kpi-rev-detail"></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">2024 Gross Margin</div>
+          <div class="kpi-value" id="kpi-gm">—</div>
+          <div class="kpi-detail" id="kpi-gm-detail"></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Merchants EOY 2024</div>
+          <div class="kpi-value" id="kpi-merch">—</div>
+          <div class="kpi-detail" id="kpi-merch-detail"></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">2024 GPV</div>
+          <div class="kpi-value" id="kpi-gpv">—</div>
+          <div class="kpi-detail" id="kpi-gpv-detail"></div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="chart-card">
+          <h3>Revenue by year (<span id="rev-chart-scen">Base</span>)</h3>
+          <div class="chart-wrap"><canvas id="chart-revenue-year"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Revenue by segment — 2024</h3>
+          <div class="chart-wrap"><canvas id="chart-seg-2024"></canvas></div>
+        </div>
+      </div>
+
+      <div class="note" id="overview-note"></div>
+    </section>
+
+    <!-- ===================== CURRENT YEAR ===================== -->
+    <section class="tab-panel" id="tab-current">
+      <div class="panel-header">
+        <div>
+          <h1>Current Year Overview</h1>
+          <div class="panel-meta" id="current-meta"></div>
+        </div>
+      </div>
+      <div class="sheet-scenario-note" id="current-scen-note"></div>
+      <div id="current-content" class="table-scroll"></div>
+    </section>
+
+    <!-- ===================== FORECAST YEARS ===================== -->
+    <section class="tab-panel" id="tab-forecast">
+      <div class="panel-header">
+        <div>
+          <h1>Forecast Years Overview</h1>
+          <div class="panel-meta">Annual view 2018-2024 · reflects <span class="scen-inline" id="fc-scen-inline">Base</span> scenario</div>
+        </div>
+      </div>
+      <div id="forecast-content" class="table-scroll"></div>
+    </section>
+
+    <!-- ===================== UNIT ECONOMICS ===================== -->
+    <section class="tab-panel" id="tab-unit-econ">
+      <div class="panel-header">
+        <div>
+          <h1>Unit Economics</h1>
+          <div class="panel-meta">2020 cohort · CAC flat across scenarios · LTV is 5-year discounted · <span class="scen-inline" id="ue-scen-inline">Base</span> scenario</div>
+        </div>
+      </div>
+      <div id="unit-econ-content"></div>
+    </section>
+
+    <!-- ===================== SCENARIOS ===================== -->
+    <section class="tab-panel" id="tab-scenarios">
+      <div class="panel-header">
+        <div>
+          <h1>Scenario Comparison</h1>
+          <div class="panel-meta">Base / Bear / Bull side-by-side 2020-2024 with variances vs Base</div>
+        </div>
+      </div>
+      <div id="scenarios-content" class="table-scroll"></div>
+    </section>
+
+    <!-- ===================== SENSITIVITY ===================== -->
+    <section class="tab-panel" id="tab-sensitivity">
+      <div class="panel-header">
+        <div>
+          <h1>Sensitivity Analysis</h1>
+          <div class="panel-meta">Revenue impact of key lever perturbations · Base case anchor</div>
+        </div>
+      </div>
+      <div id="sensitivity-content"></div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <div>Data source: <a href="https://docs.google.com/spreadsheets/d/1x6aNjAe-MjECTN0gWmy0MuxONtMqQVPRMDVMx-kqVm0/edit" target="_blank" rel="noopener">Google Sheet</a> · auto-republished on edits</div>
+      <div>Last fetched: <span id="last-fetched">—</span></div>
+    </div>
+  </footer>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>
