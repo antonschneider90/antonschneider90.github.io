@@ -533,112 +533,201 @@ function renderSeg2024Chart(tab) {
   });
 }
 
-// ============ RENDER: CURRENT YEAR (mirror CYO) ============
+// ============ RENDER: CURRENT YEAR (computed from RFE tabs, scenario-aware) ============
+// Build the CYO view ourselves from RFE_{scenario} data, so the dashboard scenario toggle 
+// controls this tab too. Last actual month comes from CYO's B2 in the Sheet.
+
+// Helper: sum a column range for a specific row in a tab
+function sumRangeCols(tab, row, startCol, endCol) {
+  if (!row) return null;
+  let sum = 0; let any = false;
+  for (let c = startCol; c <= endCol; c++) {
+    const v = cellNum(tab, row, c);
+    if (v !== null && !isNaN(v)) { sum += v; any = true; }
+  }
+  return any ? sum : null;
+}
+
+// Parse "YYYY-MM" or "YYYY-MM-DD" string → { year, month (1-12) }
+function parseYYYYMM(s) {
+  if (!s) return null;
+  const str = s.toString().trim();
+  const m = str.match(/^(\d{4})-(\d{2})/);
+  if (!m) return null;
+  return { year: parseInt(m[1], 10), month: parseInt(m[2], 10) };
+}
+
+// Compute the 4-block metrics for a given metric row (or num/den ratio) against CYO anchor month
+// Returns: { lastMonth: {cur, prior, yoy$, yoy%}, ytd: {...}, roy: {...}, fy: {...} }
+function computeCYOBlocks(tab, metric, lastYear, lastMonth) {
+  const anch = rfeAnchors(tab);
+  const dateStart = anch.dateStartCol;
+  // Column positions (1-indexed)
+  const lastMonthCol = dateStart + (lastYear - 2018) * 12 + (lastMonth - 1);
+  const priorYearSameMonthCol = dateStart + (lastYear - 1 - 2018) * 12 + (lastMonth - 1);
+  const ytdStartCol = dateStart + (lastYear - 2018) * 12;  // Jan of lastYear
+  const ytdPriorStartCol = dateStart + (lastYear - 1 - 2018) * 12;  // Jan of lastYear-1
+  const royStartCol = dateStart + (lastYear - 2018) * 12 + lastMonth;  // month after last actual
+  const fyEndCol = dateStart + (lastYear - 2018) * 12 + 11;  // Dec of lastYear
+  const priorYearEndCol = dateStart + (lastYear - 1 - 2018) * 12 + 11;  // Dec of lastYear-1
+
+  const getVal = (startCol, endCol) => {
+    if (startCol > endCol) return null;
+    if (metric.row) return sumRangeCols(tab, metric.row, startCol, endCol);
+    if (metric.num && metric.den) {
+      const n = sumRangeCols(tab, metric.num, startCol, endCol);
+      const d = sumRangeCols(tab, metric.den, startCol, endCol);
+      return (n !== null && d !== null && d !== 0) ? n / d : null;
+    }
+    if (metric.eoy_row) {
+      return cellNum(tab, metric.eoy_row, endCol);
+    }
+    return null;
+  };
+
+  const buildBlock = (curStart, curEnd, priorStart, priorEnd) => {
+    const cur = getVal(curStart, curEnd);
+    const prior = getVal(priorStart, priorEnd);
+    let yoyDollar = null, yoyPct = null;
+    if (cur !== null && prior !== null) {
+      yoyDollar = cur - prior;
+      if (prior !== 0) yoyPct = (cur - prior) / Math.abs(prior);
+    }
+    return { cur, prior, yoyDollar, yoyPct };
+  };
+
+  return {
+    lastMonth: buildBlock(lastMonthCol, lastMonthCol, priorYearSameMonthCol, priorYearSameMonthCol),
+    ytd: buildBlock(ytdStartCol, lastMonthCol, ytdPriorStartCol, priorYearSameMonthCol),
+    roy: royStartCol > fyEndCol
+         ? { cur: null, prior: null, yoyDollar: null, yoyPct: null }
+         : buildBlock(royStartCol, fyEndCol,
+                      dateStart + (lastYear - 1 - 2018) * 12 + lastMonth,
+                      priorYearEndCol),
+    fy: buildBlock(ytdStartCol, fyEndCol, ytdPriorStartCol, priorYearEndCol),
+  };
+}
+
 function renderCurrentYear() {
-  const data = state.data['Current Year Overview'];
-  if (!data) { $('#current-content').innerHTML = '<p class="note">No data.</p>'; return; }
+  const tab = rfeTabForScenario(state.scenario);
+  const lastActualStr = findCYOLastActualMonth();
+  const parsed = parseYYYYMM(lastActualStr) || { year: 2020, month: 2 };
+  const lastYear = parsed.year;
+  const lastMonth = parsed.month;
 
   const activeSheetScen = findAssumptionScenario() || '—';
-  const lastActual = findCYOLastActualMonth() || '—';
-  $('#current-meta').textContent = `Last actual month: ${lastActual} · Active Sheet scenario: ${activeSheetScen}`;
+  $('#current-meta').textContent = `Last actual month: ${lastYear}-${String(lastMonth).padStart(2, '0')} · Current year: ${lastYear} · Scenario: ${state.scenario}`;
 
-  if (activeSheetScen !== state.scenario && activeSheetScen !== '—') {
-    $('#current-scen-note').textContent = `Note: this view shows ${activeSheetScen} (the active scenario in the Sheet). The dashboard toggle (${state.scenario}) does not affect this tab because the CYO's Last Month / YTD / RoY math depends on the active scenario cell in the Sheet. To change this view, edit Assumptions!C7 in the Sheet and refresh.`;
-  } else if (activeSheetScen !== '—') {
-    $('#current-scen-note').textContent = `Sheet's active scenario matches dashboard toggle: ${state.scenario}`;
+  // The scenario note is now unnecessary — dashboard toggle controls this tab too
+  $('#current-scen-note').textContent = activeSheetScen !== state.scenario
+    ? `Dashboard showing ${state.scenario}. Your Sheet's active scenario is ${activeSheetScen}, which only affects the Sheet's own CYO and doesn't impact what's shown here.`
+    : '';
+
+  const anch = rfeAnchors(tab);
+
+  // Define rows to render
+  const sectionRows = [
+    { type: 'section', label: 'FINANCIALS — GRAND TOTAL' },
+    { label: 'GPV', metric: { row: anch.grand.gpv }, fmt: 'm', bold: true },
+    { label: 'Revenue', metric: { row: anch.grand.rev_tot }, fmt: 'm', bold: true },
+    { label: 'Net Take Rate % (Rev/GPV)', metric: { num: anch.grand.rev_tot, den: anch.grand.gpv }, fmt: 'pctBps' },
+    { label: 'COGS', metric: { row: anch.grand.cogs_tot }, fmt: 'm', bold: true, reverseVar: true },
+    { label: 'Gross Margin', metric: { row: anch.grand.gm }, fmt: 'm', bold: true },
+    { label: 'Gross Margin % (GM/Rev)', metric: { num: anch.grand.gm, den: anch.grand.rev_tot }, fmt: 'pctBps' },
+  ];
+
+  // Add by-segment sections
+  sectionRows.push({ type: 'section', label: 'FINANCIALS — BY SEGMENT' });
+  for (const seg of ['SaaS', 'E-Commerce Store', 'Platform']) {
+    sectionRows.push({ type: 'subheader', label: `— ${seg} —` });
+    const segR = anch.segments[seg];
+    sectionRows.push({ label: 'GPV', metric: { row: segR.gpv }, fmt: 'm', bold: true });
+    sectionRows.push({ label: 'Revenue', metric: { row: segR.rev_tot }, fmt: 'm', bold: true });
+    sectionRows.push({ label: 'Net Take Rate %', metric: { num: segR.rev_tot, den: segR.gpv }, fmt: 'pctBps' });
+    sectionRows.push({ label: 'COGS', metric: { row: segR.cogs_tot }, fmt: 'm', bold: true, reverseVar: true });
+    sectionRows.push({ label: 'Gross Margin', metric: { row: segR.gm }, fmt: 'm', bold: true });
+    sectionRows.push({ label: 'Gross Margin %', metric: { num: segR.gm, den: segR.rev_tot }, fmt: 'pctBps' });
   }
 
-  // Build table by scanning CYO rows sequentially and rendering them as-is.
-  // The CYO is already a nicely-formatted table; we just render its content.
-  // Find the start: look for the first row that has meaningful content (skip title, b2, etc)
-  // We render from the row that looks like a section header downwards.
+  // KPIs — merchants EOY (uses eoy_row semantic — value at end of range, not sum)
+  sectionRows.push({ type: 'section', label: 'KPIs' });
+  sectionRows.push({ label: '# Merchants (EOY)', metric: { eoy_row: anch.grand.mcount }, fmt: 'count', bold: true });
 
-  let html = '<table class="data-table">';
+  // Formatters
+  const fmtVal = (v, fmt) => {
+    if (v === null || isNaN(v)) return '—';
+    if (fmt === 'm') return fmtM(v);
+    if (fmt === 'pctBps') return (v * 100).toFixed(2) + '%';
+    if (fmt === 'count') return Math.round(v).toLocaleString();
+    return v.toFixed(2);
+  };
+  const fmtVarDollar = (v, fmt) => {
+    if (v === null || isNaN(v)) return '—';
+    if (fmt === 'pctBps') return fmtBps(v);  // percentage-point diff → bps
+    if (fmt === 'count') return (v >= 0 ? '+' : '') + Math.round(v).toLocaleString();
+    return fmtMVar(v);
+  };
+  const fmtVarPct = (v) => {
+    if (v === null || isNaN(v)) return '—';
+    return fmtPctVar(v);
+  };
 
-  // Find first meaningful row — scan for row with "FINANCIALS" in col A (uppercase)
-  let startIdx = -1;
-  for (let i = 0; i < data.length; i++) {
-    const row = data[i] || [];
-    const a = (row[0] || '').toString().toUpperCase();
-    if (a.includes('FINANCIALS') || a.includes('KPI')) { startIdx = i; break; }
-    // Also check for a row that has block headers like "Last Month"
-    if (row.some(c => c && /^Last Month$|^YTD/.test(String(c).trim()))) {
-      // This is the block header row — start 2 rows earlier to pick up any preceding labels
-      startIdx = Math.max(0, i - 1);
-      break;
-    }
-  }
-  if (startIdx === -1) startIdx = 5;  // fallback
+  // Build HTML with sticky header
+  let html = `<table class="data-table cyo-table">
+    <thead>
+      <tr class="block-row">
+        <th class="sticky-col"></th>
+        <th class="block-header" colspan="4">Last Month</th>
+        <th class="gap-col"></th>
+        <th class="block-header" colspan="4">YTD (Act)</th>
+        <th class="gap-col"></th>
+        <th class="block-header" colspan="4">Rest of Year (Fcst)</th>
+        <th class="gap-col"></th>
+        <th class="block-header" colspan="4">Full Year</th>
+      </tr>
+      <tr class="sub-header-sticky">
+        <th class="sticky-col"></th>
+        ${['Last Month','YTD','RoY','FY'].map((_, idx) => `
+          <th>Current<br>Year</th><th>Prior<br>Year</th><th>YoY ($)</th><th>YoY (%)</th>
+          ${idx < 3 ? '<th class="gap-col"></th>' : ''}
+        `).join('')}
+      </tr>
+    </thead>
+    <tbody>`;
 
-  for (let i = startIdx; i < data.length; i++) {
-    const row = data[i] || [];
-    if (row.every(c => !c || String(c).trim() === '')) continue;  // skip empty rows
-
-    const label = (row[0] || '').toString().trim();
-    const rowText = row.slice(1).join(' ');
-    const isSection = /FINANCIALS|KPI/.test(label.toUpperCase()) && label.length > 4;
-    const isSubHeader = /^—.*—$/.test(label);
-    const isBlockHeader = /Last Month|YTD.*Act|Rest of Year|Full Year/.test(rowText);
-    const isSubHeader2 = /Current Year|Prior Year|YoY/.test(rowText) && (!label || label === '');
-
-    if (isSection) {
-      html += `<tr class="section-row"><td colspan="25">${label}</td></tr>`;
+  for (const r of sectionRows) {
+    if (r.type === 'section') {
+      html += `<tr class="section-row"><td colspan="24">${r.label}</td></tr>`;
       continue;
     }
-    if (isSubHeader) {
-      html += `<tr class="sub-header-row"><td colspan="25">${label}</td></tr>`;
-      continue;
-    }
-    if (isBlockHeader) {
-      html += '<tr><th></th>';
-      html += '<th class="block-header" colspan="4">Last Month</th><th></th>';
-      html += '<th class="block-header" colspan="4">YTD (Act)</th><th></th>';
-      html += '<th class="block-header" colspan="4">Rest of Year (Fcst)</th><th></th>';
-      html += '<th class="block-header" colspan="4">Full Year</th>';
-      html += '</tr>';
-      continue;
-    }
-    if (isSubHeader2) {
-      html += '<tr><th></th>';
-      for (let blk = 0; blk < 4; blk++) {
-        html += '<th>Current<br>Year</th><th>Prior<br>Year</th><th>YoY ($)</th><th>YoY (%)</th>';
-        if (blk < 3) html += '<th></th>';
-      }
-      html += '</tr>';
+    if (r.type === 'subheader') {
+      html += `<tr class="sub-header-row"><td colspan="24">${r.label}</td></tr>`;
       continue;
     }
 
-    // Data row — just emit all cells as-is
-    const rowClass = /^(Merchants|Revenue per|GPV per|New merchants|Churned|Net Take|Gross Margin %|Churn rate|  )/.test(label) ? '' : 'bold-row';
+    const blocks = computeCYOBlocks(tab, r.metric, lastYear, lastMonth);
+    const rowClass = r.bold ? 'bold-row' : '';
     html += `<tr class="${rowClass}">`;
-    const indent = label.startsWith('  ') || label.startsWith('\t');
-    html += `<td${indent ? ' class="indent"' : ''}>${label.trim()}</td>`;
-
-    // Render remaining cells. The 4 blocks of 4 columns each, separated by gap columns.
-    // Layout: col 1 = label. Then cols 2-5 = Last Month block (Cur/Prior/YoY$/YoY%). Col 6 = gap. Cols 7-10 = YTD. etc.
-    // We'll render 19 data cells following the label.
-    for (let j = 1; j <= 19; j++) {
-      const v = row[j] !== undefined ? row[j] : '';
-      const inBlock = [1, 2, 3, 4, 6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19].includes(j);
-      if (!inBlock) { html += '<td></td>'; continue; }
-      const colInBlock = ((j - 1) % 5);
-      let cls = '';
-      if (colInBlock === 0) cls = 'cell-current';
-      else if (colInBlock === 2 || colInBlock === 3) cls = 'cell-variance';
-      const parsed = parseNum(v);
-      if ((colInBlock === 2 || colInBlock === 3) && parsed !== null) {
-        const isReversed = /COGS|Churn/.test(label);
-        if (!isReversed) {
-          if (parsed > 0) cls += ' pos'; else if (parsed < 0) cls += ' neg';
-        } else {
-          if (parsed > 0) cls += ' neg'; else if (parsed < 0) cls += ' pos';
-        }
-      }
-      html += `<td class="${cls}">${v || ''}</td>`;
-    }
+    html += `<td class="sticky-col">${r.label}</td>`;
+    const blockOrder = ['lastMonth', 'ytd', 'roy', 'fy'];
+    blockOrder.forEach((bk, idx) => {
+      const b = blocks[bk];
+      // Current
+      html += `<td class="cell-current">${fmtVal(b.cur, r.fmt)}</td>`;
+      // Prior
+      html += `<td>${fmtVal(b.prior, r.fmt)}</td>`;
+      // YoY $
+      const dc = b.yoyDollar !== null && !isNaN(b.yoyDollar) ? (r.reverseVar ? (b.yoyDollar > 0 ? 'neg' : b.yoyDollar < 0 ? 'pos' : '') : (b.yoyDollar > 0 ? 'pos' : b.yoyDollar < 0 ? 'neg' : '')) : '';
+      html += `<td class="cell-variance ${dc}">${fmtVarDollar(b.yoyDollar, r.fmt)}</td>`;
+      // YoY %
+      const pc = b.yoyPct !== null && !isNaN(b.yoyPct) ? (r.reverseVar ? (b.yoyPct > 0 ? 'neg' : b.yoyPct < 0 ? 'pos' : '') : (b.yoyPct > 0 ? 'pos' : b.yoyPct < 0 ? 'neg' : '')) : '';
+      html += `<td class="cell-variance ${pc}">${fmtVarPct(b.yoyPct)}</td>`;
+      // Gap
+      if (idx < 3) html += `<td class="gap-col"></td>`;
+    });
     html += '</tr>';
   }
-  html += '</table>';
+  html += '</tbody></table>';
   $('#current-content').innerHTML = html;
 }
 
@@ -832,7 +921,6 @@ function renderUnitEcon() {
 function renderScenarios() {
   const tabs = { 'Base': 'RFE_Base', 'Bear': 'RFE_Bear', 'Bull': 'RFE_Bull' };
   const years = [2020, 2021, 2022, 2023, 2024];
-  // Get anchors per scenario tab — they're structurally identical but let's be safe
   const anchors = {
     'Base': rfeAnchors('RFE_Base'),
     'Bear': rfeAnchors('RFE_Bear'),
@@ -846,17 +934,17 @@ function renderScenarios() {
     { label: '# Merchants (EOY)', key: 'mcount', fmt: 'eoy-count' },
   ];
 
-  let html = `<table class="data-table"><thead>`;
-  html += `<tr><th rowspan="2">Metric</th>`;
+  let html = `<table class="data-table scenarios-table"><thead>`;
+  html += `<tr><th rowspan="2" class="sticky-col">Metric</th>`;
   for (const y of years) html += `<th class="block-header" colspan="5">${y}</th>`;
   html += `</tr><tr>`;
   for (const y of years) {
-    html += `<th>Base</th><th>Bear</th><th>Bull</th><th>Bear vs<br>Base</th><th>Bull vs<br>Base</th>`;
+    html += `<th class="center-header">Base</th><th class="center-header">Bear</th><th class="center-header">Bull</th><th class="center-header">Bear vs<br>Base</th><th class="center-header">Bull vs<br>Base</th>`;
   }
   html += `</tr></thead><tbody>`;
 
   for (const r of rows) {
-    html += `<tr class="bold-row"><td>${r.label}</td>`;
+    html += `<tr class="bold-row"><td class="sticky-col">${r.label}</td>`;
     for (const y of years) {
       const getVal = (scen) => {
         const rowNum = anchors[scen].grand[r.key];
@@ -899,7 +987,7 @@ function renderSensitivity() {
   const data = state.data['Summary'];
   if (!data) { $('#sensitivity-content').innerHTML = '<p class="note">No data.</p>'; return; }
 
-  // Find the sensitivity table — look for row with headers "#", "Perturbation", "2024 Δ ($m)", "Cum 2020-24 Δ ($m)"
+  // Find the sensitivity table — look for row with "Perturbation" in col B
   let headerRow = -1;
   for (let i = 0; i < data.length; i++) {
     const row = data[i] || [];
@@ -916,14 +1004,17 @@ function renderSensitivity() {
     const row = data[i] || [];
     if (!row[1] || !row[2]) break;
     const label = row[1];
+    // These are raw dollar amounts in the Summary tab (e.g. -11200000 means -$11.2m)
+    // BUT the Summary may already have them stored as $-11.2m (depending on formatting).
+    // parseNum would return -11200000 if stored as "-11200000" or as "$-11.2m" with "m" suffix (parsed to -1.12e7).
+    // Let's check the actual value structure: if the cell text ends with "m" suffix, parseNum gives the right number.
+    // If it's just a raw number like "-11200000", parseNum returns -11200000 (dollars).
+    // We want to display in $m. Divide if abs >= 1e6 to detect raw dollars.
     const d2024 = parseNum(row[2]);
     const dCum = parseNum(row[3]);
     const category = row[4] || '';
     items.push({ label, d2024, dCum, category });
   }
-
-  // Find max abs for bar scaling
-  const maxAbs = Math.max(...items.map(i => Math.abs(i.dCum || 0)));
 
   let html = `<table class="data-table sensitivity-table">
     <thead>
@@ -932,24 +1023,22 @@ function renderSensitivity() {
         <th>Category</th>
         <th>2024 Δ</th>
         <th>Cum 2020-24 Δ</th>
-        <th style="min-width: 220px;">Cumulative impact</th>
       </tr>
     </thead>
     <tbody>`;
+  // Summary tab stores values already in $m (headers say "($m)"). Format accordingly.
+  const fmtInM = (v) => {
+    if (v === null || isNaN(v)) return '—';
+    const sign = v >= 0 ? '+' : '-';
+    const abs = Math.abs(v);
+    return sign + '$' + abs.toFixed(1) + 'm';
+  };
   items.forEach(it => {
-    const barW = maxAbs ? Math.abs(it.dCum / maxAbs) * 100 : 0;
-    const barClass = it.dCum < 0 ? 'neg' : '';
-    const barAlign = it.dCum < 0 ? 'right' : 'left';
     html += `<tr>
       <td>${it.label}</td>
       <td style="font-style: italic; color: var(--grey);">${it.category}</td>
-      <td class="${it.d2024 > 0 ? 'pos' : it.d2024 < 0 ? 'neg' : ''}" style="text-align: right;">${it.d2024 !== null ? (it.d2024 > 0 ? '+' : '') + '$' + it.d2024.toFixed(1) + 'm' : '—'}</td>
-      <td class="${it.dCum > 0 ? 'pos' : it.dCum < 0 ? 'neg' : ''}" style="text-align: right; font-weight: 600;">${it.dCum !== null ? (it.dCum > 0 ? '+' : '') + '$' + it.dCum.toFixed(1) + 'm' : '—'}</td>
-      <td><div class="sens-bar-wrap">
-        <div class="sens-bar-track" style="margin-${it.dCum < 0 ? 'left' : 'right'}: auto;">
-          <div class="sens-bar-fill ${barClass}" style="width: ${barW}%; ${it.dCum < 0 ? 'right: 0;' : 'left: 0;'}"></div>
-        </div>
-      </div></td>
+      <td class="${it.d2024 > 0 ? 'pos' : it.d2024 < 0 ? 'neg' : ''}" style="text-align: right;">${fmtInM(it.d2024)}</td>
+      <td class="${it.dCum > 0 ? 'pos' : it.dCum < 0 ? 'neg' : ''}" style="text-align: right; font-weight: 600;">${fmtInM(it.dCum)}</td>
     </tr>`;
   });
   html += '</tbody></table>';
