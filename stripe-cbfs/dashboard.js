@@ -618,10 +618,8 @@ function renderCurrentYear() {
   const activeSheetScen = findAssumptionScenario() || '—';
   $('#current-meta').textContent = `Last actual month: ${lastYear}-${String(lastMonth).padStart(2, '0')} · Current year: ${lastYear} · Scenario: ${state.scenario}`;
 
-  // The scenario note is now unnecessary — dashboard toggle controls this tab too
-  $('#current-scen-note').textContent = activeSheetScen !== state.scenario
-    ? `Dashboard showing ${state.scenario}. Your Sheet's active scenario is ${activeSheetScen}, which only affects the Sheet's own CYO and doesn't impact what's shown here.`
-    : '';
+  // No banner — the meta line already shows the scenario
+  $('#current-scen-note').textContent = '';
 
   const anch = rfeAnchors(tab);
 
@@ -913,18 +911,16 @@ function renderUnitEcon() {
       </table>
     </div>`;
   }
-html += '</div>';
+  html += '</div>';
   html += `<div class="note" style="margin-top: 24px;">
     <h3>Why is Y1 GM so much lower than Y2?</h3>
     <p>Two compounding effects drive this:</p>
     <ul>
       <li><strong>Partial year for the cohort.</strong> The 2020 cohort only adds merchants from March onwards (Jan and Feb 2020 are actuals with no new-2020 merchants). So Y1 captures 10 months of cohort adds, not 12.</li>
-      <li><strong>New merchant ramp.</strong> New merchants start at 20-30% of segment average GPV and ramp to 100% over 9-18 months (depending on scenario and segment). A merchant who joined in March 2020 doesn't reach full run-rate until 2021.</li>
+      <li><strong>New merchant ramp.</strong> New merchants start at 20-30% of segment average GPV (depending on scenario) and ramp linearly to 100% over 9-18 months. A merchant who joined in March 2020 doesn't reach full run-rate until 2021.</li>
     </ul>
-    <p>By Y2, the full cohort is on board and fully ramped, which is why Y2 is roughly 3× Y1 (not 2× as a simple half-year effect would suggest). The LTV calculation correctly uses the actual GM earned — a merchant's economic value in Y1 equals what they actually delivered, not a hypothetical steady-state.</p>
+    <p>By Y2, the full cohort is on board and fully ramped, which is why Y2 is roughly 3× Y1 (not 2× as a simple half-year effect would suggest). The LTV calculation correctly uses the actual GM earned — a merchant's economic value in Y1 equals what they actually delivered, not hypothetical steady-state.</p>
   </div>`;
-  $('#unit-econ-content').innerHTML = html;
-}
   $('#unit-econ-content').innerHTML = html;
 }
 
@@ -1037,19 +1033,28 @@ function renderSensitivity() {
       </tr>
     </thead>
     <tbody>`;
-  // Summary tab stores values already in $m (headers say "($m)"). Format accordingly.
+  // Summary tab values: the "($m)" header implies values should be in millions.
+  // But Google Sheets' gviz CSV export sometimes multiplies by 1M when the cell format 
+  // contains a "m" suffix literal. Auto-detect: if |value| > 1000, assume raw dollars.
+  const normalizeToM = (v) => {
+    if (v === null || isNaN(v)) return null;
+    return Math.abs(v) > 1000 ? v / 1e6 : v;
+  };
   const fmtInM = (v) => {
-    if (v === null || isNaN(v)) return '—';
-    const sign = v >= 0 ? '+' : '-';
-    const abs = Math.abs(v);
+    const n = normalizeToM(v);
+    if (n === null || isNaN(n)) return '—';
+    const sign = n >= 0 ? '+' : '-';
+    const abs = Math.abs(n);
     return sign + '$' + abs.toFixed(1) + 'm';
   };
   items.forEach(it => {
+    const d2024Norm = normalizeToM(it.d2024);
+    const dCumNorm = normalizeToM(it.dCum);
     html += `<tr>
       <td>${it.label}</td>
       <td style="font-style: italic; color: var(--grey);">${it.category}</td>
-      <td class="${it.d2024 > 0 ? 'pos' : it.d2024 < 0 ? 'neg' : ''}" style="text-align: right;">${fmtInM(it.d2024)}</td>
-      <td class="${it.dCum > 0 ? 'pos' : it.dCum < 0 ? 'neg' : ''}" style="text-align: right; font-weight: 600;">${fmtInM(it.dCum)}</td>
+      <td class="${d2024Norm > 0 ? 'pos' : d2024Norm < 0 ? 'neg' : ''}" style="text-align: right;">${fmtInM(it.d2024)}</td>
+      <td class="${dCumNorm > 0 ? 'pos' : dCumNorm < 0 ? 'neg' : ''}" style="text-align: right; font-weight: 600;">${fmtInM(it.dCum)}</td>
     </tr>`;
   });
   html += '</tbody></table>';
@@ -1102,6 +1107,7 @@ function activateTab(tabId) {
     case 'unit-econ': renderUnitEcon(); break;
     case 'scenarios': renderScenarios(); break;
     case 'sensitivity': renderSensitivity(); break;
+    case 'instructions': /* static content, no render needed */ break;
   }
 }
 
