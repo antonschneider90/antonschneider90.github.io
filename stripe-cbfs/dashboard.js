@@ -126,6 +126,8 @@ async function fetchTab(tabName) {
 async function loadAll() {
   const statusEl = $('#loading-status');
   state.data = {};
+  // Clear RFE anchor cache — recomputed on next access
+  for (const k of Object.keys(_rfeAnchors)) delete _rfeAnchors[k];
   const results = await Promise.all(
     TABS_TO_FETCH.map(async (t) => {
       if (statusEl) statusEl.textContent = `Loading "${t}"...`;
@@ -152,6 +154,107 @@ function cellNum(tabName, row, col) {
   return parseNum(cell(tabName, row, col));
 }
 
+// Find first row in `tab` where:
+//   col A (1) matches colAText AND col B (2) matches colBText (if provided) AND col E (5) matches colEText (if provided)
+// Returns 1-indexed row number, or null
+function findRow(tab, colAText, colBText, colEText) {
+  const data = state.data[tab];
+  if (!data) return null;
+  for (let i = 0; i < data.length; i++) {
+    const row = data[i] || [];
+    const a = (row[0] || '').toString().trim();
+    const b = (row[1] || '').toString().trim();
+    const e = (row[4] || '').toString().trim();
+    if (colAText !== null && a !== colAText) continue;
+    if (colBText !== null && b !== colBText) continue;
+    if (colEText !== null && e !== colEText) continue;
+    return i + 1;  // 1-indexed
+  }
+  return null;
+}
+
+// Find the column offset for dates. Google gviz CSV may shift column positions too.
+// Look at the row with col A = "Segment" (header row with dates), find the col where
+// the date starts (matches 2018-01 or contains "2018")
+function findDateStartCol(tab) {
+  const data = state.data[tab];
+  if (!data) return 6;  // default fallback: col F
+  for (let i = 0; i < Math.min(10, data.length); i++) {
+    const row = data[i] || [];
+    for (let j = 0; j < row.length; j++) {
+      const v = (row[j] || '').toString();
+      if (/^2018-01/.test(v) || /^1\/1\/2018/.test(v) || v === '2018-01' || /Jan.*2018/i.test(v)) {
+        return j + 1;  // 1-indexed
+      }
+    }
+  }
+  return 6;  // default fallback
+}
+
+// Cache-aware helpers for each RFE tab
+const _rfeAnchors = {};
+function rfeAnchors(tab) {
+  if (_rfeAnchors[tab]) return _rfeAnchors[tab];
+  // Find all anchor rows dynamically
+  const grand = {};
+  const metricMap = {
+    mcount: '# Merchants total',
+    gpv: 'GPV ($)',
+    events: 'Events (#)',
+    rev_vol: 'Revenue (vol)',
+    rev_trx: 'Revenue (trx)',
+    rev_add: 'Revenue (add)',
+    rev_tot: 'Revenue Total',
+    cogs_int: 'COGS inter/network',
+    cogs_api: 'COGS API',
+    cogs_loss: 'COGS loss',
+    cogs_tot: 'COGS Total',
+    gm: 'Gross Margin',
+  };
+  for (const [k, label] of Object.entries(metricMap)) {
+    grand[k] = findRow(tab, 'TOTAL', 'Grand Total', label);
+  }
+
+  const segments = {};
+  const segMetricMap = {
+    mcount: '# Merchants total',
+    gpv: 'GPV ($) total',
+    events: 'Events (#) total',
+    rev_tot: 'Revenue Total total',
+    cogs_tot: 'COGS Total total',
+    gm: 'Gross Margin',  // segment GM row label is just "Gross Margin"
+  };
+  for (const seg of ['SaaS', 'E-Commerce Store', 'Platform']) {
+    segments[seg] = {};
+    for (const [k, label] of Object.entries(segMetricMap)) {
+      segments[seg][k] = findRow(tab, seg, 'SEGMENT TOTAL', label);
+    }
+  }
+
+  // Cohort 2020 rows — find by col A = segment, col B = "New 2020", col E = metric
+  const cohort2020 = {};
+  for (const seg of ['SaaS', 'E-Commerce Store', 'Platform']) {
+    cohort2020[seg] = {
+      gm_row: findRow(tab, seg, 'New 2020', 'Gross Margin'),
+      new_row: findRow(tab, seg, 'New 2020', '+ New merchants'),
+    };
+  }
+
+  // Check cell (CHECK OK / CHECK ERROR) — find the row where col A contains "OVERALL" and grab col F
+  // Actually our check row has col A = "OVERALL" and the result in col F
+  let checkRow = null;
+  for (let i = 0; i < (state.data[tab] || []).length; i++) {
+    const row = state.data[tab][i] || [];
+    const a = (row[0] || '').toString();
+    if (a.includes('OVERALL')) { checkRow = i + 1; break; }
+  }
+
+  const dateStartCol = findDateStartCol(tab);
+
+  _rfeAnchors[tab] = { grand, segments, cohort2020, checkRow, dateStartCol };
+  return _rfeAnchors[tab];
+}
+
 // Excel column letter to 1-indexed number
 function colToNum(col) {
   let n = 0;
@@ -161,13 +264,15 @@ function colToNum(col) {
   return n;
 }
 
-// Year → column range in RFE tabs (F = Jan 2018). 2024 = BZ..CK
-function yearColRange(year) {
-  const startCol = 6 + (year - 2018) * 12;
+// Year → column range in an RFE tab (uses dynamic date-start column)
+function yearColRange(tab, year) {
+  const dateStart = rfeAnchors(tab).dateStartCol;
+  const startCol = dateStart + (year - 2018) * 12;
   return [startCol, startCol + 11];
 }
-// Sum a range of cols for a specific row in a specific RFE tab
+// Sum a range of cols for a specific row
 function sumRow(tab, row, startCol, endCol) {
+  if (!row) return null;
   let sum = 0;
   let any = false;
   for (let c = startCol; c <= endCol; c++) {
@@ -177,62 +282,141 @@ function sumRow(tab, row, startCol, endCol) {
   return any ? sum : null;
 }
 function sumYear(tab, row, year) {
-  const [s, e] = yearColRange(year);
+  if (!row) return null;
+  const [s, e] = yearColRange(tab, year);
   return sumRow(tab, row, s, e);
 }
 // EOY value = last (Dec) column of year
 function eoyVal(tab, row, year) {
-  const [, e] = yearColRange(year);
+  if (!row) return null;
+  const [, e] = yearColRange(tab, year);
   return cellNum(tab, row, e);
 }
-
-// RFE row anchors (grand total section) — same in all parallel tabs
-const RFE_GRAND = {
-  mcount: 6,
-  gpv: 7,
-  events: 8,
-  rev_vol: 9,
-  rev_trx: 10,
-  rev_add: 11,
-  rev_tot: 12,
-  cogs_int: 13,
-  cogs_api: 14,
-  cogs_loss: 15,
-  cogs_tot: 16,
-  gm: 17,
-};
-const RFE_SEG_ROWS = {
-  'SaaS': { mcount: 21, gpv: 22, events: 23, rev_tot: 27, cogs_tot: 31, gm: 32 },
-  'E-Commerce Store': { mcount: 35, gpv: 36, events: 37, rev_tot: 41, cogs_tot: 45, gm: 46 },
-  'Platform': { mcount: 49, gpv: 50, events: 51, rev_tot: 55, cogs_tot: 59, gm: 60 },
-};
-// Overall check cell
-const RFE_CHECK_CELL = { row: 1131, col: 6 }; // F1131
-
-// Cohort rows for unit economics (2020 cohort only)
-const COHORT_2020 = {
-  'SaaS': { gm_row: 109, new_row: 94, cac_row: 82, churn_row: 60 },
-  'E-Commerce Store': { gm_row: 234, new_row: 219, cac_row: 83, churn_row: 61 },
-  'Platform': { gm_row: 359, new_row: 344, cac_row: 84, churn_row: 62 },
-};
 
 function rfeTabForScenario(scen) {
   return `RFE_${scen}`;
 }
 
+// Find active scenario text in Assumptions tab — look for cell containing "Base", "Bear", or "Bull"
+// near a row labeled "Active scenario" or similar
+function findAssumptionScenario() {
+  const data = state.data['Assumptions'];
+  if (!data) return null;
+  for (let i = 0; i < data.length; i++) {
+    const row = data[i] || [];
+    const a = (row[0] || '').toString().toLowerCase();
+    if (a.includes('active scenario') || a.includes('scenario switch') || a.includes('scenario')) {
+      // Check adjacent cells for Base/Bear/Bull
+      for (let j = 1; j < row.length; j++) {
+        const v = (row[j] || '').toString().trim();
+        if (v === 'Base' || v === 'Bear' || v === 'Bull') return v;
+      }
+    }
+  }
+  return null;
+}
+
+// Find CAC for a segment in Assumptions tab — look for row with label like "CAC — SaaS" or "CAC SaaS"
+function findAssumptionCAC(seg) {
+  const data = state.data['Assumptions'];
+  if (!data) return null;
+  const segKey = seg.toLowerCase();
+  for (let i = 0; i < data.length; i++) {
+    const row = data[i] || [];
+    const a = (row[0] || '').toString().toLowerCase();
+    if (a.includes('cac') && (
+        (segKey === 'saas' && a.includes('saas')) ||
+        (segKey === 'e-commerce store' && (a.includes('e-commerce') || a.includes('ecommerce') || a.includes('e-com'))) ||
+        (segKey === 'platform' && a.includes('platform'))
+      )) {
+      // Return the numeric value in the next few cells
+      for (let j = 1; j < row.length; j++) {
+        const n = parseNum(row[j]);
+        if (n !== null && n > 0) return n;
+      }
+    }
+  }
+  return null;
+}
+
+// Find WACC in Assumptions
+function findAssumptionWACC() {
+  const data = state.data['Assumptions'];
+  if (!data) return null;
+  for (let i = 0; i < data.length; i++) {
+    const row = data[i] || [];
+    const a = (row[0] || '').toString().toLowerCase();
+    if (a.includes('wacc') || a.includes('discount rate') || a.includes('cost of capital')) {
+      for (let j = 1; j < row.length; j++) {
+        const n = parseNum(row[j]);
+        if (n !== null && n > 0 && n < 1) return n;  // WACC should be between 0 and 1
+      }
+    }
+  }
+  return 0.10;  // fallback
+}
+
+// Find segment churn for active scenario in Assumptions
+function findAssumptionChurn(seg, scenario) {
+  const data = state.data['Assumptions'];
+  if (!data) return null;
+  const segKey = seg.toLowerCase();
+  // Look for "Churn" related rows per segment
+  for (let i = 0; i < data.length; i++) {
+    const row = data[i] || [];
+    const a = (row[0] || '').toString().toLowerCase();
+    if (a.includes('churn') && (
+        (segKey === 'saas' && a.includes('saas')) ||
+        (segKey === 'e-commerce store' && (a.includes('e-commerce') || a.includes('ecommerce'))) ||
+        (segKey === 'platform' && a.includes('platform'))
+      )) {
+      // Find the column that corresponds to the scenario
+      // Structure: col 3 = base case comment, col 4 = base, col 5 = bear, col 6 = bull (1-indexed)
+      // But this may shift. Just look at first 3 numeric values as Base/Bear/Bull in order.
+      const nums = [];
+      for (let j = 1; j < row.length; j++) {
+        const n = parseNum(row[j]);
+        if (n !== null && n >= 0 && n <= 1) nums.push(n);
+      }
+      // Typically: base, bear, bull in that column order
+      const scenIdx = { 'Base': 0, 'Bear': 1, 'Bull': 2 }[scenario] || 0;
+      return nums[scenIdx] !== undefined ? nums[scenIdx] : nums[0];
+    }
+  }
+  return null;
+}
+
+// Find Last Actual Month from CYO tab — look for the row with label "Last month of actuals"
+function findCYOLastActualMonth() {
+  const data = state.data['Current Year Overview'];
+  if (!data) return null;
+  for (let i = 0; i < data.length; i++) {
+    const row = data[i] || [];
+    const a = (row[0] || '').toString().toLowerCase();
+    if (a.includes('last month of actuals') || a.includes('last actual')) {
+      for (let j = 1; j < row.length; j++) {
+        const v = (row[j] || '').toString().trim();
+        if (v && v !== '') return v;
+      }
+    }
+  }
+  return null;
+}
+
 // ============ RENDER: OVERVIEW ============
 function renderOverview() {
   const tab = rfeTabForScenario(state.scenario);
+  const a = rfeAnchors(tab);
   // KPIs — 2024 full-year revenue, GM, merchants EOY, GPV
-  const rev2024 = sumYear(tab, RFE_GRAND.rev_tot, 2024);
-  const gm2024 = sumYear(tab, RFE_GRAND.gm, 2024);
-  const merch2024 = eoyVal(tab, RFE_GRAND.mcount, 2024);
-  const gpv2024 = sumYear(tab, RFE_GRAND.gpv, 2024);
+  const rev2024 = sumYear(tab, a.grand.rev_tot, 2024);
+  const gm2024 = sumYear(tab, a.grand.gm, 2024);
+  const merch2024 = eoyVal(tab, a.grand.mcount, 2024);
+  const gpv2024 = sumYear(tab, a.grand.gpv, 2024);
   // Baseline (2019 actuals, scenario-independent)
-  const rev2019 = sumYear(tab, RFE_GRAND.rev_tot, 2019);
-  const gm2019 = sumYear(tab, RFE_GRAND.gm, 2019);
-  const merch2019 = eoyVal(tab, RFE_GRAND.mcount, 2019);
-  const gpv2019 = sumYear(tab, RFE_GRAND.gpv, 2019);
+  const rev2019 = sumYear(tab, a.grand.rev_tot, 2019);
+  const gm2019 = sumYear(tab, a.grand.gm, 2019);
+  const merch2019 = eoyVal(tab, a.grand.mcount, 2019);
+  const gpv2019 = sumYear(tab, a.grand.gpv, 2019);
 
   $('#kpi-rev').textContent = fmtM(rev2024);
   const revCAGR = rev2019 && rev2024 ? (Math.pow(rev2024 / rev2019, 1 / 5) - 1) : null;
@@ -251,10 +435,9 @@ function renderOverview() {
   $('#kpi-gpv-detail').textContent = gpvCAGR !== null ? `2019-24 CAGR ${(gpvCAGR * 100).toFixed(1)}%` : '';
 
   // Meta
-  const assump = state.data['Assumptions'];
-  const activeSheetScen = assump && assump[6] ? (assump[6][2] || '—') : '—';
+  const activeSheetScen = findAssumptionScenario() || '—';
   const cyo = state.data['Current Year Overview'];
-  const lastActual = cyo && cyo[1] ? (cyo[1][1] || '—') : '—';
+  const lastActual = findCYOLastActualMonth() || '—';
   $('#overview-meta').textContent = `Scenario: ${state.scenario} · Sheet active scenario: ${activeSheetScen} · Last actual month: ${lastActual}`;
 
   // Charts
@@ -278,8 +461,9 @@ function renderOverview() {
 
 let revChart = null;
 function renderRevenueYearChart(tab) {
+  const a = rfeAnchors(tab);
   const years = [2018, 2019, 2020, 2021, 2022, 2023, 2024];
-  const revs = years.map(y => (sumYear(tab, RFE_GRAND.rev_tot, y) || 0) / 1e6);
+  const revs = years.map(y => (sumYear(tab, a.grand.rev_tot, y) || 0) / 1e6);
   const ctx = document.getElementById('chart-revenue-year').getContext('2d');
   if (revChart) revChart.destroy();
   revChart = new Chart(ctx, {
@@ -318,8 +502,9 @@ function renderRevenueYearChart(tab) {
 }
 let segChart = null;
 function renderSeg2024Chart(tab) {
+  const a = rfeAnchors(tab);
   const segs = ['SaaS', 'E-Commerce Store', 'Platform'];
-  const vals = segs.map(s => (sumYear(tab, RFE_SEG_ROWS[s].rev_tot, 2024) || 0) / 1e6);
+  const vals = segs.map(s => (sumYear(tab, a.segments[s].rev_tot, 2024) || 0) / 1e6);
   const ctx = document.getElementById('chart-seg-2024').getContext('2d');
   if (segChart) segChart.destroy();
   segChart = new Chart(ctx, {
@@ -353,82 +538,93 @@ function renderCurrentYear() {
   const data = state.data['Current Year Overview'];
   if (!data) { $('#current-content').innerHTML = '<p class="note">No data.</p>'; return; }
 
-  const assump = state.data['Assumptions'];
-  const activeSheetScen = assump && assump[6] ? (assump[6][2] || '—') : '—';
-  const lastActual = data[1] ? (data[1][1] || '—') : '—';
+  const activeSheetScen = findAssumptionScenario() || '—';
+  const lastActual = findCYOLastActualMonth() || '—';
   $('#current-meta').textContent = `Last actual month: ${lastActual} · Active Sheet scenario: ${activeSheetScen}`;
 
-  if (activeSheetScen !== state.scenario) {
+  if (activeSheetScen !== state.scenario && activeSheetScen !== '—') {
     $('#current-scen-note').textContent = `Note: this view shows ${activeSheetScen} (the active scenario in the Sheet). The dashboard toggle (${state.scenario}) does not affect this tab because the CYO's Last Month / YTD / RoY math depends on the active scenario cell in the Sheet. To change this view, edit Assumptions!C7 in the Sheet and refresh.`;
-  } else {
+  } else if (activeSheetScen !== '—') {
     $('#current-scen-note').textContent = `Sheet's active scenario matches dashboard toggle: ${state.scenario}`;
   }
 
-  // Build table from CYO CSV — it already has the right structure
-  // CYO rows: 1 = title, 2-5 = B2 etc headers, 6-7 = block/sub-header rows, 8+ = data
-  // We render rows 6 onward.
-  const startRow = 5; // 0-indexed → row 6 in Excel
-  const endRow = data.length;
+  // Build table by scanning CYO rows sequentially and rendering them as-is.
+  // The CYO is already a nicely-formatted table; we just render its content.
+  // Find the start: look for the first row that has meaningful content (skip title, b2, etc)
+  // We render from the row that looks like a section header downwards.
 
   let html = '<table class="data-table">';
-  for (let i = startRow; i < endRow; i++) {
+
+  // Find first meaningful row — scan for row with "FINANCIALS" in col A (uppercase)
+  let startIdx = -1;
+  for (let i = 0; i < data.length; i++) {
+    const row = data[i] || [];
+    const a = (row[0] || '').toString().toUpperCase();
+    if (a.includes('FINANCIALS') || a.includes('KPI')) { startIdx = i; break; }
+    // Also check for a row that has block headers like "Last Month"
+    if (row.some(c => c && /^Last Month$|^YTD/.test(String(c).trim()))) {
+      // This is the block header row — start 2 rows earlier to pick up any preceding labels
+      startIdx = Math.max(0, i - 1);
+      break;
+    }
+  }
+  if (startIdx === -1) startIdx = 5;  // fallback
+
+  for (let i = startIdx; i < data.length; i++) {
     const row = data[i] || [];
     if (row.every(c => !c || String(c).trim() === '')) continue;  // skip empty rows
 
-    const label = row[0] || '';
-    const isSection = String(label).toUpperCase().includes('FINANCIALS') || String(label).toUpperCase().includes('KPI');
-    const isSubHeader = String(label).startsWith('—') && String(label).endsWith('—');
-    const isBlockHeader = /Last Month|YTD|Rest of Year|Full Year/.test(row.slice(1).join(' '));
-    const isSubHeader2 = /Current Year|Prior Year|YoY/.test(row.slice(1).join(' ')) && !label;
+    const label = (row[0] || '').toString().trim();
+    const rowText = row.slice(1).join(' ');
+    const isSection = /FINANCIALS|KPI/.test(label.toUpperCase()) && label.length > 4;
+    const isSubHeader = /^—.*—$/.test(label);
+    const isBlockHeader = /Last Month|YTD.*Act|Rest of Year|Full Year/.test(rowText);
+    const isSubHeader2 = /Current Year|Prior Year|YoY/.test(rowText) && (!label || label === '');
 
     if (isSection) {
-      html += `<tr class="section-row"><td colspan="${Math.max(row.length, 21)}">${label}</td></tr>`;
+      html += `<tr class="section-row"><td colspan="25">${label}</td></tr>`;
       continue;
     }
     if (isSubHeader) {
-      html += `<tr class="sub-header-row"><td colspan="${Math.max(row.length, 21)}">${label}</td></tr>`;
+      html += `<tr class="sub-header-row"><td colspan="25">${label}</td></tr>`;
       continue;
     }
     if (isBlockHeader) {
-      // Keep the CYO's 4-cell blocks
-      html += '<tr>';
-      html += `<th></th>`;
-      // Merge blocks for "Last Month" etc (cols B-E, G-J, L-O, Q-T = 4 cells each with 1 gap)
-      const blocks = [[1, 4, 'Last Month'], [6, 9, 'YTD (Act)'], [11, 14, 'Rest of Year (Fcst)'], [16, 19, 'Full Year']];
-      for (const [s, e, title] of blocks) {
-        const rowTitle = row[s] || title; // row[s] = e.g. cell B (col 1)
-        html += `<th class="block-header" colspan="4">${title}</th>`;
-        if (e < 19) html += `<th></th>`; // gap
-      }
+      html += '<tr><th></th>';
+      html += '<th class="block-header" colspan="4">Last Month</th><th></th>';
+      html += '<th class="block-header" colspan="4">YTD (Act)</th><th></th>';
+      html += '<th class="block-header" colspan="4">Rest of Year (Fcst)</th><th></th>';
+      html += '<th class="block-header" colspan="4">Full Year</th>';
       html += '</tr>';
       continue;
     }
     if (isSubHeader2) {
-      html += '<tr>';
-      html += `<th></th>`;
-      for (let j = 1; j <= 19; j++) {
-        const v = row[j];
-        if (v) html += `<th>${String(v).replace(/\n/g, ' ')}</th>`;
-        else html += `<th></th>`;
+      html += '<tr><th></th>';
+      for (let blk = 0; blk < 4; blk++) {
+        html += '<th>Current<br>Year</th><th>Prior<br>Year</th><th>YoY ($)</th><th>YoY (%)</th>';
+        if (blk < 3) html += '<th></th>';
       }
       html += '</tr>';
       continue;
     }
 
-    // Data row
-    const rowClass = /Merchants|Revenue per|GPV per|New merchants|Churned|Net Take|Gross Margin %|Churn rate/.test(label) ? '' : 'bold-row';
+    // Data row — just emit all cells as-is
+    const rowClass = /^(Merchants|Revenue per|GPV per|New merchants|Churned|Net Take|Gross Margin %|Churn rate|  )/.test(label) ? '' : 'bold-row';
     html += `<tr class="${rowClass}">`;
-    html += `<td${String(label).startsWith('  ') ? ' class="indent"' : ''}>${label.trim()}</td>`;
+    const indent = label.startsWith('  ') || label.startsWith('\t');
+    html += `<td${indent ? ' class="indent"' : ''}>${label.trim()}</td>`;
+
+    // Render remaining cells. The 4 blocks of 4 columns each, separated by gap columns.
+    // Layout: col 1 = label. Then cols 2-5 = Last Month block (Cur/Prior/YoY$/YoY%). Col 6 = gap. Cols 7-10 = YTD. etc.
+    // We'll render 19 data cells following the label.
     for (let j = 1; j <= 19; j++) {
       const v = row[j] !== undefined ? row[j] : '';
       const inBlock = [1, 2, 3, 4, 6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19].includes(j);
       if (!inBlock) { html += '<td></td>'; continue; }
-      // Determine class
       const colInBlock = ((j - 1) % 5);
       let cls = '';
       if (colInBlock === 0) cls = 'cell-current';
       else if (colInBlock === 2 || colInBlock === 3) cls = 'cell-variance';
-      // Pos/neg for variance cells
       const parsed = parseNum(v);
       if ((colInBlock === 2 || colInBlock === 3) && parsed !== null) {
         const isReversed = /COGS|Churn/.test(label);
@@ -449,23 +645,24 @@ function renderCurrentYear() {
 // ============ RENDER: FORECAST YEARS ============
 function renderForecast() {
   const tab = rfeTabForScenario(state.scenario);
+  const anch = rfeAnchors(tab);
   const years = [2018, 2019, 2020, 2021, 2022, 2023, 2024];
   $('#fc-scen-inline').textContent = state.scenario;
 
   const rows = [
     { sec: 'FINANCIALS — GRAND TOTAL', type: 'section' },
-    { label: 'GPV', row: RFE_GRAND.gpv, fmt: 'm', bold: true },
-    { label: 'Revenue', row: RFE_GRAND.rev_tot, fmt: 'm', bold: true },
-    { label: 'Net Take Rate %', num: RFE_GRAND.rev_tot, den: RFE_GRAND.gpv, fmt: 'pct', indent: true },
-    { label: 'COGS', row: RFE_GRAND.cogs_tot, fmt: 'm', bold: true },
-    { label: 'Gross Margin', row: RFE_GRAND.gm, fmt: 'm', bold: true },
-    { label: 'Gross Margin %', num: RFE_GRAND.gm, den: RFE_GRAND.rev_tot, fmt: 'pct', indent: true },
+    { label: 'GPV', row: anch.grand.gpv, fmt: 'm', bold: true },
+    { label: 'Revenue', row: anch.grand.rev_tot, fmt: 'm', bold: true },
+    { label: 'Net Take Rate %', num: anch.grand.rev_tot, den: anch.grand.gpv, fmt: 'pct', indent: true },
+    { label: 'COGS', row: anch.grand.cogs_tot, fmt: 'm', bold: true },
+    { label: 'Gross Margin', row: anch.grand.gm, fmt: 'm', bold: true },
+    { label: 'Gross Margin %', num: anch.grand.gm, den: anch.grand.rev_tot, fmt: 'pct', indent: true },
     { sec: 'FINANCIALS — BY SEGMENT', type: 'section' },
   ];
 
   for (const seg of ['SaaS', 'E-Commerce Store', 'Platform']) {
     rows.push({ sec: `— ${seg} —`, type: 'subheader' });
-    const segR = RFE_SEG_ROWS[seg];
+    const segR = anch.segments[seg];
     rows.push({ label: 'GPV', row: segR.gpv, fmt: 'm', bold: true, indent: true });
     rows.push({ label: 'Revenue', row: segR.rev_tot, fmt: 'm', bold: true, indent: true });
     rows.push({ label: 'Net Take Rate %', num: segR.rev_tot, den: segR.gpv, fmt: 'pct', indent: true });
@@ -474,7 +671,7 @@ function renderForecast() {
     rows.push({ label: 'Gross Margin %', num: segR.gm, den: segR.rev_tot, fmt: 'pct', indent: true });
   }
   rows.push({ sec: 'KPIs', type: 'section' });
-  rows.push({ label: '# Merchants (EOY)', row: RFE_GRAND.mcount, fmt: 'eoy-count', bold: true });
+  rows.push({ label: '# Merchants (EOY)', row: anch.grand.mcount, fmt: 'eoy-count', bold: true });
 
   // Build HTML
   let html = `<table class="data-table"><thead><tr><th>Metric</th>`;
@@ -541,27 +738,25 @@ function renderForecast() {
 // ============ RENDER: UNIT ECONOMICS ============
 function renderUnitEcon() {
   const tab = rfeTabForScenario(state.scenario);
+  const anch = rfeAnchors(tab);
   $('#ue-scen-inline').textContent = state.scenario;
 
-  // Read CAC and WACC from Assumptions
+  // Read CAC and WACC from Assumptions via label-based lookups
   const cacs = {
-    'SaaS': cellNum('Assumptions', 82, 3),
-    'E-Commerce Store': cellNum('Assumptions', 83, 3),
-    'Platform': cellNum('Assumptions', 84, 3),
+    'SaaS': findAssumptionCAC('SaaS'),
+    'E-Commerce Store': findAssumptionCAC('E-Commerce Store'),
+    'Platform': findAssumptionCAC('Platform'),
   };
-  const wacc = cellNum('Assumptions', 85, 3) || 0.10;
-  // Active-scenario churn per segment — we can read from the RFE_* tab's formula result? 
-  // Simpler: read from Assumptions directly based on state.scenario
-  const scenCol = state.scenario === 'Base' ? 4 : state.scenario === 'Bear' ? 5 : 6;
+  const wacc = findAssumptionWACC() || 0.10;
   const churns = {
-    'SaaS': cellNum('Assumptions', 60, scenCol),
-    'E-Commerce Store': cellNum('Assumptions', 61, scenCol),
-    'Platform': cellNum('Assumptions', 62, scenCol),
+    'SaaS': findAssumptionChurn('SaaS', state.scenario),
+    'E-Commerce Store': findAssumptionChurn('E-Commerce Store', state.scenario),
+    'Platform': findAssumptionChurn('Platform', state.scenario),
   };
 
   let html = '<div class="unit-econ-grid">';
   for (const seg of ['SaaS', 'E-Commerce Store', 'Platform']) {
-    const c2020 = COHORT_2020[seg];
+    const c2020 = anch.cohort2020[seg];
     // Merchants added in 2020 (sum of + New merchants row for 2020)
     const mAdded = sumYear(tab, c2020.new_row, 2020);
     // Cohort GM per year (Y1=2020 ... Y5=2024)
@@ -583,7 +778,7 @@ function renderUnitEcon() {
 
     // Payback (cohort-ramp)
     let payback = null;
-    if (cac !== null) {
+    if (cac !== null && cac !== undefined) {
       for (let i = 0; i < cum.length; i++) {
         if (cum[i] >= cac) {
           const prevCum = i === 0 ? 0 : cum[i - 1];
@@ -613,7 +808,7 @@ function renderUnitEcon() {
         </div>
         <div>
           <div class="ue-metric-label">Annual churn</div>
-          <div class="ue-metric-value">${churns[seg] !== null ? (churns[seg] * 100).toFixed(1) + '%' : '—'}</div>
+          <div class="ue-metric-value">${churns[seg] !== null && churns[seg] !== undefined ? (churns[seg] * 100).toFixed(1) + '%' : '—'}</div>
         </div>
       </div>
       <div class="ue-ratio-row">
@@ -637,12 +832,18 @@ function renderUnitEcon() {
 function renderScenarios() {
   const tabs = { 'Base': 'RFE_Base', 'Bear': 'RFE_Bear', 'Bull': 'RFE_Bull' };
   const years = [2020, 2021, 2022, 2023, 2024];
+  // Get anchors per scenario tab — they're structurally identical but let's be safe
+  const anchors = {
+    'Base': rfeAnchors('RFE_Base'),
+    'Bear': rfeAnchors('RFE_Bear'),
+    'Bull': rfeAnchors('RFE_Bull'),
+  };
   const rows = [
-    { label: 'GPV', row: RFE_GRAND.gpv, fmt: 'm' },
-    { label: 'Revenue', row: RFE_GRAND.rev_tot, fmt: 'm' },
-    { label: 'COGS', row: RFE_GRAND.cogs_tot, fmt: 'm' },
-    { label: 'Gross Margin', row: RFE_GRAND.gm, fmt: 'm' },
-    { label: '# Merchants (EOY)', row: RFE_GRAND.mcount, fmt: 'eoy-count' },
+    { label: 'GPV', key: 'gpv', fmt: 'm' },
+    { label: 'Revenue', key: 'rev_tot', fmt: 'm' },
+    { label: 'COGS', key: 'cogs_tot', fmt: 'm' },
+    { label: 'Gross Margin', key: 'gm', fmt: 'm' },
+    { label: '# Merchants (EOY)', key: 'mcount', fmt: 'eoy-count' },
   ];
 
   let html = `<table class="data-table"><thead>`;
@@ -657,7 +858,10 @@ function renderScenarios() {
   for (const r of rows) {
     html += `<tr class="bold-row"><td>${r.label}</td>`;
     for (const y of years) {
-      const getVal = (scen) => r.fmt === 'eoy-count' ? eoyVal(tabs[scen], r.row, y) : sumYear(tabs[scen], r.row, y);
+      const getVal = (scen) => {
+        const rowNum = anchors[scen].grand[r.key];
+        return r.fmt === 'eoy-count' ? eoyVal(tabs[scen], rowNum, y) : sumYear(tabs[scen], rowNum, y);
+      };
       const base = getVal('Base');
       const bear = getVal('Bear');
       const bull = getVal('Bull');
@@ -754,16 +958,22 @@ function renderSensitivity() {
 
 // ============ RENDER: CHECK STATUS BADGE ============
 function renderCheckBadge() {
-  // Read RFE's F1131 (overall check)
-  const val = cell('RFE_Base', RFE_CHECK_CELL.row, RFE_CHECK_CELL.col);
-  // Actually the RFE_Base doesn't have the check; main Reporting & Forecasting Engine does.
-  // But we fetched RFE_Base which has same structure. However the check row may or may not compute correctly
-  // in RFE_Base since it references PU/Segmentation. It should — identical formulas.
-  // Let me try RFE_Base first.
-  let status = (val && String(val).trim()) || '';
-  if (!status || status === '') {
-    // Try main (not fetched), fall back
-    status = 'CHECK OK';
+  // Scan entire RFE_Base for the cell that contains "CHECK OK" or "CHECK ERROR"
+  // This is the most robust — no dependency on row numbers
+  const data = state.data['RFE_Base'];
+  let status = null;
+  if (data) {
+    for (let i = data.length - 1; i >= 0; i--) {  // scan from bottom, check is near the end
+      const row = data[i] || [];
+      for (const v of row) {
+        const s = (v || '').toString().trim();
+        if (s === 'CHECK OK' || s === 'CHECK ERROR') {
+          status = s;
+          break;
+        }
+      }
+      if (status) break;
+    }
   }
 
   const badge = $('#check-badge');
@@ -775,7 +985,7 @@ function renderCheckBadge() {
     badge.classList.remove('ok'); badge.classList.add('error');
     label.textContent = 'Data check: ERROR';
   } else {
-    label.textContent = status || '—';
+    label.textContent = status || 'Data check: —';
   }
 }
 
