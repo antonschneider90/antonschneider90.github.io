@@ -612,6 +612,56 @@ footer {
 footer a { color: var(--purple-dim); }
 
 /* ============================================================
+   INSTRUCTIONS TAB
+   ============================================================ */
+.instructions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.instruction-card {
+  background: white;
+  border: 1px solid var(--grey-soft);
+  border-radius: var(--radius);
+  padding: 24px 26px;
+  line-height: 1.55;
+}
+.instruction-card h3 {
+  font-family: 'DM Serif Display', serif;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--navy);
+  margin-bottom: 12px;
+}
+.instruction-card p {
+  font-size: 13px;
+  color: var(--navy-80);
+  margin: 0 0 10px 0;
+}
+.instruction-card p:last-child { margin-bottom: 0; }
+.instruction-card ul, .instruction-card ol {
+  font-size: 13px;
+  color: var(--navy-80);
+  margin: 8px 0;
+  padding-left: 20px;
+}
+.instruction-card li { margin-bottom: 6px; }
+.instruction-card code {
+  background: var(--grey-bg);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11.5px;
+  color: var(--purple);
+}
+
+@media (max-width: 980px) {
+  .instructions-grid { grid-template-columns: 1fr; }
+}
+
+/* ============================================================
    RESPONSIVE
    ============================================================ */
 @media (max-width: 980px) {
