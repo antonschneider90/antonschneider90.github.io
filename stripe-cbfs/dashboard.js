@@ -913,7 +913,18 @@ function renderUnitEcon() {
       </table>
     </div>`;
   }
-  html += '</div>';
+html += '</div>';
+  html += `<div class="note" style="margin-top: 24px;">
+    <h3>Why is Y1 GM so much lower than Y2?</h3>
+    <p>Two compounding effects drive this:</p>
+    <ul>
+      <li><strong>Partial year for the cohort.</strong> The 2020 cohort only adds merchants from March onwards (Jan and Feb 2020 are actuals with no new-2020 merchants). So Y1 captures 10 months of cohort adds, not 12.</li>
+      <li><strong>New merchant ramp.</strong> New merchants start at 20-30% of segment average GPV and ramp to 100% over 9-18 months (depending on scenario and segment). A merchant who joined in March 2020 doesn't reach full run-rate until 2021.</li>
+    </ul>
+    <p>By Y2, the full cohort is on board and fully ramped, which is why Y2 is roughly 3× Y1 (not 2× as a simple half-year effect would suggest). The LTV calculation correctly uses the actual GM earned — a merchant's economic value in Y1 equals what they actually delivered, not a hypothetical steady-state.</p>
+  </div>`;
+  $('#unit-econ-content').innerHTML = html;
+}
   $('#unit-econ-content').innerHTML = html;
 }
 
