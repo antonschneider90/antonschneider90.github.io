@@ -63,6 +63,7 @@
     <button class="tab-btn" data-tab="unit-econ">Unit Economics</button>
     <button class="tab-btn" data-tab="scenarios">Scenarios</button>
     <button class="tab-btn" data-tab="sensitivity">Sensitivity</button>
+    <button class="tab-btn" data-tab="instructions">Instructions</button>
   </nav>
 
   <main id="main-content">
@@ -166,6 +167,68 @@
         </div>
       </div>
       <div id="sensitivity-content"></div>
+    </section>
+
+    <!-- ===================== INSTRUCTIONS ===================== -->
+    <section class="tab-panel" id="tab-instructions">
+      <div class="panel-header">
+        <div>
+          <h1>Instructions</h1>
+          <div class="panel-meta">How this dashboard connects to the model</div>
+        </div>
+      </div>
+      <div class="instructions-grid">
+
+        <div class="instruction-card">
+          <h3>Data source</h3>
+          <p>This dashboard reads live from a Google Sheet (<a href="https://docs.google.com/spreadsheets/d/1x6aNjAe-MjECTN0gWmy0MuxONtMqQVPRMDVMx-kqVm0/edit" target="_blank" rel="noopener">open the model</a>) which is "Published to the web" so each tab's data is available as a CSV endpoint. On page load, the dashboard fetches 7 tabs in parallel: Current Year Overview, Forecast Years Overview, RFE_Base, RFE_Bear, RFE_Bull, Assumptions, and Summary.</p>
+        </div>
+
+        <div class="instruction-card">
+          <h3>Scenario toggle</h3>
+          <p>The <strong>Base / Bear / Bull</strong> toggle in the top bar controls every tab. Switching is instant because all three scenarios are pre-fetched from the parallel <code>RFE_Base</code>, <code>RFE_Bear</code>, <code>RFE_Bull</code> tabs in the Sheet.</p>
+          <p>Those three RFE tabs are parallel copies of the main RFE engine with scenario hardcoded. They update automatically whenever you change any Base/Bear/Bull assumption in the Sheet.</p>
+        </div>
+
+        <div class="instruction-card">
+          <h3>Where to change assumptions</h3>
+          <p>All assumptions live in the <strong>Assumptions</strong> tab of the Sheet. Key cells:</p>
+          <ul>
+            <li><code>C7</code> — active scenario for the Sheet's own CYO (Base / Bear / Bull). Not used by this dashboard.</li>
+            <li><code>B2</code> in the Current Year Overview tab — Last month of actuals. Update when new monthly actuals are pasted into Product Usage.</li>
+            <li><code>D/E/F 60-62</code> — annual merchant churn by segment (Base/Bear/Bull)</li>
+            <li><code>D/E/F 68-69</code> — new merchant ramp (months to full GPV, starting % of segment average)</li>
+            <li><code>C 82-84</code> — segment CAC (flat across scenarios)</li>
+            <li><code>C 85</code> — WACC for LTV discounting</li>
+            <li><code>D/E/F 56-58</code> — new merchants added per year by segment and scenario</li>
+            <li><code>D/E/F 16-24</code> — take rate, billing fee, and drift assumptions</li>
+          </ul>
+        </div>
+
+        <div class="instruction-card">
+          <h3>When to hit Refresh</h3>
+          <p>Click the <strong>Refresh</strong> button in the top right whenever you edit the Sheet and want the dashboard to pick up those edits. Google Sheets typically takes <strong>1-5 minutes</strong> to republish CSV endpoints after a change, so if numbers don't update immediately, wait a minute and try again.</p>
+          <p>You do NOT need to refresh when toggling scenarios — that's instant, client-side.</p>
+        </div>
+
+        <div class="instruction-card">
+          <h3>Data integrity check</h3>
+          <p>The <strong>Data check</strong> badge in the top bar reads from the model's integrity check row. It ties reported revenue/GPV/merchant counts back to the raw Product Usage data. Green <span style="color: var(--green); font-weight: 600;">OK</span> means all checks pass; red <span style="color: var(--red); font-weight: 600;">ERROR</span> means there's a mismatch. If you see ERROR, scroll to row 1130 of any RFE tab in the Sheet to see which check (GPV / Events / Merchants) failed and for which month.</p>
+        </div>
+
+        <div class="instruction-card">
+          <h3>Adding a new merchant</h3>
+          <p>If raw data starts showing a new merchant ID, you need to wire it in manually in four places:</p>
+          <ol>
+            <li>Add the merchant ID, name, and segment to the <strong>Segmentation</strong> tab</li>
+            <li>Add the merchant to the <strong>Merchant Activity</strong> tab</li>
+            <li>Add per-merchant detail rows in all four RFE tabs: <code>Reporting & Forecasting Engine</code>, <code>RFE_Base</code>, <code>RFE_Bear</code>, <code>RFE_Bull</code></li>
+            <li>Update <code>B2</code> in Current Year Overview to pull the new actuals</li>
+          </ol>
+          <p>Easy way to do step 3: copy the block of rows of an existing merchant in the same segment, paste below, then update the merchant ID reference (col B) to the new merchant. Do this in all 4 tabs. The Instructions tab in the Sheet has more details.</p>
+        </div>
+
+      </div>
     </section>
   </main>
 
