@@ -78,12 +78,17 @@
 
       <div class="kpi-grid">
         <div class="kpi-card">
+          <div class="kpi-label">2024 GPV</div>
+          <div class="kpi-value" id="kpi-gpv">—</div>
+          <div class="kpi-detail" id="kpi-gpv-detail"></div>
+        </div>
+        <div class="kpi-card">
           <div class="kpi-label">2024 Revenue</div>
           <div class="kpi-value" id="kpi-rev">—</div>
           <div class="kpi-detail" id="kpi-rev-detail"></div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">2024 Gross Margin</div>
+          <div class="kpi-label">2024 Gross Margin %</div>
           <div class="kpi-value" id="kpi-gm">—</div>
           <div class="kpi-detail" id="kpi-gm-detail"></div>
         </div>
@@ -91,11 +96,6 @@
           <div class="kpi-label">Merchants EOY 2024</div>
           <div class="kpi-value" id="kpi-merch">—</div>
           <div class="kpi-detail" id="kpi-merch-detail"></div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-label">2024 GPV</div>
-          <div class="kpi-value" id="kpi-gpv">—</div>
-          <div class="kpi-detail" id="kpi-gpv-detail"></div>
         </div>
       </div>
 
@@ -105,8 +105,8 @@
           <div class="chart-wrap"><canvas id="chart-revenue-year"></canvas></div>
         </div>
         <div class="chart-card">
-          <h3>Revenue by segment — 2024</h3>
-          <div class="chart-wrap"><canvas id="chart-seg-2024"></canvas></div>
+          <h3>Revenue mix by segment — 2018-2024 (<span id="seg-mix-scen">Base</span>)</h3>
+          <div class="chart-wrap"><canvas id="chart-seg-mix"></canvas></div>
         </div>
       </div>
 
