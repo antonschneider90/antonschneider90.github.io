@@ -9,9 +9,12 @@
 // ============ CONFIG ============
 const SHEET_ID = '11h9hLqsE7Do9TygPRmJYObpp9TiN8A70c8dE_lmdLpc';
 
-// Build CSV URL for a specific tab name
-function csvUrl(tabName) {
-  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tabName)}`;
+// Build gviz JSON URL for a specific tab name.
+// Using JSON instead of CSV because CSV applies cell number-formatting (e.g. "$#,##0,\k"
+// rounds monthly values to thousands), which produces accumulated rounding error vs the model.
+// JSON returns both raw `v` (value) and `f` (formatted) per cell — we always read `v`.
+function jsonUrl(tabName) {
+  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tabName)}`;
 }
 
 const TABS_TO_FETCH = [
@@ -113,14 +116,42 @@ function fmtCountVar(n) {
 }
 
 // ============ DATA FETCH ============
+// gviz JSON response is wrapped in a function call:
+//   /*O_o*/google.visualization.Query.setResponse({...})
+// We strip the wrapper, then read `table.rows[i].c[j].v` (raw value) for each cell.
+// We also read header labels from `table.cols[j].label` and prepend them so the resulting
+// 2D array matches the prior CSV shape exactly (row 0 = headers, row 1+ = data).
 async function fetchTab(tabName) {
-  const url = csvUrl(tabName);
+  const url = jsonUrl(tabName);
   const resp = await fetch(url);
   if (!resp.ok) throw new Error(`Failed to fetch "${tabName}" (HTTP ${resp.status}). Make sure the Sheet is published to web.`);
   const text = await resp.text();
-  // Papa parses the CSV
-  const parsed = Papa.parse(text, { header: false, skipEmptyLines: false });
-  return parsed.data; // 2D array
+  // Strip the JSONP-style wrapper. Format: /*O_o*/\ngoogle.visualization.Query.setResponse(...);
+  const start = text.indexOf('{');
+  const end = text.lastIndexOf('}');
+  if (start < 0 || end < 0) throw new Error(`Unexpected gviz JSON response for "${tabName}"`);
+  const jsonStr = text.substring(start, end + 1);
+  const payload = JSON.parse(jsonStr);
+  if (payload.status === 'error') {
+    const msg = (payload.errors || []).map(e => e.detailed_message || e.message).join('; ');
+    throw new Error(`gviz error for "${tabName}": ${msg}`);
+  }
+  const tbl = payload.table || {};
+  const cols = tbl.cols || [];
+  const rows = tbl.rows || [];
+  // Header row: column labels (defaults to letter if no header set)
+  const headerRow = cols.map(c => (c && c.label) ? c.label : '');
+  // Data rows: each cell -> raw value `v` (or null)
+  const dataRows = rows.map(r => {
+    const cells = r.c || [];
+    // Pad to header length
+    return cols.map((_, j) => {
+      const cell = cells[j];
+      if (cell === null || cell === undefined) return null;
+      return cell.v === undefined ? null : cell.v;
+    });
+  });
+  return [headerRow, ...dataRows];
 }
 
 async function loadAll() {
@@ -175,7 +206,9 @@ function findRow(tab, colAText, colBText, colEText) {
 
 // Find the column offset for dates. Google gviz CSV may shift column positions too.
 // Look at the row with col A = "Segment" (header row with dates), find the col where
-// the date starts (matches 2018-01 or contains "2018")
+// the date starts. Matches multiple formats:
+//   - CSV: "2018-01-01", "1/1/2018", "Jan 2018"
+//   - gviz JSON: "Date(2018,0,1)" (month is 0-indexed)
 function findDateStartCol(tab) {
   const data = state.data[tab];
   if (!data) return 6;  // default fallback: col F
@@ -183,7 +216,13 @@ function findDateStartCol(tab) {
     const row = data[i] || [];
     for (let j = 0; j < row.length; j++) {
       const v = (row[j] || '').toString();
-      if (/^2018-01/.test(v) || /^1\/1\/2018/.test(v) || v === '2018-01' || /Jan.*2018/i.test(v)) {
+      if (
+        /^2018-01/.test(v) ||
+        /^1\/1\/2018/.test(v) ||
+        v === '2018-01' ||
+        /Jan.*2018/i.test(v) ||
+        /^Date\(2018\s*,\s*0\s*,/.test(v)  // gviz JSON: Date(2018,0,1)
+      ) {
         return j + 1;  // 1-indexed
       }
     }
