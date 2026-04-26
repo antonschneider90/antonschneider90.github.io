@@ -181,7 +181,7 @@
 
         <div class="instruction-card">
           <h3>Data source</h3>
-          <p>This dashboard reads live from a Google Sheet (<a href="https://docs.google.com/spreadsheets/d/1x6aNjAe-MjECTN0gWmy0MuxONtMqQVPRMDVMx-kqVm0/edit" target="_blank" rel="noopener">open the model</a>) which is "Published to the web" so each tab's data is available as a CSV endpoint. On page load, the dashboard fetches 7 tabs in parallel: Current Year Overview, Forecast Years Overview, RFE_Base, RFE_Bear, RFE_Bull, Assumptions, and Summary.</p>
+          <p>This dashboard reads live from a Google Sheet (<a href="https://docs.google.com/spreadsheets/d/11h9hLqsE7Do9TygPRmJYObpp9TiN8A70c8dE_lmdLpc/edit" target="_blank" rel="noopener">open the model</a>) which is "Published to the web" so each tab's data is available as a CSV endpoint. On page load, the dashboard fetches 7 tabs in parallel: Current Year Overview, Forecast Years Overview, RFE_Base, RFE_Bear, RFE_Bull, Assumptions, and Summary.</p>
         </div>
 
         <div class="instruction-card">
@@ -194,14 +194,32 @@
           <h3>Where to change assumptions</h3>
           <p>All assumptions live in the <strong>Assumptions</strong> tab of the Sheet. Key cells:</p>
           <ul>
+            <li><code>C5</code> — Last month of actuals (drives where actuals end and forecast begins)</li>
             <li><code>C7</code> — active scenario for the Sheet's own CYO (Base / Bear / Bull). Not used by this dashboard.</li>
-            <li><code>B2</code> in the Current Year Overview tab — Last month of actuals. Update when new monthly actuals are pasted into Product Usage.</li>
+            <li><code>D/E/F 16-19</code> — volume take rate per product (now 2.6% flat across all)</li>
+            <li><code>D/E/F 20</code> — custom pricing threshold ($5m/month merchant GPV)</li>
+            <li><code>D/E/F 22</code> — custom pricing discount (15% off rate and trx fee)</li>
+            <li><code>D/E/F 24</code> — per-transaction fee ($0.20)</li>
+            <li><code>D/E/F 29</code> — Recurring billing uplift (% of Recurring GPV, 2020+)</li>
+            <li><code>D/E/F 41</code> — <strong>Basic → Recurring migration rate</strong> (% of Basic GPV migrating per month)</li>
+            <li><code>D/E/F 42</code> — <strong>New SaaS merchant sell-in mix</strong> (% onboarded directly as Recurring)</li>
+            <li><code>D/E/F 56-58</code> — new merchants added per year by segment and scenario</li>
             <li><code>D/E/F 60-62</code> — annual merchant churn by segment (Base/Bear/Bull)</li>
+            <li><code>D/E/F 64-66</code> — Existing merchant GPV growth per year by segment</li>
             <li><code>D/E/F 68-69</code> — new merchant ramp (months to full GPV, starting % of segment average)</li>
             <li><code>C 82-84</code> — segment CAC (flat across scenarios)</li>
             <li><code>C 85</code> — WACC for LTV discounting</li>
-            <li><code>D/E/F 56-58</code> — new merchants added per year by segment and scenario</li>
-            <li><code>D/E/F 16-24</code> — take rate, billing fee, and drift assumptions</li>
+          </ul>
+        </div>
+
+        <div class="instruction-card">
+          <h3>SaaS Recurring migration mechanic</h3>
+          <p>Stripe Billing (Recurring) launched in May 2018. The model treats Basic API → Recurring migration as a strategic priority:</p>
+          <ul>
+            <li><strong>Migration rate</strong> (Assumptions <code>D/E/F 41</code>): each forecast month, X% of cohort Basic API GPV shifts to Recurring. Defaults: Base 1.5% / Bear 0.5% / Bull 3.0% per month (≈17% / 6% / 30% per year).</li>
+            <li><strong>Sell-in mix</strong> (<code>D/E/F 42</code>): of new SaaS merchants onboarded 2020+, this % start on Recurring; the rest start on Basic and migrate over time. Default: 50% across all scenarios.</li>
+            <li><strong>Recurring billing uplift</strong> (<code>D/E/F 29</code>): incremental revenue on Recurring GPV (added to base 2.6% volume rate). Default: Base 0.8% / Bear 0.5% / Bull 1.1%.</li>
+            <li>Net effect by 2024: Recurring share of SaaS GPV rises from 37% (2019) to <strong>68% Base / 45% Bear / 86% Bull</strong>.</li>
           </ul>
         </div>
 
@@ -234,7 +252,7 @@
 
   <footer>
     <div class="footer-inner">
-      <div>Data source: <a href="https://docs.google.com/spreadsheets/d/1x6aNjAe-MjECTN0gWmy0MuxONtMqQVPRMDVMx-kqVm0/edit" target="_blank" rel="noopener">Google Sheet</a> · auto-republished on edits</div>
+      <div>Data source: <a href="https://docs.google.com/spreadsheets/d/11h9hLqsE7Do9TygPRmJYObpp9TiN8A70c8dE_lmdLpc/edit" target="_blank" rel="noopener">Google Sheet</a> · auto-republished on edits</div>
       <div>Last fetched: <span id="last-fetched">—</span></div>
     </div>
   </footer>
