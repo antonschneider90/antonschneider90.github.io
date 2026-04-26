@@ -7,7 +7,7 @@
    ============================================================ */
 
 // ============ CONFIG ============
-const SHEET_ID = '1x6aNjAe-MjECTN0gWmy0MuxONtMqQVPRMDVMx-kqVm0';
+const SHEET_ID = '11h9hLqsE7Do9TygPRmJYObpp9TiN8A70c8dE_lmdLpc';
 
 // Build CSV URL for a specific tab name
 function csvUrl(tabName) {
@@ -453,6 +453,7 @@ function renderOverview() {
       <li>Scenario toggle uses pre-computed parallel tabs (<code>RFE_Base</code>, <code>RFE_Bear</code>, <code>RFE_Bull</code>) — instant switching, no re-calculation needed.</li>
       <li>The <strong>Current Year</strong> tab reflects whatever scenario is active in <code>Assumptions!C7</code> in the Sheet — it's not controlled by the dashboard toggle.</li>
       <li>All other tabs respect the toggle: <strong>${state.scenario}</strong> ( ${bestScen}) is currently shown.</li>
+      <li><strong>SaaS Basic → Recurring migration</strong> is now modelled at the cohort level (Assumptions D/E/F 41-42). Recurring share of SaaS GPV grows from 37% in 2019 to 68% / 45% / 86% by 2024 in Base / Bear / Bull respectively.</li>
     </ul>
   `;
 
