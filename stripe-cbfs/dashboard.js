@@ -425,6 +425,49 @@ function findAssumptionChurn(seg, scenario) {
   return null;
 }
 
+// Convert various last-actual-month representations into "YYYY-MM" string.
+// Handles: Excel serial number (e.g. 43862), gviz "Date(2020,1,1)" (month 0-indexed),
+// ISO "2020-02-01" or "2020-02", or already-formatted strings.
+function formatLastActualMonth(v) {
+  if (v === null || v === undefined || v === '') return '—';
+
+  // Numeric Excel serial date — Excel/Sheets epoch is 1899-12-30 (accounts for the
+  // 1900 leap-year bug, which is why day 1 corresponds to 1900-01-01).
+  if (typeof v === 'number' || /^\d+(\.\d+)?$/.test(String(v).trim())) {
+    const serial = Number(v);
+    if (serial > 0 && serial < 100000) {
+      const epoch = new Date(Date.UTC(1899, 11, 30));
+      const ms = serial * 86400000;
+      const d = new Date(epoch.getTime() + ms);
+      const yr = d.getUTCFullYear();
+      const mo = String(d.getUTCMonth() + 1).padStart(2, '0');
+      return `${yr}-${mo}`;
+    }
+  }
+
+  const s = String(v).trim();
+
+  // gviz Date format: "Date(2020,1,1)" — month is 0-indexed
+  const gvizMatch = s.match(/^Date\((\d{4})\s*,\s*(\d{1,2})\s*,/);
+  if (gvizMatch) {
+    const yr = gvizMatch[1];
+    const mo = String(parseInt(gvizMatch[2], 10) + 1).padStart(2, '0');
+    return `${yr}-${mo}`;
+  }
+
+  // ISO "YYYY-MM" or "YYYY-MM-DD"
+  const isoMatch = s.match(/^(\d{4})-(\d{2})/);
+  if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}`;
+
+  // Slash format "M/D/YYYY" or "D/M/YYYY" — best effort, assume MM/DD/YYYY (US-style)
+  const slashMatch = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (slashMatch) {
+    return `${slashMatch[3]}-${String(parseInt(slashMatch[1], 10)).padStart(2, '0')}`;
+  }
+
+  return s;  // fallback: show whatever we got
+}
+
 // Find Last Actual Month from CYO tab — look for the row with label "Last month of actuals"
 function findCYOLastActualMonth() {
   const data = state.data['Current Year Overview'];
@@ -457,31 +500,38 @@ function renderOverview() {
   const merch2019 = eoyVal(tab, a.grand.mcount, 2019);
   const gpv2019 = sumYear(tab, a.grand.gpv, 2019);
 
+  $('#kpi-gpv').textContent = fmtM(gpv2024);
+  const gpvCAGR = gpv2019 && gpv2024 ? (Math.pow(gpv2024 / gpv2019, 1 / 5) - 1) : null;
+  $('#kpi-gpv-detail').textContent = gpvCAGR !== null ? `2019-24 CAGR ${(gpvCAGR * 100).toFixed(1)}%` : '';
+
   $('#kpi-rev').textContent = fmtM(rev2024);
   const revCAGR = rev2019 && rev2024 ? (Math.pow(rev2024 / rev2019, 1 / 5) - 1) : null;
   $('#kpi-rev-detail').textContent = revCAGR !== null ? `2019-24 CAGR ${(revCAGR * 100).toFixed(1)}%` : '';
 
-  $('#kpi-gm').textContent = fmtM(gm2024);
-  const gmPct = rev2024 ? (gm2024 / rev2024) : null;
-  $('#kpi-gm-detail').textContent = gmPct !== null ? `${(gmPct * 100).toFixed(1)}% of revenue` : '';
+  // GM as a percentage (replaces dollar GM). Detail: bps change 2019 → 2024.
+  const gmPct2024 = rev2024 ? (gm2024 / rev2024) : null;
+  const gmPct2019 = rev2019 ? (gm2019 / rev2019) : null;
+  $('#kpi-gm').textContent = gmPct2024 !== null ? (gmPct2024 * 100).toFixed(1) + '%' : '—';
+  if (gmPct2024 !== null && gmPct2019 !== null) {
+    const bps = Math.round((gmPct2024 - gmPct2019) * 10000);
+    const sign = bps >= 0 ? '+' : '';
+    $('#kpi-gm-detail').textContent = `2019-24 ${sign}${bps} bps`;
+  } else {
+    $('#kpi-gm-detail').textContent = '';
+  }
 
   $('#kpi-merch').textContent = merch2024 !== null ? Math.round(merch2024).toString() : '—';
   const merchAdd = (merch2024 !== null && merch2019 !== null) ? (merch2024 - merch2019) : null;
   $('#kpi-merch-detail').textContent = merchAdd !== null ? `+${Math.round(merchAdd)} vs EOY 2019` : '';
 
-  $('#kpi-gpv').textContent = fmtM(gpv2024);
-  const gpvCAGR = gpv2019 && gpv2024 ? (Math.pow(gpv2024 / gpv2019, 1 / 5) - 1) : null;
-  $('#kpi-gpv-detail').textContent = gpvCAGR !== null ? `2019-24 CAGR ${(gpvCAGR * 100).toFixed(1)}%` : '';
-
   // Meta
-  const activeSheetScen = findAssumptionScenario() || '—';
   const cyo = state.data['Current Year Overview'];
-  const lastActual = findCYOLastActualMonth() || '—';
-  $('#overview-meta').textContent = `Scenario: ${state.scenario} · Sheet active scenario: ${activeSheetScen} · Last actual month: ${lastActual}`;
+  const lastActual = formatLastActualMonth(findCYOLastActualMonth());
+  $('#overview-meta').textContent = `Scenario: ${state.scenario} · Last actual month: ${lastActual}`;
 
   // Charts
   renderRevenueYearChart(tab);
-  renderSeg2024Chart(tab);
+  renderSegMixChart(tab);
 
   // Note box: takeaways
   const bestScen = { 'Base': 'moderate growth', 'Bear': 'conservative growth', 'Bull': 'aggressive growth' }[state.scenario];
@@ -490,13 +540,12 @@ function renderOverview() {
     <ul>
       <li>This dashboard mirrors the Stripe CBFS Excel model, live from a Google Sheet. Edit the Sheet → refresh this page to see updates.</li>
       <li>Scenario toggle uses pre-computed parallel tabs (<code>RFE_Base</code>, <code>RFE_Bear</code>, <code>RFE_Bull</code>) — instant switching, no re-calculation needed.</li>
-      <li>The <strong>Current Year</strong> tab reflects whatever scenario is active in <code>Assumptions!C7</code> in the Sheet — it's not controlled by the dashboard toggle.</li>
-      <li>All other tabs respect the toggle: <strong>${state.scenario}</strong> ( ${bestScen}) is currently shown.</li>
-      <li><strong>SaaS Basic → Recurring migration</strong> is now modelled at the cohort level (Assumptions D/E/F 41-42). Recurring share of SaaS GPV grows from 37% in 2019 to 68% / 45% / 86% by 2024 in Base / Bear / Bull respectively.</li>
+      <li>Dashboard and model can be updated every month by pasting one more month of historical raw data in the model and updating the last month of actuals cell (see Instructions tab).</li>
     </ul>
   `;
 
   $('#rev-chart-scen').textContent = state.scenario;
+  $('#seg-mix-scen').textContent = state.scenario;
 }
 
 let revChart = null;
@@ -541,32 +590,71 @@ function renderRevenueYearChart(tab) {
   });
 }
 let segChart = null;
-function renderSeg2024Chart(tab) {
+function renderSegMixChart(tab) {
   const a = rfeAnchors(tab);
   const segs = ['SaaS', 'E-Commerce Store', 'Platform'];
-  const vals = segs.map(s => (sumYear(tab, a.segments[s].rev_tot, 2024) || 0) / 1e6);
-  const ctx = document.getElementById('chart-seg-2024').getContext('2d');
+  const years = [2018, 2019, 2020, 2021, 2022, 2023, 2024];
+  // Compute share-of-revenue per segment per year
+  const shares = {};
+  for (const seg of segs) shares[seg] = [];
+  for (const y of years) {
+    const total = sumYear(tab, a.grand.rev_tot, y) || 0;
+    for (const seg of segs) {
+      const segRev = sumYear(tab, a.segments[seg].rev_tot, y) || 0;
+      const pct = total > 0 ? (segRev / total) * 100 : null;
+      shares[seg].push(pct);
+    }
+  }
+
+  const colors = {
+    'SaaS': '#635BFF',
+    'E-Commerce Store': '#0A2540',
+    'Platform': '#00A67E'
+  };
+
+  const datasets = segs.map(seg => ({
+    label: seg,
+    data: shares[seg],
+    borderColor: colors[seg],
+    backgroundColor: colors[seg],
+    pointBackgroundColor: colors[seg],
+    pointRadius: 3,
+    pointHoverRadius: 5,
+    borderWidth: 2,
+    tension: 0.25,
+    fill: false
+  }));
+
+  const ctx = document.getElementById('chart-seg-mix').getContext('2d');
   if (segChart) segChart.destroy();
   segChart = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: segs,
-      datasets: [{
-        data: vals,
-        backgroundColor: ['#635BFF', '#0A2540', '#00A67E'],
-        borderWidth: 2,
-        borderColor: '#FBFAF6'
-      }]
-    },
+    type: 'line',
+    data: { labels: years.map(String), datasets },
     options: {
       responsive: true, maintainAspectRatio: false,
-      cutout: '60%',
       plugins: {
-        legend: { position: 'bottom', labels: { font: { family: 'IBM Plex Sans', size: 12 }, padding: 14, boxWidth: 12 } },
+        legend: {
+          position: 'bottom',
+          labels: { font: { family: 'IBM Plex Sans', size: 12 }, padding: 14, boxWidth: 12, usePointStyle: true }
+        },
         tooltip: {
           callbacks: {
-            label: (c) => c.label + ': $' + c.parsed.toFixed(1) + 'm'
+            label: (c) => `${c.dataset.label}: ${c.parsed.y !== null ? c.parsed.y.toFixed(1) + '%' : '—'}`
           }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100,
+          ticks: {
+            callback: (v) => v + '%',
+            font: { family: 'IBM Plex Mono' }
+          },
+          title: { display: true, text: '% of total revenue', font: { family: 'IBM Plex Sans', size: 11 } }
+        },
+        x: {
+          ticks: { font: { family: 'IBM Plex Mono' } }
         }
       }
     }
@@ -588,13 +676,41 @@ function sumRangeCols(tab, row, startCol, endCol) {
   return any ? sum : null;
 }
 
-// Parse "YYYY-MM" or "YYYY-MM-DD" string → { year, month (1-12) }
+// Parse various last-actual-month representations into { year, month (1-12) }.
+// Handles: ISO "YYYY-MM" / "YYYY-MM-DD", Excel serial number (e.g. 43862),
+// gviz "Date(2020,1,1)" (month 0-indexed), and slash dates.
 function parseYYYYMM(s) {
-  if (!s) return null;
-  const str = s.toString().trim();
+  if (s === null || s === undefined || s === '') return null;
+
+  // Excel serial number — Excel/Sheets epoch is 1899-12-30 (Excel's 1900 leap-year bug)
+  if (typeof s === 'number' || /^\d+(\.\d+)?$/.test(String(s).trim())) {
+    const serial = Number(s);
+    if (serial > 0 && serial < 100000) {
+      const epoch = new Date(Date.UTC(1899, 11, 30));
+      const d = new Date(epoch.getTime() + serial * 86400000);
+      return { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1 };
+    }
+  }
+
+  const str = String(s).trim();
+
+  // gviz Date format: "Date(2020,1,1)" — month 0-indexed
+  const gvizMatch = str.match(/^Date\((\d{4})\s*,\s*(\d{1,2})\s*,/);
+  if (gvizMatch) {
+    return { year: parseInt(gvizMatch[1], 10), month: parseInt(gvizMatch[2], 10) + 1 };
+  }
+
+  // ISO "YYYY-MM" or "YYYY-MM-DD"
   const m = str.match(/^(\d{4})-(\d{2})/);
-  if (!m) return null;
-  return { year: parseInt(m[1], 10), month: parseInt(m[2], 10) };
+  if (m) return { year: parseInt(m[1], 10), month: parseInt(m[2], 10) };
+
+  // Slash format "M/D/YYYY"
+  const slashMatch = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (slashMatch) {
+    return { year: parseInt(slashMatch[3], 10), month: parseInt(slashMatch[1], 10) };
+  }
+
+  return null;
 }
 
 // Compute the 4-block metrics for a given metric row (or num/den ratio) against CYO anchor month
@@ -1005,13 +1121,26 @@ function renderScenarios() {
 
       const fmtV = (v) => {
         if (v === null || isNaN(v)) return '—';
-        if (r.fmt === 'm') return fmtM(v);
+        if (r.fmt === 'm') {
+          // Format as $X,XXXm with thousand separators, no decimals.
+          // E.g. 1,900,000,000 → $1,900m;  -1,484,900,000 → -$1,485m
+          const sign = v < 0 ? '-' : '';
+          const abs = Math.abs(v);
+          const inM = Math.round(abs / 1e6);
+          return sign + '$' + inM.toLocaleString('en-US') + 'm';
+        }
         if (r.fmt === 'eoy-count') return Math.round(v).toString();
         return v.toFixed(1);
       };
       const fmtVar = (v) => {
         if (v === null || isNaN(v)) return '—';
-        if (r.fmt === 'm') return fmtMVar(v);
+        if (r.fmt === 'm') {
+          // Variance with explicit + / - sign, $X,XXXm style, no decimals.
+          const sign = v >= 0 ? '+' : '-';
+          const abs = Math.abs(v);
+          const inM = Math.round(abs / 1e6);
+          return sign + '$' + inM.toLocaleString('en-US') + 'm';
+        }
         if (r.fmt === 'eoy-count') return (v > 0 ? '+' : '') + Math.round(v).toString();
         return (v > 0 ? '+' : '') + v.toFixed(1);
       };
@@ -1102,35 +1231,41 @@ function renderSensitivity() {
 }
 
 // ============ RENDER: CHECK STATUS BADGE ============
+// Reads the data integrity check from Current Year Overview!C3:D3 in the Sheet.
+// Treats the badge as OK if either C3 or D3 contains an "OK"-style string,
+// and as ERROR if either contains an "ERROR"/"FAIL" string. Otherwise the raw
+// value is shown so the user can see whatever the cells contain.
 function renderCheckBadge() {
-  // Scan entire RFE_Base for the cell that contains "CHECK OK" or "CHECK ERROR"
-  // This is the most robust — no dependency on row numbers
-  const data = state.data['RFE_Base'];
-  let status = null;
-  if (data) {
-    for (let i = data.length - 1; i >= 0; i--) {  // scan from bottom, check is near the end
-      const row = data[i] || [];
-      for (const v of row) {
-        const s = (v || '').toString().trim();
-        if (s === 'CHECK OK' || s === 'CHECK ERROR') {
-          status = s;
-          break;
-        }
-      }
-      if (status) break;
-    }
+  const cyo = state.data['Current Year Overview'];
+  let c3 = '', d3 = '';
+  if (cyo && cyo.length >= 3) {
+    const row3 = cyo[2] || [];
+    c3 = (row3[2] === null || row3[2] === undefined) ? '' : String(row3[2]).trim();
+    d3 = (row3[3] === null || row3[3] === undefined) ? '' : String(row3[3]).trim();
   }
+  // Combine — show whichever is non-empty (or both joined by " · ")
+  const parts = [c3, d3].filter(s => s && s.length > 0);
+  const combinedRaw = parts.join(' · ');
+  const upper = combinedRaw.toUpperCase();
 
   const badge = $('#check-badge');
   const label = $('#check-label');
-  if (status && status.toUpperCase().includes('OK')) {
-    badge.classList.add('ok'); badge.classList.remove('error');
-    label.textContent = 'Data check: OK';
-  } else if (status && status.toUpperCase().includes('ERROR')) {
-    badge.classList.remove('ok'); badge.classList.add('error');
-    label.textContent = 'Data check: ERROR';
+  badge.classList.remove('ok', 'error');
+
+  if (!combinedRaw) {
+    label.textContent = 'Data check: —';
+    return;
+  }
+
+  if (/(^|[^A-Z])OK([^A-Z]|$)/.test(upper) || upper.includes('PASS') || upper.includes('TIE')) {
+    badge.classList.add('ok');
+    label.textContent = `Data check: ${combinedRaw}`;
+  } else if (upper.includes('ERROR') || upper.includes('FAIL') || upper.includes('MISMATCH') || upper.includes('BREAK')) {
+    badge.classList.add('error');
+    label.textContent = `Data check: ${combinedRaw}`;
   } else {
-    label.textContent = status || 'Data check: —';
+    // Unknown content — show as-is, no colour
+    label.textContent = `Data check: ${combinedRaw}`;
   }
 }
 
