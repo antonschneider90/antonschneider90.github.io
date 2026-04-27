@@ -141,14 +141,23 @@ async function fetchTab(tabName) {
   const rows = tbl.rows || [];
   // Header row: column labels (defaults to letter if no header set)
   const headerRow = cols.map(c => (c && c.label) ? c.label : '');
-  // Data rows: each cell -> raw value `v` (or null)
+  // Data rows: each cell -> raw value `v`. When gviz infers a column as
+  // numeric and a cell holds a non-numeric string (e.g. 'CHECK OK'), v comes
+  // back as null. In that case we fall back to the formatted value `f` only
+  // if it's a non-numeric string — never for numeric cells, since `f` applies
+  // cell display formatting that would round/truncate monthly values.
   const dataRows = rows.map(r => {
     const cells = r.c || [];
-    // Pad to header length
     return cols.map((_, j) => {
       const cell = cells[j];
       if (cell === null || cell === undefined) return null;
-      return cell.v === undefined ? null : cell.v;
+      if (cell.v !== null && cell.v !== undefined) return cell.v;
+      // v is null — try formatted value, but only if it's clearly a non-numeric label
+      if (cell.f !== undefined && cell.f !== null) {
+        const f = String(cell.f).trim();
+        if (f && !/^[-+(]?[\d$,. ]+\)?[%mkb]?$/i.test(f)) return f;
+      }
+      return null;
     });
   });
   return [headerRow, ...dataRows];
