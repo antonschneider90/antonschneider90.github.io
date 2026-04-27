@@ -1267,84 +1267,53 @@ function renderSensitivity() {
 }
 
 // ============ RENDER: CHECK STATUS BADGE ============
-// Reads the data integrity check from the Current Year Overview tab.
-// Originally targeted at C3:D3, but gviz JSON sometimes promotes row 1 of the
-// Sheet to the header (depending on whether headers are autodetected), which
-// shifts row indices. To be robust, we scan the top of the CYO tab for the
-// "Data check" / "Integrity check" row and read whatever's next to it. We
-// fall back to a label-anchor scan, then to a status-string scan.
+// The model writes the data integrity status as the literal string "CHECK OK"
+// or "CHECK ERROR" into Current Year Overview!C3 (formula sources it from
+// 'Reporting & Forecasting Engine'!F1131). We scan the CYO tab for that
+// literal — this avoids any dependency on whether gviz auto-promotes the
+// title row to the header (which shifts row indices off by one).
 function renderCheckBadge() {
   const cyo = state.data['Current Year Overview'];
   const badge = $('#check-badge');
   const label = $('#check-label');
   badge.classList.remove('ok', 'error');
 
-  if (!cyo) {
-    label.textContent = 'Data check: —';
-    return;
-  }
-
-  // Strategy A: find a row whose first few cells contain "data check" or
-  // "integrity" as a label, then take the next non-empty cell(s) as the value.
-  let foundValue = null;
-  const labelRegex = /(data\s*check|integrity\s*check|check\s*status|data\s*integrity)/i;
-  for (let i = 0; i < Math.min(15, cyo.length); i++) {
-    const row = cyo[i] || [];
-    for (let j = 0; j < Math.min(5, row.length); j++) {
-      const cellText = (row[j] === null || row[j] === undefined) ? '' : String(row[j]);
-      if (labelRegex.test(cellText)) {
-        // Collect non-empty cells in this row to the right of the label
-        const values = [];
-        for (let k = j + 1; k < row.length; k++) {
-          const v = row[k];
-          if (v !== null && v !== undefined && String(v).trim() !== '') {
-            values.push(String(v).trim());
-          }
-        }
-        if (values.length > 0) {
-          foundValue = values.join(' · ');
-          break;
-        }
-      }
-    }
-    if (foundValue) break;
-  }
-
-  // Strategy B: scan the entire CYO tab for any cell containing an OK/ERROR string.
-  if (!foundValue) {
-    const statusRegex = /^(CHECK\s+OK|CHECK\s+ERROR|OK|ERROR|PASS|FAIL|TIE|MISMATCH)$/i;
-    for (let i = 0; i < cyo.length && !foundValue; i++) {
+  let status = null;
+  if (cyo) {
+    outer: for (let i = 0; i < cyo.length; i++) {
       const row = cyo[i] || [];
-      for (const v of row) {
+      for (let j = 0; j < row.length; j++) {
+        const v = row[j];
         if (v === null || v === undefined) continue;
-        const s = String(v).trim();
-        if (statusRegex.test(s)) { foundValue = s; break; }
+        const s = String(v).trim().toUpperCase();
+        if (s === 'CHECK OK' || s === 'CHECK ERROR' || s === 'OK' || s === 'ERROR') {
+          status = String(v).trim();
+          // Log row/col so we can confirm where it came from on first deploy
+          console.info(`[check-badge] Found "${status}" at CYO row ${i + 1}, col ${j + 1}`);
+          break outer;
+        }
       }
     }
   }
 
-  // Strategy C: fall back to the original C3:D3 read (works if gviz preserved
-  // the row alignment we expected).
-  if (!foundValue && cyo.length >= 3) {
-    const row3 = cyo[2] || [];
-    const c3 = (row3[2] === null || row3[2] === undefined) ? '' : String(row3[2]).trim();
-    const d3 = (row3[3] === null || row3[3] === undefined) ? '' : String(row3[3]).trim();
-    const parts = [c3, d3].filter(s => s);
-    if (parts.length > 0) foundValue = parts.join(' · ');
-  }
-
-  if (!foundValue) {
+  if (!status) {
+    console.warn('[check-badge] No CHECK OK / CHECK ERROR string found in Current Year Overview tab. ' +
+                 'Tab fetched? ' + (cyo ? `yes (${cyo.length} rows)` : 'no') + '. ' +
+                 'Sample row 3 of CYO: ' + JSON.stringify((cyo || [])[2] || []));
     label.textContent = 'Data check: —';
     return;
   }
 
-  const upper = foundValue.toUpperCase();
-  if (/(^|[^A-Z])OK([^A-Z]|$)/.test(upper) || upper.includes('PASS') || upper.includes('TIE')) {
+  const upper = status.toUpperCase();
+  if (upper.includes('OK')) {
     badge.classList.add('ok');
-  } else if (upper.includes('ERROR') || upper.includes('FAIL') || upper.includes('MISMATCH') || upper.includes('BREAK')) {
+    label.textContent = 'Data check: OK';
+  } else if (upper.includes('ERROR') || upper.includes('FAIL')) {
     badge.classList.add('error');
+    label.textContent = 'Data check: ERROR';
+  } else {
+    label.textContent = `Data check: ${status}`;
   }
-  label.textContent = `Data check: ${foundValue}`;
 }
 
 // ============ TAB SWITCHING ============
