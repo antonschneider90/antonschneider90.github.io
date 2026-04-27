@@ -31,6 +31,7 @@ const TABS_TO_FETCH = [
 const state = {
   scenario: 'Base',  // active scenario: Base | Bear | Bull
   data: {},          // populated after fetch: { 'RFE_Base': [[row],[row]...], ... }
+  checkCell: null,   // raw value of Current Year Overview!C3 (data integrity status)
   loaded: false
 };
 
@@ -163,9 +164,43 @@ async function fetchTab(tabName) {
   return [headerRow, ...dataRows];
 }
 
+// Fetch a single cell as a raw string by issuing a targeted gviz query against
+// a specific range. Avoids gviz's column-type inference, which drops
+// non-numeric strings from numeric columns (the failure mode that hides
+// "CHECK OK" / "CHECK ERROR" in Current Year Overview!C3).
+async function fetchCellString(tabName, range) {
+  // Build a query that selects a single column letter at a single row and
+  // forces gviz to return it. gviz accepts a `tq` parameter with a SQL-like
+  // SELECT, but for raw single-cell reads the simpler approach is to use
+  // `range` with `headers=0` so no row is treated as the header.
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tabName)}&range=${encodeURIComponent(range)}&headers=0`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  const text = await resp.text();
+  const start = text.indexOf('{');
+  const end = text.lastIndexOf('}');
+  if (start < 0 || end < 0) throw new Error('Unexpected gviz response');
+  const payload = JSON.parse(text.substring(start, end + 1));
+  if (payload.status === 'error') {
+    const msg = (payload.errors || []).map(e => e.detailed_message || e.message).join('; ');
+    throw new Error(`gviz error: ${msg}`);
+  }
+  const rows = (payload.table || {}).rows || [];
+  for (const r of rows) {
+    const cells = r.c || [];
+    for (const cell of cells) {
+      if (!cell) continue;
+      if (cell.v !== null && cell.v !== undefined) return String(cell.v);
+      if (cell.f !== null && cell.f !== undefined) return String(cell.f);
+    }
+  }
+  return null;
+}
+
 async function loadAll() {
   const statusEl = $('#loading-status');
   state.data = {};
+  state.checkCell = null;
   // Clear RFE anchor cache — recomputed on next access
   for (const k of Object.keys(_rfeAnchors)) delete _rfeAnchors[k];
   const results = await Promise.all(
@@ -179,6 +214,18 @@ async function loadAll() {
     })
   );
   results.forEach(([t, d]) => { state.data[t] = d; });
+
+  // Targeted fetch of the data-check cell. Done separately because the regular
+  // tab fetch goes through gviz's column-type inference, which drops
+  // non-numeric strings from numeric columns.
+  try {
+    state.checkCell = await fetchCellString('Current Year Overview', 'C3');
+    console.info(`[check-badge] Targeted fetch of CYO!C3: ${JSON.stringify(state.checkCell)}`);
+  } catch (err) {
+    console.warn('[check-badge] Targeted fetch failed:', err.message);
+    state.checkCell = null;
+  }
+
   state.loaded = true;
   if (statusEl) statusEl.textContent = 'Rendering...';
 }
@@ -1276,39 +1323,37 @@ function renderSensitivity() {
 }
 
 // ============ RENDER: CHECK STATUS BADGE ============
-// The model writes the data integrity status as the literal string "CHECK OK"
-// or "CHECK ERROR" into Current Year Overview!C3 (formula sources it from
-// 'Reporting & Forecasting Engine'!F1131). We scan the CYO tab for that
-// literal — this avoids any dependency on whether gviz auto-promotes the
-// title row to the header (which shifts row indices off by one).
+// Reads the data integrity check from Current Year Overview!C3, which is
+// fetched as a single cell via fetchCellString during loadAll. The targeted
+// fetch bypasses gviz's column-type inference, which would otherwise drop
+// the non-numeric "CHECK OK" / "CHECK ERROR" string from a numeric column.
+// Falls back to scanning the tab data if the targeted fetch returned null.
 function renderCheckBadge() {
-  const cyo = state.data['Current Year Overview'];
   const badge = $('#check-badge');
   const label = $('#check-label');
   badge.classList.remove('ok', 'error');
 
-  let status = null;
-  if (cyo) {
-    outer: for (let i = 0; i < cyo.length; i++) {
-      const row = cyo[i] || [];
-      for (let j = 0; j < row.length; j++) {
-        const v = row[j];
-        if (v === null || v === undefined) continue;
-        const s = String(v).trim().toUpperCase();
-        if (s === 'CHECK OK' || s === 'CHECK ERROR' || s === 'OK' || s === 'ERROR') {
-          status = String(v).trim();
-          // Log row/col so we can confirm where it came from on first deploy
-          console.info(`[check-badge] Found "${status}" at CYO row ${i + 1}, col ${j + 1}`);
-          break outer;
+  let status = state.checkCell ? String(state.checkCell).trim() : null;
+
+  // Fallback: scan the CYO tab for a literal status string
+  if (!status) {
+    const cyo = state.data['Current Year Overview'];
+    if (cyo) {
+      outer: for (let i = 0; i < cyo.length; i++) {
+        const row = cyo[i] || [];
+        for (const v of row) {
+          if (v === null || v === undefined) continue;
+          const s = String(v).trim().toUpperCase();
+          if (s === 'CHECK OK' || s === 'CHECK ERROR' || s === 'OK' || s === 'ERROR') {
+            status = String(v).trim();
+            break outer;
+          }
         }
       }
     }
   }
 
   if (!status) {
-    console.warn('[check-badge] No CHECK OK / CHECK ERROR string found in Current Year Overview tab. ' +
-                 'Tab fetched? ' + (cyo ? `yes (${cyo.length} rows)` : 'no') + '. ' +
-                 'Sample row 3 of CYO: ' + JSON.stringify((cyo || [])[2] || []));
     label.textContent = 'Data check: —';
     return;
   }
