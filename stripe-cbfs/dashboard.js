@@ -1192,6 +1192,42 @@ function renderSensitivity() {
     items.push({ label, d2024, dCum, category });
   }
 
+  // Drop mirror-image pairs (e.g. "1 fewer X" / "1 more X", "drift -10bps" / "drift +10bps").
+  // Keep the positive half. Asymmetric pairs (different magnitudes) are preserved.
+  // A pair is detected by: identical normalised label AND opposite signs AND
+  // similar magnitudes on cumulative impact (within 20%).
+  function pairKey(s) {
+    return String(s)
+      .toLowerCase()
+      .replace(/\b(fewer|more)\b/, 'COUNT')
+      .replace(/[+-]\s*(\d+(\.\d+)?)\s*(bps|pts|pp|%)/g, 'DELTA$3')
+      .replace(/[+-]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+  const groups = {};
+  items.forEach((it, idx) => {
+    const k = pairKey(it.label);
+    if (!groups[k]) groups[k] = [];
+    groups[k].push(idx);
+  });
+  const dropIdx = new Set();
+  for (const k of Object.keys(groups)) {
+    const g = groups[k];
+    if (g.length !== 2) continue;
+    const a = items[g[0]], b = items[g[1]];
+    if (a.dCum === null || b.dCum === null) continue;
+    if ((a.dCum > 0) === (b.dCum > 0)) continue;  // need opposite signs
+    const mA = Math.abs(a.dCum), mB = Math.abs(b.dCum);
+    if (mA === 0 || mB === 0) continue;
+    const ratio = Math.min(mA, mB) / Math.max(mA, mB);
+    if (ratio < 0.8) continue;  // not a clean mirror
+    // Drop the negative one
+    dropIdx.add(a.dCum < 0 ? g[0] : g[1]);
+  }
+
+  const visibleItems = items.filter((_, i) => !dropIdx.has(i));
+
   let html = `<table class="data-table sensitivity-table">
     <thead>
       <tr>
@@ -1216,7 +1252,7 @@ function renderSensitivity() {
     const abs = Math.abs(n);
     return sign + '$' + abs.toFixed(1) + 'm';
   };
-  items.forEach(it => {
+  visibleItems.forEach(it => {
     const d2024Norm = normalizeToM(it.d2024);
     const dCumNorm = normalizeToM(it.dCum);
     html += `<tr>
@@ -1231,42 +1267,84 @@ function renderSensitivity() {
 }
 
 // ============ RENDER: CHECK STATUS BADGE ============
-// Reads the data integrity check from Current Year Overview!C3:D3 in the Sheet.
-// Treats the badge as OK if either C3 or D3 contains an "OK"-style string,
-// and as ERROR if either contains an "ERROR"/"FAIL" string. Otherwise the raw
-// value is shown so the user can see whatever the cells contain.
+// Reads the data integrity check from the Current Year Overview tab.
+// Originally targeted at C3:D3, but gviz JSON sometimes promotes row 1 of the
+// Sheet to the header (depending on whether headers are autodetected), which
+// shifts row indices. To be robust, we scan the top of the CYO tab for the
+// "Data check" / "Integrity check" row and read whatever's next to it. We
+// fall back to a label-anchor scan, then to a status-string scan.
 function renderCheckBadge() {
   const cyo = state.data['Current Year Overview'];
-  let c3 = '', d3 = '';
-  if (cyo && cyo.length >= 3) {
-    const row3 = cyo[2] || [];
-    c3 = (row3[2] === null || row3[2] === undefined) ? '' : String(row3[2]).trim();
-    d3 = (row3[3] === null || row3[3] === undefined) ? '' : String(row3[3]).trim();
-  }
-  // Combine — show whichever is non-empty (or both joined by " · ")
-  const parts = [c3, d3].filter(s => s && s.length > 0);
-  const combinedRaw = parts.join(' · ');
-  const upper = combinedRaw.toUpperCase();
-
   const badge = $('#check-badge');
   const label = $('#check-label');
   badge.classList.remove('ok', 'error');
 
-  if (!combinedRaw) {
+  if (!cyo) {
     label.textContent = 'Data check: —';
     return;
   }
 
+  // Strategy A: find a row whose first few cells contain "data check" or
+  // "integrity" as a label, then take the next non-empty cell(s) as the value.
+  let foundValue = null;
+  const labelRegex = /(data\s*check|integrity\s*check|check\s*status|data\s*integrity)/i;
+  for (let i = 0; i < Math.min(15, cyo.length); i++) {
+    const row = cyo[i] || [];
+    for (let j = 0; j < Math.min(5, row.length); j++) {
+      const cellText = (row[j] === null || row[j] === undefined) ? '' : String(row[j]);
+      if (labelRegex.test(cellText)) {
+        // Collect non-empty cells in this row to the right of the label
+        const values = [];
+        for (let k = j + 1; k < row.length; k++) {
+          const v = row[k];
+          if (v !== null && v !== undefined && String(v).trim() !== '') {
+            values.push(String(v).trim());
+          }
+        }
+        if (values.length > 0) {
+          foundValue = values.join(' · ');
+          break;
+        }
+      }
+    }
+    if (foundValue) break;
+  }
+
+  // Strategy B: scan the entire CYO tab for any cell containing an OK/ERROR string.
+  if (!foundValue) {
+    const statusRegex = /^(CHECK\s+OK|CHECK\s+ERROR|OK|ERROR|PASS|FAIL|TIE|MISMATCH)$/i;
+    for (let i = 0; i < cyo.length && !foundValue; i++) {
+      const row = cyo[i] || [];
+      for (const v of row) {
+        if (v === null || v === undefined) continue;
+        const s = String(v).trim();
+        if (statusRegex.test(s)) { foundValue = s; break; }
+      }
+    }
+  }
+
+  // Strategy C: fall back to the original C3:D3 read (works if gviz preserved
+  // the row alignment we expected).
+  if (!foundValue && cyo.length >= 3) {
+    const row3 = cyo[2] || [];
+    const c3 = (row3[2] === null || row3[2] === undefined) ? '' : String(row3[2]).trim();
+    const d3 = (row3[3] === null || row3[3] === undefined) ? '' : String(row3[3]).trim();
+    const parts = [c3, d3].filter(s => s);
+    if (parts.length > 0) foundValue = parts.join(' · ');
+  }
+
+  if (!foundValue) {
+    label.textContent = 'Data check: —';
+    return;
+  }
+
+  const upper = foundValue.toUpperCase();
   if (/(^|[^A-Z])OK([^A-Z]|$)/.test(upper) || upper.includes('PASS') || upper.includes('TIE')) {
     badge.classList.add('ok');
-    label.textContent = `Data check: ${combinedRaw}`;
   } else if (upper.includes('ERROR') || upper.includes('FAIL') || upper.includes('MISMATCH') || upper.includes('BREAK')) {
     badge.classList.add('error');
-    label.textContent = `Data check: ${combinedRaw}`;
-  } else {
-    // Unknown content — show as-is, no colour
-    label.textContent = `Data check: ${combinedRaw}`;
   }
+  label.textContent = `Data check: ${foundValue}`;
 }
 
 // ============ TAB SWITCHING ============
