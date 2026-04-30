@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Making AI a Team Sport - Anton Schneider</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        .blog-post {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+        }
+        .blog-post-header {
+            margin-bottom: 2.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .blog-post-meta {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .blog-post-title {
+            font-size: 2.25rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 0;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .blog-post-body h2 {
+            font-size: 1.35rem;
+            font-weight: 600;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .blog-post-body p {
+            font-size: 1.05rem;
+            line-height: 1.75;
+            color: #374151;
+            margin-bottom: 1.25rem;
+        }
+        .blog-post-body a {
+            color: #2563eb;
+            text-decoration: underline;
+        }
+        .blog-post-body a:hover {
+            color: #1d4ed8;
+        }
+        .blog-post-body blockquote {
+            border-left: 3px solid #2563eb;
+            padding: 0.5rem 0 0.5rem 1.25rem;
+            margin: 1.5rem 0;
+            color: #4b5563;
+            font-style: italic;
+            font-size: 1.05rem;
+            line-height: 1.65;
+        }
+        .blog-post-body ul {
+            margin-bottom: 1.25rem;
+            padding-left: 1.5rem;
+        }
+        .blog-post-body li {
+            font-size: 1.05rem;
+            line-height: 1.75;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+        .blog-post-footer {
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e5e7eb;
+            font-size: 0.95rem;
+            color: #6b7280;
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: #6b7280;
+            text-decoration: none;
+            margin-bottom: 2rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .back-link:hover {
+            color: #111827;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="../index.html" class="logo">
+                <span class="logo-text">Anton Schneider</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="../index.html#models">Models</a></li>
+                <li><a href="../blog.html">Blog</a></li>
+                <li><a href="../index.html#about">About</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section style="padding-top: 120px; background: white; min-height: 100vh;">
+        <div class="blog-post">
+            <a href="../blog.html" class="back-link">← Back to Blog</a>
+
+            <div class="blog-post-header">
+                <div class="blog-post-meta">
+                    <span>Apr 30, 2026</span>
+                    <span>•</span>
+                    <span>Finance & AI</span>
+                    <span>•</span>
+                    <span>3 min read</span>
+                </div>
+                <h1 class="blog-post-title">Making AI a Team Sport</h1>
+            </div>
+
+            <div class="blog-post-body">
+                <p>
+                    I recently talked to a Finance manager at a fintech. We talked about the powerful use cases for AI in reporting and forecasting. One comment stuck with me:
+                </p>
+
+                <blockquote>
+                    "We need to make AI a team sport. Right now it feels like an individual sport — one colleague is good at it and processes any AI requests for the team as one-offs. What's missing is the collaboration: the whole team working together with the AI, as repeatable processes."
+                </blockquote>
+
+                <p>
+                    I took that comment to heart. The result is an automated reporting and forecasting model that anyone on a team can use. It's built on a Google Sheet that any stakeholder can access and update. The output is a dashboard that the whole company can refer to — but the structure can't be changed by individual users. Viewers can only toggle between three forecast scenarios (bear, base, bull). That balances collaboration against the risk of things breaking when access is opened up to a wider audience. And the whole thing is AI-powered, with a one-click monthly refresh.
+                </p>
+
+                <h2>The mock exercise</h2>
+
+                <p>
+                    I worked through a mock exercise for a payments company: build a 5-year forecast for their merchant portfolio across SaaS, E-Commerce, and Platform segments, and recommend where to allocate capital. The exercise gave me 18 months of historical data and a board memo to deliver.
+                </p>
+
+                <p>
+                    I used it to build the kind of system I had outlined in my <a href="automated-data-updates-for-reports-and-models.html">previous blog post</a>: a model that updates automatically every month with new actuals, instead of being a one-off. AI handled the heavy lifting on the model architecture and the dashboard code. I focused on the assumptions, the narrative, and the design decisions that don't fit neatly into a prompt.
+                </p>
+
+                <h2>How it works</h2>
+
+                <p>
+                    The dashboard is connected to a Google Sheet. The Sheet is where the model lives — assumptions, scenario logic, segment-level forecasts, all of it.
+                </p>
+
+                <p>
+                    To refresh the model with new actuals, you do three things:
+                </p>
+
+                <ul>
+                    <li>Paste the latest month's raw data into the Sheet (or pull it automatically with a SQL script if your data lives in a database).</li>
+                    <li>Update one cell — the "last month of actuals" flag.</li>
+                    <li>Click refresh on the dashboard.</li>
+                </ul>
+
+                <p>
+                    That's it. The reporting views for last month, year-to-date, and rest-of-year all update. The forecast horizon shifts forward by one month. The integrity check at the top of the dashboard confirms the numbers tie back to the raw data.
+                </p>
+
+                <h2>Why this template matters</h2>
+
+                <p>
+                    This is the kind of tool I wish I'd had when I was starting out in tech finance. It combines three things that usually live in separate places:
+                </p>
+
+                <ul>
+                    <li>Raw reporting data — pulled in from databases or pasted in monthly.</li>
+                    <li>A Google Sheet model — that organises the data by month, merchant, and P&L item, and runs the forecast logic.</li>
+                    <li>A dashboard — that anyone in the company can read, with forecast scenarios they can toggle but not break.</li>
+                </ul>
+
+                <p>
+                    The template works well for any business that earns a percentage of Gross Merchandise Value. Fintech, payment providers, marketplaces, platforms. Anywhere revenue scales with someone else's transaction volume, the same structure applies — segment the customer base, forecast volume per customer, multiply by take rate, layer in churn and new acquisitions.
+                </p>
+
+                <h2>Try it</h2>
+
+                <p>
+                    The full <a href="https://antonschneider.com/stripe-cbfs/">interactive dashboard</a> is live. Toggle between scenarios, drill into segment economics, read the board memo. The underlying Google Sheet is linked from the dashboard for anyone who wants to see how the model is wired.
+                </p>
+
+                <p>
+                    If you're working on something similar — or want to adapt this template for your own business — please reach out. I'd love to hear what works, what doesn't, and where the next iteration should go.
+                </p>
+            </div>
+
+            <div class="blog-post-footer">
+                <p>Anton Schneider — <a href="https://antonschneider.com">antonschneider.com</a></p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-text">
+                    <p>&copy; 2026 Anton Schneider</p>
+                    <p class="footer-location">London / Berlin</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
