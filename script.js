@@ -1,6 +1,13 @@
 // Blog posts data
 const blogPosts = [
 {
+    date: "2026-04-30",
+    title: "Making AI a Team Sport",
+    category: "Automated Reporting & Forecasting",
+    excerpt: "How a conversation with a fintech Finance manager led me to build a model that updates every month with one click — Google Sheet model, live dashboard, scenario toggles. A template for any business that earns a percentage of GMV.",
+    slug: "making-ai-a-team-sport"
+},
+    {
     title: "Automated Data Updates for Reports and Models",
     slug: "automated-data-updates-for-reports-and-models",
     date: "2026-04-15",
