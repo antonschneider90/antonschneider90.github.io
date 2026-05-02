@@ -458,7 +458,7 @@ body {
 }
 
 .blog-meta {
-    display: flex;
+    display: nowrap;
     gap: 0.75rem;
     margin-bottom: 1rem;
     font-size: 0.875rem;
