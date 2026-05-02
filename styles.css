@@ -458,12 +458,22 @@ body {
 }
 
 .blog-meta {
-    display: nowrap;
-    gap: 0.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem 0.75rem;
     margin-bottom: 1rem;
     font-size: 0.875rem;
     color: var(--mid-gray);
     font-family: var(--font-mono);
+}
+
+.blog-meta > * {
+    flex: 0 0 auto;
+}
+
+.blog-meta > span:first-child {
+    white-space: nowrap;
 }
 
 .blog-card h3 {
