@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Deep Ocean background with rounded corners -->
+  <rect width="64" height="64" rx="12" ry="12" fill="#003049"/>
+  
+  <!-- AS monogram in Electric Volt -->
+  <text x="32" y="32"
+        font-family="'Space Grotesk', 'Inter', -apple-system, sans-serif"
+        font-size="34"
+        font-weight="700"
+        fill="#D9FF00"
+        text-anchor="middle"
+        dominant-baseline="central"
+        letter-spacing="-1.5">AS</text>
+</svg>
