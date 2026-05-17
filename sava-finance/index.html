@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sava — Financial Model</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <!-- Loading overlay -->
+  <div id="loading-overlay" class="loading">
+    <div class="loading-inner">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">Loading Sava model data...</div>
+      <div class="loading-subtext" id="loading-status">Connecting to Google Sheets</div>
+    </div>
+  </div>
+
+  <!-- Error overlay -->
+  <div id="error-overlay" class="error-overlay hidden">
+    <div class="error-inner">
+      <h2>Could not load data</h2>
+      <p id="error-message"></p>
+      <button onclick="location.reload()">Try again</button>
+    </div>
+  </div>
+
+  <header class="top-bar">
+    <div class="brand">
+      <div class="brand-mark">S</div>
+      <div class="brand-text">
+        <div class="brand-title">Sava Financial Model</div>
+        <div class="brand-sub">Anton Schneider</div>
+      </div>
+    </div>
+
+    <div class="top-controls">
+      <div class="check-badge" id="check-badge">
+        <span class="check-dot"></span>
+        <span class="check-label" id="check-label">—</span>
+      </div>
+      <div class="scenario-toggle" role="tablist" aria-label="Scenario">
+        <button class="scen-btn" data-scenario="Bear" aria-label="Bear scenario">Bear</button>
+        <button class="scen-btn active" data-scenario="Base" aria-label="Base scenario">Base</button>
+        <button class="scen-btn" data-scenario="Bull" aria-label="Bull scenario">Bull</button>
+      </div>
+      <button class="refresh-btn" id="refresh-btn" title="Refresh data from Sheet">
+        <span class="refresh-icon">↻</span>
+        <span>Refresh</span>
+      </button>
+    </div>
+  </header>
+
+  <nav class="tab-nav" role="tablist">
+    <button class="tab-btn active" data-tab="overview">Overview</button>
+    <button class="tab-btn" data-tab="cyo">Current Year</button>
+    <button class="tab-btn" data-tab="fyo">Forecast Years</button>
+    <button class="tab-btn" data-tab="revenue">Revenue Mix</button>
+    <button class="tab-btn" data-tab="headcount">Headcount</button>
+    <button class="tab-btn" data-tab="costs">P&amp;L (Costs)</button>
+    <button class="tab-btn" data-tab="financing">Financing</button>
+    <button class="tab-btn" data-tab="assumptions">Assumptions</button>
+    <button class="tab-btn" data-tab="instructions">About</button>
+  </nav>
+
+  <main id="main-content">
+    <!-- ===================== OVERVIEW ===================== -->
+    <section class="tab-panel active" id="tab-overview">
+      <div class="panel-header">
+        <div>
+          <h1>Executive Summary</h1>
+          <div class="panel-meta" id="overview-meta"></div>
+        </div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Revenue 2030</div>
+          <div class="kpi-value" id="kpi-rev">—</div>
+          <div class="kpi-detail" id="kpi-rev-detail"></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">EBITDA 2030</div>
+          <div class="kpi-value" id="kpi-ebitda">—</div>
+          <div class="kpi-detail" id="kpi-ebitda-detail"></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Headcount EOY 2030</div>
+          <div class="kpi-value" id="kpi-hc">—</div>
+          <div class="kpi-detail" id="kpi-hc-detail"></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Total Funding Need</div>
+          <div class="kpi-value" id="kpi-fund">—</div>
+          <div class="kpi-detail" id="kpi-fund-detail"></div>
+        </div>
+      </div>
+
+      <div class="chart-card" style="margin-bottom:16px;">
+        <h3>Revenue by stream — 2025-2030 (<span class="scen-inline" id="ov-rev-scen">Base</span>)</h3>
+        <div class="chart-wrap tall"><canvas id="chart-ov-rev"></canvas></div>
+      </div>
+
+      <div class="chart-card">
+        <h3>Monthly cash balance EOM — 2025-2030 (<span class="scen-inline" id="ov-cash-scen">Base</span>)</h3>
+        <div class="chart-wrap tall"><canvas id="chart-ov-cash"></canvas></div>
+      </div>
+
+      <div class="note" id="overview-note" style="margin-top:24px;">
+        <h3>How to read this model</h3>
+        <p>Sava is currently pre-revenue. EU Rx launch (Q3 2027 Base) is the first commercial milestone. The model captures three scenarios — toggle in the top right to see them. The <strong>Current Year</strong> tab is the live operating view (YTD actuals + rest-of-year forecast); the <strong>Forecast Years</strong> tab is the annual five-year strategic view with growth analytics.</p>
+      </div>
+    </section>
+
+    <!-- ===================== CURRENT YEAR ===================== -->
+    <section class="tab-panel" id="tab-cyo">
+      <div class="panel-header">
+        <div>
+          <h1>Current Year Overview</h1>
+          <div class="panel-meta" id="cyo-meta"></div>
+        </div>
+      </div>
+      <div id="cyo-content" class="table-scroll"></div>
+    </section>
+
+    <!-- ===================== FORECAST YEARS ===================== -->
+    <section class="tab-panel" id="tab-fyo">
+      <div class="panel-header">
+        <div>
+          <h1>Forecast Years Overview</h1>
+          <div class="panel-meta">Annual view 2026–2030 · reflects <span class="scen-inline" id="fyo-scen-inline">Base</span> scenario</div>
+        </div>
+      </div>
+
+      <div class="chart-card" style="margin-bottom:20px;">
+        <h3>P&amp;L Waterfall — by year</h3>
+        <div class="chart-wrap tall"><canvas id="chart-fyo-waterfall"></canvas></div>
+      </div>
+
+      <div id="fyo-content" class="table-scroll"></div>
+    </section>
+
+    <!-- ===================== REVENUE MIX ===================== -->
+    <section class="tab-panel" id="tab-revenue">
+      <div class="panel-header">
+        <div>
+          <h1>Revenue Mix</h1>
+          <div class="panel-meta">Six channels: EU+UK Rx leads, US follows, lactate as platform extension · <span class="scen-inline" id="rev-scen-inline">Base</span></div>
+        </div>
+      </div>
+
+      <div class="chart-card" style="margin-bottom:16px;">
+        <h3>Revenue by stream — annual</h3>
+        <div class="chart-wrap tall"><canvas id="chart-rev-streams"></canvas></div>
+      </div>
+
+      <div class="chart-card">
+        <h3>Patches sold — annual</h3>
+        <div class="chart-wrap"><canvas id="chart-rev-patches"></canvas></div>
+      </div>
+    </section>
+
+    <!-- ===================== HEADCOUNT ===================== -->
+    <section class="tab-panel" id="tab-headcount">
+      <div class="panel-header">
+        <div>
+          <h1>Headcount</h1>
+          <div class="panel-meta">From 98 today (Apr 2026) to EOY 2030 by function · <span class="scen-inline" id="hc-scen-inline">Base</span></div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h3>Headcount by function — EOY, stacked</h3>
+        <div class="chart-wrap tall"><canvas id="chart-hc-stacked"></canvas></div>
+      </div>
+    </section>
+
+    <!-- ===================== P&L COSTS ===================== -->
+    <section class="tab-panel" id="tab-costs">
+      <div class="panel-header">
+        <div>
+          <h1>Cost Build</h1>
+          <div class="panel-meta">Where the money goes · <span class="scen-inline" id="costs-scen-inline">Base</span></div>
+        </div>
+      </div>
+
+      <div class="chart-card" style="margin-bottom:16px;">
+        <h3>Total operating cost — COGS + Opex by function</h3>
+        <div class="chart-wrap tall"><canvas id="chart-cost-stacked"></canvas></div>
+      </div>
+
+      <div id="costs-content" class="table-scroll"></div>
+    </section>
+
+    <!-- ===================== FINANCING ===================== -->
+    <section class="tab-panel" id="tab-financing">
+      <div class="panel-header">
+        <div>
+          <h1>Financing</h1>
+          <div class="panel-meta">Series B and Series C timing and size · <span class="scen-inline" id="fin-scen-inline">Base</span></div>
+        </div>
+      </div>
+
+      <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);">
+        <div class="kpi-card">
+          <div class="kpi-label">Series B</div>
+          <div class="kpi-value" id="fin-b-size">—</div>
+          <div class="kpi-detail" id="fin-b-date">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Series C</div>
+          <div class="kpi-value" id="fin-c-size">—</div>
+          <div class="kpi-detail" id="fin-c-date">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Total External Capital</div>
+          <div class="kpi-value" id="fin-total">—</div>
+          <div class="kpi-detail">Series B + Series C</div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h3>Monthly cash balance with financing rounds</h3>
+        <div class="chart-wrap tall"><canvas id="chart-fin-cash"></canvas></div>
+      </div>
+
+      <div class="note" style="margin-top:24px;">
+        <h3>Financing logic</h3>
+        <p>Runrate-driven solver: a round closes when forward 1-month operating burn exceeds available cash (Base; Bear/Bull use 3-month cushion). Series B caps at $80M; anything above triggers a Series C. Round size depends on cumulative burn through 2030, working capital, and capex.</p>
+      </div>
+    </section>
+
+    <!-- ===================== ASSUMPTIONS ===================== -->
+    <section class="tab-panel" id="tab-assumptions">
+      <div class="panel-header">
+        <div>
+          <h1>Key Assumptions</h1>
+          <div class="panel-meta">The handful of inputs that drive the model · <span class="scen-inline" id="as-scen-inline">Base</span></div>
+        </div>
+      </div>
+
+      <div class="assumption-section">Timing</div>
+      <div class="assumption-grid">
+        <div class="assumption-cell"><div class="assumption-cell-label">EU+UK Rx launch</div><div class="assumption-cell-value" id="a-eu-launch">—</div></div>
+        <div class="assumption-cell"><div class="assumption-cell-label">US Rx launch</div><div class="assumption-cell-value" id="a-us-launch">—</div></div>
+        <div class="assumption-cell"><div class="assumption-cell-label">Lactate launch</div><div class="assumption-cell-value" id="a-lactate-launch">—</div></div>
+      </div>
+
+      <div class="assumption-section">Unit Economics</div>
+      <div class="assumption-grid">
+        <div class="assumption-cell"><div class="assumption-cell-label">ASP per patch (EU Rx)</div><div class="assumption-cell-value" id="a-asp">—</div></div>
+        <div class="assumption-cell"><div class="assumption-cell-label">Patches per patient / yr</div><div class="assumption-cell-value" id="a-patches">—</div></div>
+        <div class="assumption-cell"><div class="assumption-cell-label">Mfg cost — steady state</div><div class="assumption-cell-value" id="a-cogs">—</div></div>
+      </div>
+
+      <div class="assumption-section">People</div>
+      <div class="assumption-grid">
+        <div class="assumption-cell"><div class="assumption-cell-label">Pre-launch HC adds / yr</div><div class="assumption-cell-value" id="a-prelaunch">—</div></div>
+        <div class="assumption-cell"><div class="assumption-cell-label">Steady-state HC adds / yr</div><div class="assumption-cell-value" id="a-hc-adds">—</div></div>
+        <div class="assumption-cell"><div class="assumption-cell-label">Avg tech cost</div><div class="assumption-cell-value" id="a-tech-cost">—</div></div>
+      </div>
+    </section>
+
+    <!-- ===================== INSTRUCTIONS ===================== -->
+    <section class="tab-panel" id="tab-instructions">
+      <div class="panel-header">
+        <div>
+          <h1>About This Model</h1>
+          <div class="panel-meta">How this dashboard connects to the Google Sheets model</div>
+        </div>
+      </div>
+      <div class="instructions-grid">
+
+        <div class="instruction-card">
+          <h3>Data source</h3>
+          <p>This dashboard reads live from a Google Sheets model which is "Published to the web". On page load, the dashboard fetches the key tabs in parallel: Current Year Overview, Forecast Years Overview, RFE_Base, RFE_Bear, RFE_Bull, Assumptions, Headcount Plan, Revenue Build, Summary.</p>
+        </div>
+
+        <div class="instruction-card">
+          <h3>Scenario toggle</h3>
+          <p>The <strong>Bear / Base / Bull</strong> toggle in the top bar controls every tab. Switching is instant — all three scenario engines (RFE_Bear / RFE_Base / RFE_Bull) are pre-fetched.</p>
+        </div>
+
+        <div class="instruction-card">
+          <h3>Where to change assumptions</h3>
+          <p>All assumptions live in the <strong>Assumptions</strong> tab of the Sheet. Each scenario has its own column (D = Bear, E = Base, F = Bull). The active scenario for the Sheet's own CYO/FYO views is set in <code>C8</code> — this dashboard ignores it and uses the toggle instead.</p>
+          <p>Key cells: <code>C9</code> last month of actuals · <code>D/E/F 12, 14, 16</code> launch months · <code>D/E/F 115</code> steady-state HC adds · <code>D/E/F 116</code> pre-launch HC adds · <code>D/E/F 102</code> opening cash · <code>D/E/F 103</code> runrate cushion months.</p>
+        </div>
+
+        <div class="instruction-card">
+          <h3>When to hit Refresh</h3>
+          <p>Click the <strong>Refresh</strong> button in the top right whenever you edit the Sheet and want the dashboard to pick up changes. Google Sheets typically takes <strong>1-5 minutes</strong> to republish CSV endpoints after a change — wait a minute and try again if numbers don't update.</p>
+          <p>You do NOT need to refresh when toggling scenarios — that's instant, client-side.</p>
+        </div>
+
+        <div class="instruction-card">
+          <h3>Data integrity check</h3>
+          <p>The <strong>Data check</strong> badge in the top bar reads from the model's 67-check integrity row. Green <span style="color: var(--green); font-weight: 600;">OK</span> means all checks pass; red <span style="color: var(--red); font-weight: 600;">ERROR</span> indicates a mismatch — open the Sheet's Checks tab to investigate.</p>
+        </div>
+
+        <div class="instruction-card">
+          <h3>Model architecture</h3>
+          <p>Top-down: <strong>Assumptions</strong> → <strong>Driver tabs</strong> (Revenue Build, COGS &amp; Mfg, Opex Build, Headcount Plan) → <strong>RFE_Base / Bear / Bull</strong> → <strong>CYO &amp; FYO</strong> overviews. 67 integrity checks tie outputs back to inputs.</p>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <div>Data source: <a href="https://docs.google.com/spreadsheets/d/1fJLaVixEazLYqhqpE6dyC5g3bY3jrdzu2fo3rj2sr8k/edit" target="_blank" rel="noopener">Google Sheets model</a> · auto-republished on edits</div>
+      <div>Last fetched: <span id="last-fetched">—</span></div>
+    </div>
+  </footer>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>
