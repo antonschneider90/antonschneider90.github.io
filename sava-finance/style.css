@@ -1,11 +1,12 @@
 /* ============================================================
    Sava Technologies Dashboard — Anton Schneider
-   Aesthetic: warm cream + charcoal ink + clinical green accent
-   Structure cloned from Stripe CBFS dashboard (palette adapted)
+   Aesthetic: warm cream + charcoal ink + terracotta accent
+   Secondary: petrol blue. Green reserved for positive variance.
+   Structure cloned from Stripe CBFS dashboard.
    ============================================================ */
 
 :root {
-  /* Sava palette (replaces CBFS navy/purple) */
+  /* Ink (charcoal) */
   --ink: #1A1815;
   --ink-80: rgba(26, 24, 21, 0.8);
   --ink-60: rgba(26, 24, 21, 0.6);
@@ -13,20 +14,28 @@
   --ink-10: rgba(26, 24, 21, 0.08);
   --ink-ultra: #100E0C;
 
-  --accent: #2F5D50;          /* clinical green-teal — replaces purple */
-  --accent-soft: #E8F0ED;     /* replaces purple-soft */
-  --accent-dim: #A8C5BC;      /* replaces purple-dim */
+  /* Primary accent: terracotta (Sava brand) */
+  --accent: #C65A35;
+  --accent-soft: #FBEFE8;     /* very pale terracotta — table column highlights */
+  --accent-dim: #E5B59E;      /* muted terracotta — borders, dim links */
 
+  /* Secondary accent: petrol blue (for charts, financing markers) */
+  --blue: #2C4A57;
+  --blue-soft: #E2EAEE;
+
+  /* Neutrals */
   --white: #ffffff;
   --off-white: #F7F5F0;
-  --cream: #FAF7F0;           /* main bg */
+  --cream: #FAF7F0;
   --cream-warm: #F2EDE2;
 
-  --green: #2F5D50;           /* same as accent — used for positive variance */
-  --green-soft: #D9E7E1;
-  --red: #B85C3C;             /* warm terracotta — replaces CBFS red */
-  --red-soft: #F4E0D7;
+  /* Semantic — green only for positive variance, red only for negative */
+  --green: #4A7A6B;           /* muted clinical green — variance only */
+  --green-soft: #E1EBE6;
+  --red: #A04025;             /* deep brick — variance only, distinct from accent */
+  --red-soft: #F1DBD0;
   --amber: #C9893A;
+
   --grey: #6C7180;
   --grey-soft: rgba(26, 24, 21, 0.10);
   --grey-line: rgba(26, 24, 21, 0.14);
@@ -136,6 +145,8 @@ a:hover { text-decoration: underline; }
 
 .top-controls { display: flex; align-items: center; gap: 16px; }
 
+/* Data check badge — uses standalone semantic green (ok) / red (error),
+   NOT the brand accent, so the dot remains a true status signal */
 .check-badge {
   display: flex; align-items: center; gap: 8px;
   padding: 6px 12px;
@@ -147,11 +158,11 @@ a:hover { text-decoration: underline; }
   letter-spacing: 0.02em;
 }
 .check-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--grey); }
-.check-badge.ok .check-dot { background: var(--green); box-shadow: 0 0 0 3px rgba(47, 93, 80, 0.25); }
-.check-badge.error .check-dot { background: var(--red); box-shadow: 0 0 0 3px rgba(184, 92, 60, 0.3); animation: pulse-red 2s infinite; }
-@keyframes pulse-red { 0%, 100% { box-shadow: 0 0 0 3px rgba(184, 92, 60, 0.3); } 50% { box-shadow: 0 0 0 6px rgba(184, 92, 60, 0.1); } }
-.check-badge.ok { background: rgba(47, 93, 80, 0.15); border-color: rgba(47, 93, 80, 0.3); color: #B7D1C7; }
-.check-badge.error { background: rgba(184, 92, 60, 0.18); border-color: rgba(184, 92, 60, 0.35); color: #F0C8B6; }
+.check-badge.ok .check-dot { background: var(--green); box-shadow: 0 0 0 3px rgba(74, 122, 107, 0.25); }
+.check-badge.error .check-dot { background: var(--red); box-shadow: 0 0 0 3px rgba(160, 64, 37, 0.3); animation: pulse-red 2s infinite; }
+@keyframes pulse-red { 0%, 100% { box-shadow: 0 0 0 3px rgba(160, 64, 37, 0.3); } 50% { box-shadow: 0 0 0 6px rgba(160, 64, 37, 0.1); } }
+.check-badge.ok { background: rgba(74, 122, 107, 0.15); border-color: rgba(74, 122, 107, 0.3); color: #C2D6CE; }
+.check-badge.error { background: rgba(160, 64, 37, 0.18); border-color: rgba(160, 64, 37, 0.35); color: #E8BAA5; }
 
 .scenario-toggle {
   display: flex;
@@ -178,7 +189,7 @@ a:hover { text-decoration: underline; }
 .scen-btn.active {
   background: var(--accent);
   color: white;
-  box-shadow: 0 2px 8px rgba(47, 93, 80, 0.4);
+  box-shadow: 0 2px 8px rgba(198, 90, 53, 0.4);
 }
 
 .refresh-btn {
