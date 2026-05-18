@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sava Dashboard — gviz Diagnostic</title>
+<style>
+  body { font: 13px/1.5 -apple-system, BlinkMacSystemFont, sans-serif; margin: 20px; background: #FAF7F0; color: #1A1815; }
+  h1 { font-size: 18px; }
+  h2 { font-size: 15px; margin-top: 28px; border-bottom: 1px solid #999; padding-bottom: 4px; }
+  pre { background: white; padding: 12px; font: 11px 'JetBrains Mono', monospace; overflow-x: auto; border: 1px solid #ddd; border-radius: 4px; max-height: 500px; overflow-y: auto; }
+  .info { background: #E2EAEE; padding: 10px; border-left: 3px solid #2C4A57; margin: 8px 0; }
+  .err { background: #F1DBD0; padding: 10px; border-left: 3px solid #A04025; margin: 8px 0; }
+  .ok { background: #E1EBE6; padding: 10px; border-left: 3px solid #4A7A6B; margin: 8px 0; }
+  table { border-collapse: collapse; font: 11px 'JetBrains Mono', monospace; margin: 8px 0; background: white; }
+  th, td { padding: 4px 8px; border: 1px solid #ddd; text-align: left; vertical-align: top; }
+  th { background: #1A1815; color: white; font-weight: 500; }
+  .row-idx { background: #EFEBE2; font-weight: 600; }
+  .nullcell { color: #999; font-style: italic; }
+</style>
+</head>
+<body>
+<h1>Sava Dashboard — gviz Diagnostic</h1>
+<div class="info">
+  Fetches every tab the dashboard uses, then dumps the first ~50 rows of each as the JS would see them.
+  <br>The leftmost "DASH ROW" column = the row index the dashboard's <code>cell(tab, row, col)</code> uses.
+  <br>Compare against the model's actual spreadsheet row numbers.
+</div>
+<div id="out">Loading...</div>
+
+<script>
+const SHEET_ID = '1fJLaVixEazLYqhqpE6dyC5g3bY3jrdzu2fo3rj2sr8k';
+const TABS = [
+  'Current Year Overview',
+  'Forecast Years Overview',
+  'RFE_Base',
+  'Assumptions',
+  'Headcount Plan',
+  'Revenue Build',
+];
+
+// What the dashboard.js expects to find at each row
+const EXPECT = {
+  'Forecast Years Overview': {
+    7: 'Revenue',
+    16: 'EBITDA',
+    36: 'Total HC (EOY)',
+  },
+  'RFE_Base': {
+    5: 'Date headers (Jan 2025 in col B)',
+    67: 'Cash & equivalents',
+    111: 'Series B trigger month idx',
+    113: 'Series B size (USD)',
+    114: 'Series C trigger month idx',
+    116: 'Series C size (USD)',
+  },
+  'Assumptions': {
+    8: 'Active scenario',
+    9: 'LMA (date)',
+  },
+  'Headcount Plan': {
+    22: 'R&D HC',
+    23: 'Regulatory HC',
+    24: 'Manufacturing HC',
+    25: 'QA HC',
+    26: 'Commercial HC',
+    27: 'G&A HC',
+  },
+  'Revenue Build': {
+    94: 'EU+UK Rx',
+    95: 'EU+UK OTC',
+    96: 'US Rx',
+    97: 'US OTC',
+    98: 'Lactate Standalone',
+    99: 'Lactate Add-on',
+  },
+};
+
+function jsonUrl(tab) {
+  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tab)}`;
+}
+
+async function fetchRaw(tab) {
+  const resp = await fetch(jsonUrl(tab));
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  const text = await resp.text();
+  const start = text.indexOf('{');
+  const end = text.lastIndexOf('}');
+  if (start < 0 || end < 0) throw new Error('No JSON braces');
+  return JSON.parse(text.substring(start, end + 1));
+}
+
+// Replicates dashboard.js fetchTab logic
+function toDashboardArray(payload) {
+  const tbl = payload.table || {};
+  const cols = tbl.cols || [];
+  const rows = tbl.rows || [];
+  const headerRow = cols.map(c => (c && c.label) ? c.label : '');
+  const dataRows = rows.map(r => {
+    const cells = r.c || [];
+    return cols.map((_, j) => {
+      const cell = cells[j];
+      if (cell === null || cell === undefined) return null;
+      if (cell.v !== null && cell.v !== undefined) return cell.v;
+      if (cell.f !== undefined && cell.f !== null) return cell.f;
+      return null;
+    });
+  });
+  return [headerRow, ...dataRows];
+}
+
+function shorten(v) {
+  if (v === null || v === undefined) return '<span class="nullcell">null</span>';
+  let s = String(v);
+  if (s.length > 40) s = s.slice(0, 37) + '...';
+  return s.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+async function run() {
+  const out = document.getElementById('out');
+  out.innerHTML = '';
+  for (const tab of TABS) {
+    const block = document.createElement('div');
+    block.innerHTML = `<h2>${tab}</h2>`;
+    out.appendChild(block);
+    try {
+      const payload = await fetchRaw(tab);
+      const arr = toDashboardArray(payload);
+      const tbl = payload.table || {};
+      const cols = tbl.cols || [];
+      const rows = tbl.rows || [];
+
+      block.innerHTML += `<div class="ok">Fetched OK. cols.length=${cols.length}, rows.length=${rows.length}, total arr length=${arr.length} (= 1 headerRow + ${arr.length-1} data rows)</div>`;
+
+      // Show first 5 col labels
+      const colLabels = cols.slice(0, 8).map((c, i) => `col${i+1}:${c && c.label ? c.label : '∅'}/${c && c.type ? c.type : '?'}`).join('  |  ');
+      block.innerHTML += `<div class="info">First 8 cols (label/type): ${colLabels}</div>`;
+
+      // Show what's at the EXPECTED rows
+      const expect = EXPECT[tab] || {};
+      let expectHtml = '<table><tr><th>JS uses row #</th><th>Expected label</th><th>arr[row-1][0] (col A)</th><th>arr[row-1][1] (col B)</th><th>arr[row-1][5] (col F)</th></tr>';
+      for (const [rIdx, lbl] of Object.entries(expect)) {
+        const r = parseInt(rIdx);
+        const rowArr = arr[r - 1];
+        const colA = rowArr ? rowArr[0] : '(no row)';
+        const colB = rowArr ? rowArr[1] : '';
+        const colF = rowArr ? (rowArr[5] || '') : '';
+        expectHtml += `<tr><td class="row-idx">${r}</td><td>${shorten(lbl)}</td><td>${shorten(colA)}</td><td>${shorten(colB)}</td><td>${shorten(colF)}</td></tr>`;
+      }
+      expectHtml += '</table>';
+      block.innerHTML += '<h3 style="font-size:13px;margin-top:14px">What\'s at the expected rows:</h3>' + expectHtml;
+
+      // First 50 dashboard rows raw
+      let dumpHtml = '<table><tr><th>DASH ROW</th><th>col A</th><th>col B</th><th>col C</th><th>col D</th><th>col E</th><th>col F</th></tr>';
+      const limit = Math.min(arr.length, 50);
+      for (let i = 0; i < limit; i++) {
+        const row = arr[i] || [];
+        dumpHtml += `<tr><td class="row-idx">${i+1}</td><td>${shorten(row[0])}</td><td>${shorten(row[1])}</td><td>${shorten(row[2])}</td><td>${shorten(row[3])}</td><td>${shorten(row[4])}</td><td>${shorten(row[5])}</td></tr>`;
+      }
+      dumpHtml += '</table>';
+      block.innerHTML += '<h3 style="font-size:13px;margin-top:14px">First 50 rows as dashboard sees them:</h3>' + dumpHtml;
+
+      // Also show specific deeper rows for tabs that need them
+      if (tab === 'RFE_Base' || tab === 'Revenue Build' || tab === 'Headcount Plan') {
+        const start = tab === 'RFE_Base' ? 60 : tab === 'Revenue Build' ? 90 : 20;
+        const stop = tab === 'RFE_Base' ? 120 : tab === 'Revenue Build' ? 105 : 30;
+        let deepHtml = '<table><tr><th>DASH ROW</th><th>col A</th><th>col B</th><th>col C</th><th>col D</th><th>col E</th><th>col F</th></tr>';
+        for (let i = start - 1; i < stop && i < arr.length; i++) {
+          const row = arr[i] || [];
+          deepHtml += `<tr><td class="row-idx">${i+1}</td><td>${shorten(row[0])}</td><td>${shorten(row[1])}</td><td>${shorten(row[2])}</td><td>${shorten(row[3])}</td><td>${shorten(row[4])}</td><td>${shorten(row[5])}</td></tr>`;
+        }
+        deepHtml += '</table>';
+        block.innerHTML += `<h3 style="font-size:13px;margin-top:14px">Rows ${start}–${stop} as dashboard sees them:</h3>` + deepHtml;
+      }
+
+    } catch (e) {
+      block.innerHTML += `<div class="err">Error fetching: ${e.message}</div>`;
+    }
+  }
+}
+
+run();
+</script>
+</body>
+</html>
