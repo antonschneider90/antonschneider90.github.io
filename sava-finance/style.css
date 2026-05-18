@@ -382,6 +382,10 @@ table.data-table {
   font-size: 12.5px;
   font-variant-numeric: tabular-nums;
 }
+/* Sticky thead for every .data-table inside a .table-scroll (or used directly):
+   Sits below the top bar (~70px) and tab nav (~48px) → 118px. */
+.data-table thead th { position: sticky; top: 118px; z-index: 5; }
+.data-table thead tr:nth-child(2) th { top: 152px; }  /* second header row, if present */
 .data-table thead {
   background: var(--ink);
   color: white;
@@ -458,9 +462,7 @@ table.data-table {
 .data-table .section-row .sticky-col { background: var(--ink); color: white; z-index: 2; }
 .data-table .sub-header-row .sticky-col { background: var(--accent-soft); color: var(--ink); z-index: 2; }
 
-/* Sticky thead for CYO */
-.cyo-table thead { position: sticky; top: 0; z-index: 10; }
-.cyo-table thead th { background: var(--ink); }
+/* Sticky thead for CYO — inherits global rule; CYO has a 2-row header */
 .cyo-table thead .sub-header-sticky th { background: var(--ink); color: white; font-weight: 500; }
 .cyo-table thead .gap-col { background: var(--ink); }
 .cyo-table tbody .gap-col { background: white; border-bottom: none; padding: 0; width: 8px; }
