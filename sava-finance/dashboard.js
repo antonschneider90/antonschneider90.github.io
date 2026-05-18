@@ -100,6 +100,43 @@ function fmtCountVar(n) {
   return sign + Math.round(n).toLocaleString();
 }
 
+// Formats whatever gviz returns for a date cell into "Mon YYYY" (e.g. "Apr 2026").
+// gviz may return: a Date object, a "Date(yyyy,mm,dd)" string, an ISO string,
+// a pre-formatted string like "Apr-2026", or a numeric Excel serial.
+function formatLMA(raw) {
+  if (raw === null || raw === undefined || raw === '') return '—';
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  // JS Date instance
+  if (raw instanceof Date && !isNaN(raw)) {
+    return `${monthNames[raw.getMonth()]} ${raw.getFullYear()}`;
+  }
+  if (typeof raw === 'string') {
+    const s = raw.trim();
+    // "Date(yyyy,mm,dd...)" gviz format (months 0-indexed)
+    const m1 = s.match(/^Date\((\d+),(\d+),(\d+)/);
+    if (m1) return `${monthNames[parseInt(m1[2])]} ${m1[1]}`;
+    // "Apr-2026" or "Apr 2026" pre-formatted
+    const m2 = s.match(/^([A-Za-z]{3,9})[\s\-]+(\d{4})$/);
+    if (m2) {
+      const mon = m2[1].slice(0,3);
+      const idx = monthNames.findIndex(n => n.toLowerCase() === mon.toLowerCase());
+      if (idx >= 0) return `${monthNames[idx]} ${m2[2]}`;
+      return s;
+    }
+    // ISO date "2026-04-01" or "2026-04-01 00:00:00"
+    const m3 = s.match(/^(\d{4})-(\d{2})-\d{2}/);
+    if (m3) return `${monthNames[parseInt(m3[2]) - 1]} ${m3[1]}`;
+    return s;
+  }
+  if (typeof raw === 'number') {
+    // Excel serial — best-effort
+    const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+    const d = new Date(excelEpoch.getTime() + raw * 864e5);
+    if (!isNaN(d)) return `${monthNames[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+  }
+  return String(raw);
+}
+
 // ============ DATA FETCH ============
 async function fetchTab(tabName) {
   const url = jsonUrl(tabName);
@@ -150,19 +187,86 @@ async function loadAll() {
     })
   );
   results.forEach(([t, d]) => { state.data[t] = d; });
+  buildAllRowIndexes();
   state.loaded = true;
   if (statusEl) statusEl.textContent = 'Rendering...';
 }
 
 // ============ DATA ACCESS ============
-// 1-indexed cell access (matches spreadsheet conventions)
+// gviz collapses empty rows: the row index returned by gviz does NOT
+// match the row number in the source spreadsheet. To stay robust, we
+// look up rows by their label in column A (or column B for Assumptions,
+// which uses col A as a margin/indent column).
+//
+// state.rowIdx[tabName] = Map(label_lower → 1-indexed row number in gviz data)
+
+// Which column contains the row's "label" for each tab. Default = 1 (col A).
+const LABEL_COL = {
+  'Assumptions': 2,
+};
+
+function buildRowIndex(tabName) {
+  const data = state.data[tabName];
+  const map = new Map();
+  if (!data) return map;
+  const labelCol = (LABEL_COL[tabName] || 1) - 1;  // 0-indexed
+  for (let i = 0; i < data.length; i++) {
+    const labelRaw = data[i] && data[i][labelCol];
+    if (labelRaw === null || labelRaw === undefined || labelRaw === '') continue;
+    const lbl = String(labelRaw).trim().toLowerCase();
+    if (!lbl) continue;
+    if (!map.has(lbl)) map.set(lbl, i + 1);
+  }
+  return map;
+}
+
+function buildAllRowIndexes() {
+  state.rowIdx = {};
+  for (const tab of Object.keys(state.data)) {
+    state.rowIdx[tab] = buildRowIndex(tab);
+  }
+}
+
+// Look up the 1-indexed gviz row number for a given col-A label.
+// Accepts an exact label or an array of label candidates (first hit wins).
+// If `partial` is true, also matches rows whose label starts with the search term.
+function rowOf(tabName, labelOrLabels, partial = false) {
+  const map = state.rowIdx && state.rowIdx[tabName];
+  if (!map) return null;
+  const candidates = Array.isArray(labelOrLabels) ? labelOrLabels : [labelOrLabels];
+  for (const cand of candidates) {
+    const key = String(cand).trim().toLowerCase();
+    if (map.has(key)) return map.get(key);
+  }
+  if (partial) {
+    for (const cand of candidates) {
+      const key = String(cand).trim().toLowerCase();
+      for (const [lbl, idx] of map.entries()) {
+        if (lbl.startsWith(key)) return idx;
+      }
+    }
+  }
+  return null;
+}
+
+// 1-indexed cell access. `row` is the gviz row number (post-collapse).
 function cell(tabName, row, col) {
+  if (row === null || row === undefined) return null;
   const data = state.data[tabName];
   if (!data || !data[row - 1]) return null;
   return data[row - 1][col - 1];
 }
 function cellNum(tabName, row, col) {
   return parseNum(cell(tabName, row, col));
+}
+
+// Convenience: look up a row by label then read col. Returns null if label not found.
+function cellByLabel(tabName, label, col, partial = false) {
+  const r = rowOf(tabName, label, partial);
+  return r ? cell(tabName, r, col) : null;
+}
+function cellNumByLabel(tabName, label, col, partial = false) {
+  return parseNum(cellByLabel(tabName, label, col, partial));
 }
 
 function rfeTabForScenario(scen) {
@@ -262,15 +366,13 @@ function renderOverview() {
   const tab = rfeTabForScenario(scen);
 
   // KPIs from FYO (column F = 2030, which is FYO col 6)
-  // FYO structure: cols B-F = years 2026-2030, so 2030 = col 6
-  const rev2030 = cellNum('Forecast Years Overview', 7, 6);
-  const ebitda2030 = cellNum('Forecast Years Overview', 16, 6);
-  const hc2030 = cellNum('Forecast Years Overview', 36, 6);
+  const rev2030 = cellNumByLabel('Forecast Years Overview', 'Revenue', 6);
+  const ebitda2030 = cellNumByLabel('Forecast Years Overview', 'EBITDA', 6);
+  const hc2030 = cellNumByLabel('Forecast Years Overview', 'Total HC (EOY)', 6);
 
-  // Funding need: read Series B + C from RFE solver rows
-  // RFE_X: B113 = Series B size, B116 = Series C size
-  const sB = cellNum(tab, 113, 2);
-  const sC = cellNum(tab, 116, 2);
+  // Funding need: read Series B + C sizes from RFE solver rows
+  const sB = cellNumByLabel(tab, 'Series B size (USD)', 2);
+  const sC = cellNumByLabel(tab, 'Series C size (USD)', 2);
   const fundNeed = (sB || 0) + (sC || 0);
 
   $('#kpi-rev').textContent = fmtM(rev2030);
@@ -285,16 +387,9 @@ function renderOverview() {
   $('#kpi-hc-detail').textContent = 'From 98 today';
   $('#kpi-fund-detail').textContent = 'Series B + Series C';
 
-  // Meta
-  const baseLMA = cell('Assumptions', 9, 3);
-  let lmaStr = '—';
-  if (baseLMA) {
-    if (typeof baseLMA === 'string' && baseLMA.startsWith('Date(')) {
-      const m = baseLMA.match(/Date\((\d+),(\d+),(\d+)\)/);
-      if (m) lmaStr = `${m[1]}-${String(parseInt(m[2])+1).padStart(2,'0')}`;
-    } else lmaStr = String(baseLMA);
-  }
-  $('#overview-meta').innerHTML = `Last actual month: <strong>${lmaStr}</strong> · Scenario: <span class="scen-inline">${scen}</span>`;
+  // Meta — LMA date from Assumptions
+  const baseLMA = cellByLabel('Assumptions', 'Last month of actuals (date)', 3);
+  $('#overview-meta').innerHTML = `Last actual month: <strong>${formatLMA(baseLMA)}</strong> · Scenario: <span class="scen-inline">${scen}</span>`;
 
   // Update scenario indicators
   $$('.scen-inline').forEach(el => el.textContent = scen);
@@ -307,24 +402,25 @@ function renderOverview() {
 
 // ============ RENDER: REVENUE BY STREAM CHART ============
 function renderRevByStreamChart(canvasId, scen) {
-  // Revenue Build tab in Sava model:
-  //   R94 = EU+UK Rx, R95 = EU+UK OTC, R96 = US Rx, R97 = US OTC, R98 = Lactate Standalone, R99 = Lactate Add-on
-  // Year cols: 2025=B-M, 2026=N-Y, ... (yearStartCol/yearEndCol)
+  // Revenue Build tab — find rows by label
   const streams = [
-    { label: 'EU+UK Rx', row: 94 },
-    { label: 'EU+UK OTC', row: 95 },
-    { label: 'US Rx', row: 96 },
-    { label: 'US OTC', row: 97 },
-    { label: 'Lactate Standalone', row: 98 },
-    { label: 'Lactate Add-on', row: 99 },
+    { label: 'EU+UK Rx', sheetLabel: 'EU+UK Rx revenue' },
+    { label: 'EU+UK OTC', sheetLabel: 'EU+UK OTC revenue' },
+    { label: 'US Rx', sheetLabel: 'US Rx revenue' },
+    { label: 'US OTC', sheetLabel: 'US OTC revenue' },
+    { label: 'Lactate Standalone', sheetLabel: 'Lactate standalone revenue' },
+    { label: 'Lactate Add-on', sheetLabel: 'Lactate add-on revenue' },
   ];
   const years = [2025, 2026, 2027, 2028, 2029, 2030];
-  const datasets = streams.map((s, i) => ({
-    label: s.label,
-    data: years.map(y => sumYear('Revenue Build', s.row, y) || 0),
-    backgroundColor: palette.series[i],
-    borderRadius: 0,
-  }));
+  const datasets = streams.map((s, i) => {
+    const row = rowOf('Revenue Build', s.sheetLabel);
+    return {
+      label: s.label,
+      data: years.map(y => (row ? sumYear('Revenue Build', row, y) : null) || 0),
+      backgroundColor: palette.series[i],
+      borderRadius: 0,
+    };
+  });
 
   destroyChart(canvasId);
   charts[canvasId] = new Chart(document.getElementById(canvasId), {
@@ -344,37 +440,31 @@ function renderRevByStreamChart(canvasId, scen) {
   });
 }
 
+// Convert a column index in the monthly grid (B=2 = Jan 2025) into a "YYYY-MM" string.
+// This avoids depending on the date-header row, which gviz can mangle.
+function colToYearMonth(c) {
+  const offset = c - 2;  // 0 = Jan 2025
+  const y = 2025 + Math.floor(offset / 12);
+  const m = (offset % 12) + 1;
+  return `${y}-${String(m).padStart(2, '0')}`;
+}
+
 // ============ RENDER: MONTHLY CASH CHART ============
 function renderMonthlyCashChart(canvasId, scen, withMarkers) {
   const tab = rfeTabForScenario(scen);
-  // RFE_X row 67 = Cash; row 5 = date headers
-  // Cols B (2) to BU (73) = Jan 2025 to Dec 2030
+  const cashRow = rowOf(tab, 'Cash & cash equivalents');
   const dates = [];
   const cashVals = [];
   for (let c = 2; c <= 73; c++) {
-    const dateCell = cell(tab, 5, c);
-    let dateLabel = '';
-    if (typeof dateCell === 'string' && dateCell.startsWith('Date(')) {
-      const m = dateCell.match(/Date\((\d+),(\d+),(\d+)\)/);
-      if (m) {
-        const y = parseInt(m[1]);
-        const mo = parseInt(m[2]) + 1;  // gviz months are 0-indexed
-        dateLabel = `${y}-${String(mo).padStart(2,'0')}`;
-      }
-    } else if (dateCell) {
-      dateLabel = String(dateCell);
-    }
-    dates.push(dateLabel);
-    cashVals.push(cellNum(tab, 67, c) || 0);
+    dates.push(colToYearMonth(c));
+    cashVals.push((cashRow ? cellNum(tab, cashRow, c) : 0) || 0);
   }
 
   // Markers for Series B and C
   let bIdx = -1, cIdx = -1;
   if (withMarkers) {
-    // Look up Series B and C months from solver rows
-    // RFE_X: B111 = Series B month index, B114 = Series C month index
-    const bMonthIdx = cellNum(tab, 111, 2);
-    const cMonthIdx = cellNum(tab, 114, 2);
+    const bMonthIdx = cellNumByLabel(tab, 'Series B trigger month idx (1=Jan2025, 0=not triggered)', 2);
+    const cMonthIdx = cellNumByLabel(tab, 'Series C trigger month idx (0 = not needed)', 2);
     if (bMonthIdx) bIdx = bMonthIdx - 1;  // 1-indexed → 0-indexed
     if (cMonthIdx) cIdx = cMonthIdx - 1;
   }
@@ -473,41 +563,36 @@ function renderMonthlyCashChart(canvasId, scen, withMarkers) {
 
 function renderCYO() {
   const cyoTab = 'Current Year Overview';
-  const year = cellNum(cyoTab, 3, 2);
-  const lastMonth = cellNum(cyoTab, 4, 2);
+  const year = cellNumByLabel(cyoTab, 'Current year', 2);
+  const lastMonth = cellNumByLabel(cyoTab, 'Last month (1-12)', 2);
   const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const monthStr = lastMonth ? monthNames[Math.round(lastMonth) - 1] : '—';
   const yrStr = year ? Math.round(year) : '—';
-  const prevYrStr = year ? Math.round(year) - 1 : '—';
   $('#cyo-meta').innerHTML = `Last actual month: <strong>${monthStr} ${yrStr}</strong> · Scenario: <span class="scen-inline">${state.scenario}</span>`;
 
-  // Note: the Sheet's CYO uses Assumptions!C8 (single scenario) and we want
-  // the dashboard to show the active scenario, but the CYO tab itself only
-  // displays one scenario at a time. We'll show the data as-is and add a note
-  // explaining that the dashboard scenario toggle controls other tabs but CYO
-  // mirrors the Sheet's active scenario.
-
-  // Row definitions: label, row index, format, indent
-  const rows = [
+  // Row definitions: label shown in dashboard, label-in-sheet to look up, format, flags
+  const rowsSpec = [
     { type: 'section', label: 'P&L (USD)' },
-    { label: 'Revenue', row: 10, fmt: 'm', bold: true },
-    { label: 'Total COGS', row: 11, fmt: 'm', reverseVar: true },
-    { label: 'Gross profit', row: 12, fmt: 'm', bold: true },
-    { label: 'Gross margin %', row: 13, fmt: 'pct', indent: true },
-    { label: 'R&D', row: 14, fmt: 'm', indent: true, reverseVar: true },
-    { label: 'Regulatory', row: 15, fmt: 'm', indent: true, reverseVar: true },
-    { label: 'Sales & marketing', row: 16, fmt: 'm', indent: true, reverseVar: true },
-    { label: 'G&A', row: 17, fmt: 'm', indent: true, reverseVar: true },
-    { label: 'Total Opex', row: 18, fmt: 'm', bold: true, reverseVar: true },
-    { label: 'EBITDA', row: 19, fmt: 'm', bold: true },
-    { label: 'Net Income', row: 20, fmt: 'm', bold: true },
+    { label: 'Revenue', sheetLabel: 'Revenue', fmt: 'm', bold: true },
+    { label: 'Total COGS', sheetLabel: 'Total COGS', fmt: 'm', reverseVar: true },
+    { label: 'Gross profit', sheetLabel: 'Gross profit', fmt: 'm', bold: true },
+    { label: 'Gross margin %', sheetLabel: 'Gross margin % (GP/Rev)', fmt: 'pct', indent: true },
+    { label: 'R&D', sheetLabel: 'R&D', fmt: 'm', indent: true, reverseVar: true },
+    { label: 'Regulatory', sheetLabel: 'Regulatory', fmt: 'm', indent: true, reverseVar: true },
+    { label: 'Sales & marketing', sheetLabel: 'Sales & marketing', fmt: 'm', indent: true, reverseVar: true },
+    { label: 'G&A', sheetLabel: 'G&A', fmt: 'm', indent: true, reverseVar: true },
+    { label: 'Total Opex', sheetLabel: 'Total Opex', fmt: 'm', bold: true, reverseVar: true },
+    { label: 'EBITDA', sheetLabel: 'EBITDA', fmt: 'm', bold: true },
+    { label: 'Net Income', sheetLabel: 'Net Income', fmt: 'm', bold: true },
     { type: 'section', label: 'Cash & Financing (USD)' },
-    { label: 'Capex', row: 23, fmt: 'm', reverseVar: true },
-    { label: 'Series B inflow', row: 24, fmt: 'm' },
-    { label: 'Series C inflow', row: 25, fmt: 'm' },
-    { label: 'Net change in cash', row: 26, fmt: 'm', bold: true },
-    { label: 'Cash balance (EOM)', row: 27, fmt: 'm', bold: true },
+    { label: 'Capex', sheetLabel: 'Capex', fmt: 'm', reverseVar: true },
+    { label: 'Series B inflow', sheetLabel: 'Series B inflow', fmt: 'm' },
+    { label: 'Series C inflow', sheetLabel: 'Series C inflow', fmt: 'm' },
+    { label: 'Net change in cash', sheetLabel: 'Net change in cash', fmt: 'm', bold: true },
+    { label: 'Cash balance (EOM)', sheetLabel: 'Cash balance (EOM)', fmt: 'm', bold: true },
   ];
+  // Resolve sheet labels → row numbers once
+  const rows = rowsSpec.map(r => r.type === 'section' ? r : ({ ...r, row: rowOf(cyoTab, r.sheetLabel) }));
 
   // 4 blocks: Last Month | YTD | RoY | FY
   // Cols per block (1-indexed): cur, prior, yoy$, yoy%
@@ -613,52 +698,53 @@ function renderFYO() {
   const fyoTab = 'Forecast Years Overview';
   const years = [2026, 2027, 2028, 2029, 2030];
 
-  // Row defs from Sava FYO tab
-  const rows = [
+  // Row defs: label shown in dashboard, sheetLabel = exact text in col A of the model
+  const rowsSpec = [
     { type: 'section', label: 'P&L (USD)' },
-    { label: 'Revenue', row: 7, fmt: 'm', bold: true },
-    { label: 'Total COGS', row: 8, fmt: 'm', bold: true },
-    { label: 'Gross profit', row: 9, fmt: 'm', bold: true },
-    { label: 'Gross margin %', row: 10, fmt: 'pct', indent: true },
-    { label: 'R&D', row: 11, fmt: 'm', indent: true },
-    { label: 'Regulatory', row: 12, fmt: 'm', indent: true },
-    { label: 'Sales & marketing', row: 13, fmt: 'm', indent: true },
-    { label: 'G&A', row: 14, fmt: 'm', indent: true },
-    { label: 'Total Opex', row: 15, fmt: 'm', bold: true },
-    { label: 'EBITDA', row: 16, fmt: 'm', bold: true },
-    { label: 'Net Income', row: 17, fmt: 'm', bold: true },
+    { label: 'Revenue', sheetLabel: 'Revenue', fmt: 'm', bold: true },
+    { label: 'Total COGS', sheetLabel: 'Total COGS', fmt: 'm', bold: true },
+    { label: 'Gross profit', sheetLabel: 'Gross profit', fmt: 'm', bold: true },
+    { label: 'Gross margin %', sheetLabel: 'Gross margin %', fmt: 'pct', indent: true },
+    { label: 'R&D', sheetLabel: 'R&D', fmt: 'm', indent: true },
+    { label: 'Regulatory', sheetLabel: 'Regulatory', fmt: 'm', indent: true },
+    { label: 'Sales & marketing', sheetLabel: 'Sales & marketing', fmt: 'm', indent: true },
+    { label: 'G&A', sheetLabel: 'G&A', fmt: 'm', indent: true },
+    { label: 'Total Opex', sheetLabel: 'Total Opex', fmt: 'm', bold: true },
+    { label: 'EBITDA', sheetLabel: 'EBITDA', fmt: 'm', bold: true },
+    { label: 'Net Income', sheetLabel: 'Net Income', fmt: 'm', bold: true },
 
     { type: 'section', label: 'Cash Flow (USD)' },
-    { label: 'CFO', row: 20, fmt: 'm' },
-    { label: 'CFI (capex etc.)', row: 21, fmt: 'm' },
-    { label: 'Series B inflow', row: 22, fmt: 'm' },
-    { label: 'Series C inflow', row: 23, fmt: 'm' },
-    { label: 'Net change in cash', row: 24, fmt: 'm', bold: true },
-    { label: 'Cash balance (EOY)', row: 25, fmt: 'm', bold: true },
+    { label: 'CFO', sheetLabel: 'CFO', fmt: 'm' },
+    { label: 'CFI (capex etc.)', sheetLabel: 'CFI (capex etc.)', fmt: 'm' },
+    { label: 'Series B inflow', sheetLabel: 'Series B inflow', fmt: 'm' },
+    { label: 'Series C inflow', sheetLabel: 'Series C inflow', fmt: 'm' },
+    { label: 'Net change in cash', sheetLabel: 'Net change in cash', fmt: 'm', bold: true },
+    { label: 'Cash balance (EOY)', sheetLabel: 'Cash balance (EOY)', fmt: 'm', bold: true },
 
     { type: 'section', label: 'Balance Sheet (EOY)' },
-    { label: 'Cash & equivalents', row: 28, fmt: 'm' },
-    { label: 'AR + Inventory', row: 29, fmt: 'm' },
-    { label: 'Net PP&E', row: 30, fmt: 'm' },
-    { label: 'Total Assets', row: 31, fmt: 'm', bold: true },
-    { label: 'Total Liabilities', row: 32, fmt: 'm' },
-    { label: 'Total Equity', row: 33, fmt: 'm', bold: true },
+    { label: 'Cash & equivalents', sheetLabel: 'Cash & equivalents', fmt: 'm' },
+    { label: 'AR + Inventory', sheetLabel: 'AR + Inventory', fmt: 'm' },
+    { label: 'Net PP&E', sheetLabel: 'Net PP&E', fmt: 'm' },
+    { label: 'Total Assets', sheetLabel: 'Total Assets', fmt: 'm', bold: true },
+    { label: 'Total Liabilities', sheetLabel: 'Total Liabilities', fmt: 'm' },
+    { label: 'Total Equity', sheetLabel: 'Total Equity', fmt: 'm', bold: true },
 
     { type: 'section', label: 'Operational' },
-    { label: 'Total HC (EOY)', row: 36, fmt: 'count' },
-    { label: 'Active patients (EOY)', row: 37, fmt: 'count' },
-    { label: 'Patches sold (annual)', row: 38, fmt: 'count' },
-    { label: 'Mfg lines installed (EOY)', row: 39, fmt: 'count' },
+    { label: 'Total HC (EOY)', sheetLabel: 'Total HC (EOY)', fmt: 'count' },
+    { label: 'Active patients (EOY)', sheetLabel: 'Active patients (EOY)', fmt: 'count' },
+    { label: 'Patches sold (annual)', sheetLabel: 'Patches sold (annual)', fmt: 'count' },
+    { label: 'Mfg lines installed (EOY)', sheetLabel: 'Mfg lines installed (EOY)', fmt: 'count' },
 
     { type: 'section', label: 'Unit Economics' },
-    { label: 'Avg active patients (FY)', row: 42, fmt: 'count' },
-    { label: 'New patients added (FY)', row: 43, fmt: 'count' },
-    { label: 'ARPU (annualized)', row: 44, fmt: 'm' },
-    { label: 'CAC (S&M / new patients)', row: 45, fmt: 'm' },
-    { label: 'LTV (per patient)', row: 46, fmt: 'm' },
-    { label: 'LTV:CAC ratio', row: 47, fmt: 'ratio' },
-    { label: 'All-in per-patch cost', row: 48, fmt: 'm' },
+    { label: 'Avg active patients (FY)', sheetLabel: 'Avg active patients (FY)', fmt: 'count' },
+    { label: 'New patients added (FY)', sheetLabel: 'New patients added (FY)', fmt: 'count' },
+    { label: 'ARPU (annualized)', sheetLabel: 'ARPU (annualized)', fmt: 'm' },
+    { label: 'CAC (S&M / new patients)', sheetLabel: 'CAC (S&M / new patients)', fmt: 'm' },
+    { label: 'LTV (per patient)', sheetLabel: 'LTV (per patient)', fmt: 'm' },
+    { label: 'LTV:CAC ratio', sheetLabel: 'LTV:CAC ratio', fmt: 'ratio' },
+    { label: 'All-in per-patch cost', sheetLabel: 'All-in per-patch cost', fmt: 'm' },
   ];
+  const rows = rowsSpec.map(r => r.type === 'section' ? r : ({ ...r, row: rowOf(fyoTab, r.sheetLabel) }));
 
   const fmtVal = (v, fmt) => {
     if (v === null || isNaN(v)) return '—';
@@ -747,12 +833,18 @@ function renderFYOWaterfall() {
   const actualValues = []; // for tooltip — the "real" value each bar represents
   const yearStartIdx = {};  // bar index where each year starts (for label placement)
 
+  // Resolve row indices once
+  const revRow = rowOf(fyoTab, 'Revenue');
+  const cogsRow = rowOf(fyoTab, 'Total COGS');
+  const opexRow = rowOf(fyoTab, 'Total Opex');
+  const ebitdaRow = rowOf(fyoTab, 'EBITDA');
+
   years.forEach((y, yi) => {
     const colYear = 2 + yi; // FYO B-F = years 2-6
-    const rev = cellNum(fyoTab, 7, colYear) || 0;
-    const cogs = cellNum(fyoTab, 8, colYear) || 0;
-    const opex = cellNum(fyoTab, 15, colYear) || 0;
-    const ebitda = cellNum(fyoTab, 16, colYear) || 0;
+    const rev = (revRow ? cellNum(fyoTab, revRow, colYear) : 0) || 0;
+    const cogs = (cogsRow ? cellNum(fyoTab, cogsRow, colYear) : 0) || 0;
+    const opex = (opexRow ? cellNum(fyoTab, opexRow, colYear) : 0) || 0;
+    const ebitda = (ebitdaRow ? cellNum(fyoTab, ebitdaRow, colYear) : 0) || 0;
 
     yearStartIdx[y] = labels.length;
 
@@ -880,9 +972,10 @@ function renderFYOWaterfall() {
 // ============ RENDER: REVENUE MIX ============
 function renderRevenue() {
   renderRevByStreamChart('chart-rev-streams', state.scenario);
-  // Patches by year — Revenue Build R92
+  // Patches by year — total patches sold (all channels)
   const years = [2025, 2026, 2027, 2028, 2029, 2030];
-  const patches = years.map(y => sumYear('Revenue Build', 92, y) || 0);
+  const patchesRow = rowOf('Revenue Build', 'Total patches sold (all channels)');
+  const patches = years.map(y => (patchesRow ? sumYear('Revenue Build', patchesRow, y) : null) || 0);
 
   destroyChart('rev-patches');
   charts['rev-patches'] = new Chart(document.getElementById('chart-rev-patches'), {
@@ -901,28 +994,32 @@ function renderRevenue() {
 
 // ============ RENDER: HEADCOUNT ============
 function renderHeadcount() {
-  // Headcount Plan tab: R22-27 are functions
-  // R22=R&D, R23=Regulatory, R24=Manufacturing, R25=QA, R26=Commercial, R27=G&A
-  // EOY cols same as model: col M=Dec 25, Y=Dec 26, AK=Dec 27, AW=Dec 28, BI=Dec 29, BU=Dec 30 (yearEndCol)
+  // Headcount Plan "HEADCOUNT BY FUNCTION" section — labels in col A.
+  // Note: "R&D HC (residual)" is the actual R&D function count; the sheet
+  // separately tracks Tech vs Non-tech rollups but the by-function breakdown
+  // is what we visualize.
   const years = [2025, 2026, 2027, 2028, 2029, 2030];
   const funcs = [
-    { label: 'R&D', row: 22 },
-    { label: 'Regulatory', row: 23 },
-    { label: 'Manufacturing', row: 24 },
-    { label: 'QA', row: 25 },
-    { label: 'Commercial', row: 26 },
-    { label: 'G&A', row: 27 },
+    { label: 'R&D', sheetLabel: 'R&D HC (residual)' },
+    { label: 'Regulatory', sheetLabel: 'Regulatory HC' },
+    { label: 'Manufacturing', sheetLabel: 'Manufacturing HC' },
+    { label: 'QA', sheetLabel: 'QA HC' },
+    { label: 'Commercial', sheetLabel: 'Commercial / S&M HC' },
+    { label: 'G&A', sheetLabel: 'G&A HC' },
   ];
 
-  const datasets = funcs.map((f, i) => ({
-    label: f.label,
-    data: years.map(y => {
-      const v = cellNum('Headcount Plan', f.row, yearEndCol(y));
-      return v !== null ? Math.round(v) : 0;
-    }),
-    backgroundColor: palette.series[i],
-    borderRadius: 0,
-  }));
+  const datasets = funcs.map((f, i) => {
+    const row = rowOf('Headcount Plan', f.sheetLabel);
+    return {
+      label: f.label,
+      data: years.map(y => {
+        const v = row ? cellNum('Headcount Plan', row, yearEndCol(y)) : null;
+        return v !== null ? Math.round(v) : 0;
+      }),
+      backgroundColor: palette.series[i],
+      borderRadius: 0,
+    };
+  });
 
   destroyChart('hc-stacked');
   charts['hc-stacked'] = new Chart(document.getElementById('chart-hc-stacked'), {
@@ -956,18 +1053,25 @@ function renderCosts() {
   const fyoTab = 'Forecast Years Overview';
   const years = [2026, 2027, 2028, 2029, 2030];
 
-  // Cost categories from FYO
+  // Cost categories from FYO — resolve each by label
+  const cogsRow = rowOf(fyoTab, 'Total COGS');
+  const rdRow = rowOf(fyoTab, 'R&D');
+  const regRow = rowOf(fyoTab, 'Regulatory');
+  const smRow = rowOf(fyoTab, 'Sales & marketing');
+  const gaRow = rowOf(fyoTab, 'G&A');
+  const opexRow = rowOf(fyoTab, 'Total Opex');
+
   const cats = [
-    { label: 'COGS', row: 8, color: palette.red },
-    { label: 'R&D', row: 11, color: palette.ink },
-    { label: 'Regulatory', row: 12, color: '#4A6670' },
-    { label: 'Sales & marketing', row: 13, color: palette.accent },
-    { label: 'G&A', row: 14, color: '#8A7E68' },
+    { label: 'COGS', row: cogsRow, color: palette.red },
+    { label: 'R&D', row: rdRow, color: palette.ink },
+    { label: 'Regulatory', row: regRow, color: '#4A6670' },
+    { label: 'Sales & marketing', row: smRow, color: palette.accent },
+    { label: 'G&A', row: gaRow, color: '#8A7E68' },
   ];
 
   const datasets = cats.map(c => ({
     label: c.label,
-    data: years.map((y, i) => cellNum(fyoTab, c.row, 2 + i) || 0),
+    data: years.map((y, i) => (c.row ? cellNum(fyoTab, c.row, 2 + i) : null) || 0),
     backgroundColor: c.color,
     borderRadius: 0,
   }));
@@ -995,23 +1099,28 @@ function renderCosts() {
   html += `</tr></thead><tbody>`;
   html += `<tr class="section-row"><td colspan="${years.length + 1}">COGS</td></tr>`;
   html += `<tr class="bold-row"><td>Total COGS</td>`;
-  years.forEach((y, i) => { html += `<td>${fmtM(cellNum(fyoTab, 8, 2 + i))}</td>`; });
+  years.forEach((y, i) => { html += `<td>${fmtM(cogsRow ? cellNum(fyoTab, cogsRow, 2 + i) : null)}</td>`; });
   html += `</tr>`;
   html += `<tr class="section-row"><td colspan="${years.length + 1}">Operating Expenses</td></tr>`;
-  ['R&D','Regulatory','Sales & marketing','G&A'].forEach((label, idx) => {
-    const r = 11 + idx;
-    html += `<tr><td class="indent">${label}</td>`;
-    years.forEach((y, i) => { html += `<td>${fmtM(cellNum(fyoTab, r, 2 + i))}</td>`; });
+  const opexLines = [
+    { label: 'R&D', row: rdRow },
+    { label: 'Regulatory', row: regRow },
+    { label: 'Sales & marketing', row: smRow },
+    { label: 'G&A', row: gaRow },
+  ];
+  opexLines.forEach(l => {
+    html += `<tr><td class="indent">${l.label}</td>`;
+    years.forEach((y, i) => { html += `<td>${fmtM(l.row ? cellNum(fyoTab, l.row, 2 + i) : null)}</td>`; });
     html += `</tr>`;
   });
   html += `<tr class="bold-row"><td>Total Opex</td>`;
-  years.forEach((y, i) => { html += `<td>${fmtM(cellNum(fyoTab, 15, 2 + i))}</td>`; });
+  years.forEach((y, i) => { html += `<td>${fmtM(opexRow ? cellNum(fyoTab, opexRow, 2 + i) : null)}</td>`; });
   html += `</tr>`;
   html += `<tr class="section-row"><td colspan="${years.length + 1}">Total Cost</td></tr>`;
   html += `<tr class="bold-row"><td>COGS + Opex</td>`;
   years.forEach((y, i) => {
-    const cogs = cellNum(fyoTab, 8, 2 + i) || 0;
-    const opex = cellNum(fyoTab, 15, 2 + i) || 0;
+    const cogs = (cogsRow ? cellNum(fyoTab, cogsRow, 2 + i) : 0) || 0;
+    const opex = (opexRow ? cellNum(fyoTab, opexRow, 2 + i) : 0) || 0;
     html += `<td>${fmtM(cogs + opex)}</td>`;
   });
   html += `</tr>`;
@@ -1022,12 +1131,10 @@ function renderCosts() {
 // ============ RENDER: FINANCING ============
 function renderFinancing() {
   const tab = rfeTabForScenario(state.scenario);
-  // RFE_X: B111 = Series B month idx, B112 = Series B date, B113 = Series B size
-  //        B114 = Series C month idx, B115 = Series C date, B116 = Series C size
-  const sBSize = cellNum(tab, 113, 2);
-  const sBDate = cell(tab, 112, 2);
-  const sCSize = cellNum(tab, 116, 2);
-  const sCDate = cell(tab, 115, 2);
+  const sBSize = cellNumByLabel(tab, 'Series B size (USD)', 2);
+  const sBDate = cellByLabel(tab, 'Series B trigger date', 2);
+  const sCSize = cellNumByLabel(tab, 'Series C size (USD)', 2);
+  const sCDate = cellByLabel(tab, 'Series C trigger date', 2);
 
   $('#fin-b-size').textContent = fmtM(sBSize);
   $('#fin-b-date').textContent = formatDate(sBDate);
@@ -1038,24 +1145,15 @@ function renderFinancing() {
   renderMonthlyCashChart('chart-fin-cash', state.scenario, true);
 }
 
+// Format a date cell for display. Delegates to formatLMA for full format coverage.
 function formatDate(val) {
-  if (!val) return '—';
-  if (typeof val === 'string' && val.startsWith('Date(')) {
-    const m = val.match(/Date\((\d+),(\d+),(\d+)\)/);
-    if (m) {
-      const names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      return `${names[parseInt(m[2])]} ${m[1]}`;
-    }
-  }
-  return String(val);
+  return formatLMA(val);
 }
 
 // ============ RENDER: ASSUMPTIONS ============
 function renderAssumptions() {
   const scen = state.scenario;
   const col = scenCol(scen);
-  // Assumptions rows: 12=EU Rx launch, 14=US Rx launch, 16=Lactate, 23=EU Rx ASP, 62=patches/yr,
-  //   68=mfg cost steady, 76=tech avg cost, 115=steady HC adds, 116=pre-launch HC adds
   const idxToDate = (idx) => {
     if (!idx) return '—';
     const y = 2025 + Math.floor((idx - 1) / 12);
@@ -1064,15 +1162,16 @@ function renderAssumptions() {
     return `${names[m-1]} ${y}`;
   };
 
-  const euLaunch = cellNum('Assumptions', 12, col);
-  const usLaunch = cellNum('Assumptions', 14, col);
-  const lacLaunch = cellNum('Assumptions', 16, col);
-  const asp = cellNum('Assumptions', 23, col);
-  const patches = cellNum('Assumptions', 62, col);
-  const cogs = cellNum('Assumptions', 68, col);
-  const techCost = cellNum('Assumptions', 76, col);
-  const steadyHC = cellNum('Assumptions', 115, col);
-  const preLaunchHC = cellNum('Assumptions', 116, col);
+  // Assumptions tab uses col B as the label column (see LABEL_COL).
+  const euLaunch = cellNumByLabel('Assumptions', 'EU+UK Rx commercial launch month idx', col);
+  const usLaunch = cellNumByLabel('Assumptions', 'US Rx commercial launch month idx', col);
+  const lacLaunch = cellNumByLabel('Assumptions', 'Lactate platform extension launch month', col);
+  const asp = cellNumByLabel('Assumptions', 'EU+UK Rx: ASP per patch', col);
+  const patches = cellNumByLabel('Assumptions', 'Patches per patient per year (glucose)', col);
+  const cogs = cellNumByLabel('Assumptions', 'Total per-patch mfg cost — steady state (yr 3+)', col);
+  const techCost = cellNumByLabel('Assumptions', 'Avg fully-loaded cost: tech employee/yr', col);
+  const steadyHC = cellNumByLabel('Assumptions', 'Net annual HC additions (people/year)', col);
+  const preLaunchHC = cellNumByLabel('Assumptions', 'Pre-launch net annual HC adds (apply before EU+UK Rx launch)', col);
 
   $('#a-eu-launch').textContent = idxToDate(euLaunch);
   $('#a-us-launch').textContent = idxToDate(usLaunch);
@@ -1087,11 +1186,11 @@ function renderAssumptions() {
 
 // ============ CHECK BADGE ============
 function renderCheckBadge() {
-  // Get the Sheet's checks summary — we'll read from Summary or just hardcode "67/67"
-  // For simplicity, look at Assumptions or Summary for a known check cell
-  // The model has a "Checks" tab; reading it from the dashboard isn't critical for v1.
-  // For now: read Current Year Overview C3 which has "CHECK OK" or "CHECK ERROR"
-  const checkVal = cell('Current Year Overview', 3, 3);
+  // Known limitation: gviz often type-infers col C as numeric and drops the
+  // string "CHECK OK" / "CHECK ERROR" value at CYO row 3. The badge defaults
+  // to OK; the model's Checks tab is the source of truth for integrity status.
+  // (To surface real errors here we'd need a separate single-cell gviz query.)
+  const checkVal = cellByLabel('Current Year Overview', 'Current year', 3);
   const badge = $('#check-badge');
   const label = $('#check-label');
   if (typeof checkVal === 'string' && checkVal.toUpperCase().includes('OK')) {
