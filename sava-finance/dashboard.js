@@ -212,16 +212,22 @@ function assumption(row, scen) {
 }
 
 // ============ CHART STYLING ============
+// Palette: terracotta primary (Sava brand), petrol-blue secondary,
+// muted green reserved for positive variance, deep brick red for negative.
 const palette = {
   ink: '#1A1815',
   inkLight: 'rgba(26, 24, 21, 0.55)',
   inkBorder: 'rgba(26, 24, 21, 0.10)',
-  accent: '#2F5D50',
-  accentSoft: 'rgba(47, 93, 80, 0.15)',
-  red: '#B85C3C',
-  redSoft: 'rgba(184, 92, 60, 0.15)',
+  accent: '#C65A35',                       // terracotta — primary accent
+  accentSoft: 'rgba(198, 90, 53, 0.15)',
+  blue: '#2C4A57',                         // petrol blue — secondary
+  blueSoft: 'rgba(44, 74, 87, 0.15)',
+  green: '#4A7A6B',                        // muted green — positive variance only
+  red: '#A04025',                          // deep brick — negative variance
+  redSoft: 'rgba(160, 64, 37, 0.15)',
   cream: '#FAF7F0',
-  series: ['#1A1815', '#2F5D50', '#B85C3C', '#8A7E68', '#4A6670', '#C5B6A0', '#6B4E3D', '#9E8B70'],
+  // Series order: ink → terra → petrol → taupe → warm grey → muted blue → deep brown → sand
+  series: ['#1A1815', '#C65A35', '#2C4A57', '#8A7E68', '#A89683', '#5E7984', '#6B4E3D', '#C5B6A0'],
 };
 
 Chart.defaults.font.family = 'Manrope, sans-serif';
