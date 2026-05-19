@@ -396,10 +396,13 @@ table.data-table {
   background: var(--ink);
   color: white;
 }
+/* For two-row headers (CYO), row 2 sticks below row 1.
+   Row 1 (block-header) has padding 8px + ~11px text + 8px = ~27px.
+   Set row 2's top accurately and also extend row 1's bottom shadow to
+   guarantee no transparent strip between them while scrolling. */
+.data-table thead tr:nth-child(1) th { box-shadow: 0 1px 0 0 var(--ink); }
 .data-table thead tr:nth-child(2) th {
-  /* Second header row (CYO sub-headers) — stack below row 1.
-     Row 1 height is ~38px including padding; offset row 2 to match. */
-  top: 38px;
+  top: 28px;
   z-index: 4;
   background: var(--ink);
 }
@@ -415,7 +418,6 @@ table.data-table {
   letter-spacing: 0.03em;
   text-transform: uppercase;
   white-space: nowrap;
-  border-right: 1px solid rgba(255,255,255,0.1);
 }
 .data-table th:first-child { text-align: left; padding-left: 20px; }
 .data-table th.block-header {
