@@ -846,6 +846,20 @@ function rfeAnnual(rfeTab, fyoLabel, year) {
   return sumYear(rfeTab, row, year);
 }
 
+// Series version: returns an array of annual values across years 2026-2030
+// keyed by the FYO label OR by an RFE row label directly.
+function rfeAnnualSeries(rfeTab, label) {
+  const years = [2026, 2027, 2028, 2029, 2030];
+  // First try as an FYO label
+  if (RFE_ANNUAL_MAP[label] !== undefined) {
+    return years.map(y => rfeAnnual(rfeTab, label, y) || 0);
+  }
+  // Otherwise treat as a direct row label in the RFE tab
+  const row = rowOf(rfeTab, label);
+  if (!row) return years.map(() => 0);
+  return years.map(y => sumYear(rfeTab, row, y) || 0);
+}
+
 function renderFYO() {
   const scen = state.scenario;
   const rfeTab = rfeTabForScenario(scen);
@@ -1429,48 +1443,87 @@ function renderCosts() {
     return Math.pow(vN / v0, 1 / (vals.length - 1)) - 1;
   };
 
-  // Cost table — with CAGR column
+  // ----- Cost table — granular breakdown -----
+  // Pull per-component values from Opex Build_<scen> and COGS & Mfg_<scen> tabs.
+  // For each row we provide a label, source tab, sheet label (col A in that tab),
+  // and whether it's a subtotal / total.
+  const opexTab = driverTabForScenario('Opex Build', scen);
+  const cogsTab2 = driverTabForScenario('COGS & Mfg', scen);
+
+  const sumYearByLabel = (tab, label) => years.map(y => {
+    const row = rowOf(tab, label);
+    return row ? (sumYear(tab, row, y) || 0) : 0;
+  });
+
+  // Build per-row data once
+  const costRows = [
+    { type: 'section', label: 'COGS' },
+    { label: 'Loaded mfg cost (materials + labor + OH + ster.)', tab: cogsTab2,
+      sheetLabel: 'Direct materials / Total per-patch loaded cost (forecast)', indent: true },
+    { label: 'Manufacturing HC', tab: cogsTab2, sheetLabel: 'Mfg HC cost (from Headcount Plan R34)', indent: true },
+    { label: 'QA HC', tab: cogsTab2, sheetLabel: 'QA HC cost (from Headcount Plan R35)', indent: true },
+    { label: 'Mfg depreciation', tab: cogsTab2, sheetLabel: 'Mfg depreciation (from row 38 below)', indent: true },
+    { label: 'Total COGS', tab: rfeTab, rfeAnnual: true, sheetLabel: 'Total COGS', bold: true },
+
+    { type: 'section', label: 'R&D' },
+    { label: 'R&D HC', tab: opexTab, sheetLabel: 'R&D HC', indent: true },
+    { label: 'Clinical trials (non-HC)', tab: opexTab, sheetLabel: 'Clinical trials (non-HC)', indent: true },
+    { label: 'R&D materials & consumables', tab: opexTab, sheetLabel: 'R&D materials & lab consumables', indent: true },
+    { label: 'Total R&D', tab: opexTab, sheetLabel: 'Total R&D', bold: true },
+
+    { type: 'section', label: 'Regulatory' },
+    { label: 'Regulatory HC', tab: opexTab, sheetLabel: 'Regulatory HC', indent: true },
+    { label: 'Regulatory non-HC', tab: opexTab, sheetLabel: 'Regulatory non-HC', indent: true },
+    { label: 'Total Regulatory', tab: opexTab, sheetLabel: 'Total Regulatory', bold: true },
+
+    { type: 'section', label: 'Sales & Marketing' },
+    { label: 'Commercial / S&M HC', tab: opexTab, sheetLabel: 'Commercial / S&M HC', indent: true },
+    { label: 'Brand spend', tab: opexTab, sheetLabel: 'Brand spend', indent: true },
+    { label: 'S&M infrastructure (% of revenue)', tab: opexTab, sheetLabel: 'S&M infrastructure (% of revenue)', indent: true },
+    { label: 'Customer acquisition cost (CAC)', tab: opexTab, sheetLabel: 'Customer acquisition cost (CAC) — from Revenue Build', indent: true },
+    { label: 'Total S&M', tab: opexTab, sheetLabel: 'Total S&M', bold: true },
+
+    { type: 'section', label: 'G&A' },
+    { label: 'G&A HC', tab: opexTab, sheetLabel: 'G&A HC', indent: true },
+    { label: 'G&A non-HC (base + scaling)', tab: opexTab, sheetLabel: 'G&A non-HC (base + scaling)', indent: true },
+    { label: 'Office/IT depreciation', tab: opexTab, sheetLabel: 'Office/IT depreciation (from COGS & Mfg row 39)', indent: true },
+    { label: 'Total G&A', tab: opexTab, sheetLabel: 'Total G&A', bold: true },
+
+    { type: 'section', label: 'Total Cost' },
+    { label: 'Total Opex', tab: rfeTab, rfeAnnual: true, sheetLabel: 'Total Opex', bold: true },
+    { label: 'COGS + Opex', tab: null, computed: 'cogs_plus_opex', bold: true },
+  ];
+
+  // Resolve values
+  const valuesFor = (r) => {
+    if (r.computed === 'cogs_plus_opex') {
+      const c = rfeAnnualSeries(rfeTab, 'Total COGS');
+      const o = rfeAnnualSeries(rfeTab, 'Total Opex');
+      return years.map((_, i) => (c[i] || 0) + (o[i] || 0));
+    }
+    if (r.rfeAnnual) return rfeAnnualSeries(rfeTab, r.sheetLabel);
+    return sumYearByLabel(r.tab, r.sheetLabel);
+  };
+
   let html = `<table class="data-table"><thead><tr><th>Cost line</th>`;
   for (const y of years) html += `<th>${y}</th>`;
   html += `<th>CAGR %<br>${years[0]}-${years[years.length-1]}</th>`;
   html += `</tr></thead><tbody>`;
 
-  // COGS section
-  html += `<tr class="section-row"><td colspan="${years.length + 2}">COGS</td></tr>`;
-  const cogsVals = yearlyBySeries[0];
-  html += `<tr class="bold-row"><td>Total COGS</td>`;
-  cogsVals.forEach(v => { html += `<td>${fmtM(v)}</td>`; });
-  const cogsCagr = cagrOf(cogsVals);
-  const cogsCls = cogsCagr === null ? '' : (cogsCagr >= 0 ? 'pos' : 'neg');
-  html += `<td class="cell-variance ${cogsCls}">${cogsCagr !== null ? fmtPctVar(cogsCagr) : '—'}</td></tr>`;
-
-  // Opex section
-  html += `<tr class="section-row"><td colspan="${years.length + 2}">Operating Expenses</td></tr>`;
-  for (let i = 1; i < series.length; i++) {  // skip COGS at idx 0
-    const vals = yearlyBySeries[i];
-    html += `<tr><td class="indent">${series[i].label}</td>`;
+  for (const r of costRows) {
+    if (r.type === 'section') {
+      html += `<tr class="section-row"><td colspan="${years.length + 2}">${r.label}</td></tr>`;
+      continue;
+    }
+    const vals = valuesFor(r);
+    const rowCls = r.bold ? 'bold-row' : '';
+    const lblCls = r.indent ? 'indent' : '';
+    html += `<tr class="${rowCls}"><td class="${lblCls}">${r.label}</td>`;
     vals.forEach(v => { html += `<td>${fmtM(v)}</td>`; });
     const c = cagrOf(vals);
     const cls = c === null ? '' : (c >= 0 ? 'pos' : 'neg');
     html += `<td class="cell-variance ${cls}">${c !== null ? fmtPctVar(c) : '—'}</td></tr>`;
   }
-
-  const opexTotals = years.map((_, i) =>
-    yearlyBySeries.slice(1).reduce((s, arr) => s + (arr[i] || 0), 0));
-  html += `<tr class="bold-row"><td>Total Opex</td>`;
-  opexTotals.forEach(v => { html += `<td>${fmtM(v)}</td>`; });
-  const opexCagr = cagrOf(opexTotals);
-  const opexCls = opexCagr === null ? '' : (opexCagr >= 0 ? 'pos' : 'neg');
-  html += `<td class="cell-variance ${opexCls}">${opexCagr !== null ? fmtPctVar(opexCagr) : '—'}</td></tr>`;
-
-  // COGS + Opex total
-  html += `<tr class="section-row"><td colspan="${years.length + 2}">Total Cost</td></tr>`;
-  const totalCost = years.map((_, i) => (cogsVals[i] || 0) + (opexTotals[i] || 0));
-  html += `<tr class="bold-row"><td>COGS + Opex</td>`;
-  totalCost.forEach(v => { html += `<td>${fmtM(v)}</td>`; });
-  const totalCagr = cagrOf(totalCost);
-  const totalCls = totalCagr === null ? '' : (totalCagr >= 0 ? 'pos' : 'neg');
-  html += `<td class="cell-variance ${totalCls}">${totalCagr !== null ? fmtPctVar(totalCagr) : '—'}</td></tr>`;
 
   html += `</tbody></table>`;
   $('#costs-content').innerHTML = html;
