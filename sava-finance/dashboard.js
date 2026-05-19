@@ -749,7 +749,11 @@ function renderCYO() {
 
   for (const r of rows) {
     if (r.type === 'section') {
-      html += `<tr class="section-row" data-section="${r.label}"><td class="sticky-col" colspan="20">${r.label}</td></tr>`;
+      // The section label is shown in the frozen header (leftmost cell of
+      // the sub-header row, id="cyo-section-label"). We emit only a tiny
+      // invisible anchor here so updateActiveSectionLabel can detect which
+      // section the topmost visible row belongs to via its position.
+      html += `<tr class="section-anchor" data-section="${r.label}" aria-hidden="true"><td colspan="20" style="padding:0;border:0;line-height:0;height:0;"></td></tr>`;
       continue;
     }
     const rowClass = r.bold ? 'bold-row' : '';
@@ -1021,13 +1025,13 @@ function renderFYO() {
     return v.toFixed(1);
   };
 
-  let html = `<table class="data-table"><thead><tr><th id="fyo-section-label" class="section-label-cell" style="text-align:left;text-transform:uppercase;font-weight:600;letter-spacing:0.04em;">Metric</th>`;
+  let html = `<table class="data-table"><thead><tr><th>Metric</th>`;
   for (const y of years) html += `<th>${y}</th>`;
   html += `<th>Avg Annual<br>Growth ($)</th><th>CAGR %<br>2026-2030</th><th>Variance<br>(pp)</th></tr></thead><tbody>`;
 
   for (const r of rows) {
     if (r.type === 'section') {
-      html += `<tr class="section-row" data-section="${r.label}"><td colspan="9">${r.label}</td></tr>`;
+      html += `<tr class="section-row"><td colspan="9">${r.label}</td></tr>`;
       continue;
     }
     // Year vals — all sources are scenario-aware in the v6 model.
@@ -1511,14 +1515,14 @@ function renderCosts() {
     return sumYearByLabel(r.tab, r.sheetLabel);
   };
 
-  let html = `<table class="data-table"><thead><tr><th id="costs-section-label" class="section-label-cell" style="text-align:left;text-transform:uppercase;font-weight:600;letter-spacing:0.04em;">Cost line</th>`;
+  let html = `<table class="data-table"><thead><tr><th>Cost line</th>`;
   for (const y of years) html += `<th>${y}</th>`;
   html += `<th>CAGR %<br>${years[0]}-${years[years.length-1]}</th>`;
   html += `</tr></thead><tbody>`;
 
   for (const r of costRows) {
     if (r.type === 'section') {
-      html += `<tr class="section-row" data-section="${r.label}"><td colspan="${years.length + 2}">${r.label}</td></tr>`;
+      html += `<tr class="section-row"><td colspan="${years.length + 2}">${r.label}</td></tr>`;
       continue;
     }
     const vals = valuesFor(r);
@@ -1645,13 +1649,16 @@ function renderActiveTab() {
 
 function updateStickyOffsets() {
   // For two-row theads (CYO), the second header row needs to stick just
-  // below the first. Hardcoded pixel offsets are unreliable across font/zoom,
-  // so we measure row 1's actual rendered height.
+  // below the first. We measure row 1's rendered height, then subtract 1px
+  // so row 2 slightly overlaps row 1 — eliminates any sub-pixel transparent
+  // strip through which scrolling body content would otherwise peek.
+  // The overlap is invisible because both rows share the ink background.
   document.querySelectorAll('.data-table').forEach((tbl) => {
     const firstRow = tbl.querySelector('thead tr');
     if (!firstRow) return;
     const firstRowH = firstRow.getBoundingClientRect().height;
-    tbl.style.setProperty('--thead-row1-h', `${Math.ceil(firstRowH)}px`);
+    const top = Math.max(0, Math.floor(firstRowH) - 1);
+    tbl.style.setProperty('--thead-row1-h', `${top}px`);
   });
   // Attach scroll listeners to each scrolling table container so section
   // labels (P&L, Cash Flow, etc.) appear in the leftmost header cell of the
@@ -1677,9 +1684,9 @@ function updateActiveSectionLabel(wrap) {
   const thead = table.querySelector('thead');
   if (!thead) return;
   const headerBottom = wrap.getBoundingClientRect().top + thead.getBoundingClientRect().height;
-  // Walk section rows; the active one is the last section-row whose top is
-  // above the header bottom edge (i.e. we've scrolled past it).
-  const sectionRows = table.querySelectorAll('tr.section-row');
+  // Walk section rows (or hidden anchors); the active one is the last whose
+  // top is above the header bottom edge (i.e. we've scrolled past it).
+  const sectionRows = table.querySelectorAll('tr.section-row[data-section], tr.section-anchor[data-section]');
   let active = null;
   for (const sr of sectionRows) {
     const top = sr.getBoundingClientRect().top;
