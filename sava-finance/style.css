@@ -382,10 +382,23 @@ table.data-table {
   font-size: 12.5px;
   font-variant-numeric: tabular-nums;
 }
-/* Sticky thead for every .data-table inside a .table-scroll (or used directly):
-   Sits below the top bar (~70px) and tab nav (~48px) → 118px. */
-.data-table thead th { position: sticky; top: 118px; z-index: 5; }
-.data-table thead tr:nth-child(2) th { top: 152px; }  /* second header row, if present */
+/* Sticky thead for every .data-table.
+   Sits below the top bar (~70px) and tab nav (~48px) → 118px.
+   IMPORTANT: position:sticky on th means the cell becomes its own layer and
+   loses inherited backgrounds — so we must set background on each th directly,
+   not just on thead. */
+.data-table thead th {
+  position: sticky;
+  top: 118px;
+  z-index: 5;
+  background: var(--ink);
+  color: white;
+}
+.data-table thead tr:nth-child(2) th {
+  top: 152px;
+  background: var(--ink);
+  z-index: 4;
+}
 .data-table thead {
   background: var(--ink);
   color: white;
