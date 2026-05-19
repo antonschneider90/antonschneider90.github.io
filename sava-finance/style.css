@@ -445,7 +445,16 @@ table.data-table {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   padding: 10px 20px;
+  /* Sticky just below the thead so the current section's label stays visible
+     as you scroll through its rows. When the next section-row arrives, it
+     overlaps the previous one (CSS sticky default behaviour). */
+  position: sticky;
+  top: 30px;          /* single-row thead height (FYO, P&L Costs, HC table) */
+  z-index: 3;
 }
+/* CYO has a two-row thead (~28 + ~28 = 56px), so section rows there
+   stick lower to sit just below both header rows. */
+.cyo-table .section-row td { top: 56px; }
 .data-table .section-row td:first-child { padding-left: 20px; }
 .data-table tbody tr.section-row:hover td { background: var(--ink); }
 .data-table .sub-header-row td {
