@@ -738,7 +738,7 @@ function renderCYO() {
         <th class="block-header" colspan="4">Full Year</th>
       </tr>
       <tr class="sub-header-sticky">
-        <th class="sticky-col"></th>
+        <th class="sticky-col section-label-cell" id="cyo-section-label" style="text-align:left;font-weight:600;text-transform:uppercase;font-size:11px;letter-spacing:0.04em;"></th>
         ${[0,1,2,3].map(idx => `
           <th>Current<br>Year</th><th>Prior<br>Year</th><th>YoY ($)</th><th>YoY (%)</th>
           ${idx < 3 ? '<th class="gap-col"></th>' : ''}
@@ -749,7 +749,7 @@ function renderCYO() {
 
   for (const r of rows) {
     if (r.type === 'section') {
-      html += `<tr class="section-row"><td class="sticky-col" colspan="20">${r.label}</td></tr>`;
+      html += `<tr class="section-row" data-section="${r.label}"><td class="sticky-col" colspan="20">${r.label}</td></tr>`;
       continue;
     }
     const rowClass = r.bold ? 'bold-row' : '';
@@ -1021,13 +1021,13 @@ function renderFYO() {
     return v.toFixed(1);
   };
 
-  let html = `<table class="data-table"><thead><tr><th>Metric</th>`;
+  let html = `<table class="data-table"><thead><tr><th id="fyo-section-label" class="section-label-cell" style="text-align:left;text-transform:uppercase;font-weight:600;letter-spacing:0.04em;">Metric</th>`;
   for (const y of years) html += `<th>${y}</th>`;
   html += `<th>Avg Annual<br>Growth ($)</th><th>CAGR %<br>2026-2030</th><th>Variance<br>(pp)</th></tr></thead><tbody>`;
 
   for (const r of rows) {
     if (r.type === 'section') {
-      html += `<tr class="section-row"><td colspan="9">${r.label}</td></tr>`;
+      html += `<tr class="section-row" data-section="${r.label}"><td colspan="9">${r.label}</td></tr>`;
       continue;
     }
     // Year vals — all sources are scenario-aware in the v6 model.
@@ -1511,14 +1511,14 @@ function renderCosts() {
     return sumYearByLabel(r.tab, r.sheetLabel);
   };
 
-  let html = `<table class="data-table"><thead><tr><th>Cost line</th>`;
+  let html = `<table class="data-table"><thead><tr><th id="costs-section-label" class="section-label-cell" style="text-align:left;text-transform:uppercase;font-weight:600;letter-spacing:0.04em;">Cost line</th>`;
   for (const y of years) html += `<th>${y}</th>`;
   html += `<th>CAGR %<br>${years[0]}-${years[years.length-1]}</th>`;
   html += `</tr></thead><tbody>`;
 
   for (const r of costRows) {
     if (r.type === 'section') {
-      html += `<tr class="section-row"><td colspan="${years.length + 2}">${r.label}</td></tr>`;
+      html += `<tr class="section-row" data-section="${r.label}"><td colspan="${years.length + 2}">${r.label}</td></tr>`;
       continue;
     }
     const vals = valuesFor(r);
@@ -1644,17 +1644,54 @@ function renderActiveTab() {
 }
 
 function updateStickyOffsets() {
+  // For two-row theads (CYO), the second header row needs to stick just
+  // below the first. Hardcoded pixel offsets are unreliable across font/zoom,
+  // so we measure row 1's actual rendered height.
   document.querySelectorAll('.data-table').forEach((tbl) => {
-    const thead = tbl.querySelector('thead');
-    if (!thead) return;
-    const totalH = thead.getBoundingClientRect().height;
-    // Single header row height (for CYO's two-row thead this is row 1's height;
-    // for single-row tables it's the whole thead).
-    const firstRow = thead.querySelector('tr');
-    const firstRowH = firstRow ? firstRow.getBoundingClientRect().height : totalH;
-    tbl.style.setProperty('--section-top', `${Math.ceil(totalH)}px`);
+    const firstRow = tbl.querySelector('thead tr');
+    if (!firstRow) return;
+    const firstRowH = firstRow.getBoundingClientRect().height;
     tbl.style.setProperty('--thead-row1-h', `${Math.ceil(firstRowH)}px`);
   });
+  // Attach scroll listeners to each scrolling table container so section
+  // labels (P&L, Cash Flow, etc.) appear in the leftmost header cell of the
+  // frozen thead and update as you scroll past each section's rows.
+  document.querySelectorAll('.table-scroll').forEach((wrap) => {
+    if (wrap._sectionListenerAttached) return;
+    wrap._sectionListenerAttached = true;
+    const update = () => updateActiveSectionLabel(wrap);
+    wrap.addEventListener('scroll', update, { passive: true });
+  });
+  // Run once after render so the label is correct from the start.
+  document.querySelectorAll('.table-scroll').forEach(updateActiveSectionLabel);
+}
+
+// Find the leftmost header cell that should display the current section name,
+// then look at the rows in this scroll container to figure out which section
+// the topmost visible body row belongs to.
+function updateActiveSectionLabel(wrap) {
+  const labelCell = wrap.querySelector('.section-label-cell');
+  if (!labelCell) return;
+  const table = wrap.querySelector('table');
+  if (!table) return;
+  const thead = table.querySelector('thead');
+  if (!thead) return;
+  const headerBottom = wrap.getBoundingClientRect().top + thead.getBoundingClientRect().height;
+  // Walk section rows; the active one is the last section-row whose top is
+  // above the header bottom edge (i.e. we've scrolled past it).
+  const sectionRows = table.querySelectorAll('tr.section-row');
+  let active = null;
+  for (const sr of sectionRows) {
+    const top = sr.getBoundingClientRect().top;
+    if (top <= headerBottom + 1) {
+      active = sr.getAttribute('data-section') || sr.textContent.trim();
+    } else {
+      break;
+    }
+  }
+  // Update the label cell. Use a non-breaking space when there's no active
+  // section so the cell keeps its height.
+  labelCell.textContent = active || '\u00A0';
 }
 
 // Re-measure on resize (font reflow, zoom, viewport changes).
