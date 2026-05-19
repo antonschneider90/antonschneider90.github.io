@@ -37,9 +37,13 @@ const TABS_TO_FETCH = [
   'COGS & Mfg_Bear',
   'COGS & Mfg_Base',
   'COGS & Mfg_Bull',
+  'Opex Build_Bear',
+  'Opex Build_Base',
+  'Opex Build_Bull',
   // Legacy driver tabs — kept for backward compatibility / fallback
   'Headcount Plan',
   'Revenue Build',
+  'Opex Build',
 ];
 
 // ============ STATE ============
@@ -220,6 +224,8 @@ async function loadAll() {
     'Headcount Plan_Bear', 'Headcount Plan_Base', 'Headcount Plan_Bull',
     'Revenue Build_Bear', 'Revenue Build_Base', 'Revenue Build_Bull',
     'COGS & Mfg_Bear', 'COGS & Mfg_Base', 'COGS & Mfg_Bull',
+    'Opex Build_Bear', 'Opex Build_Base', 'Opex Build_Bull',
+    'Opex Build',
   ]);
   const missingOptional = [];
   const results = await Promise.all(
