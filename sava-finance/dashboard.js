@@ -747,13 +747,23 @@ function renderCYO() {
     </thead>
     <tbody>`;
 
+  let firstSectionEmitted = false;
   for (const r of rows) {
     if (r.type === 'section') {
-      // The section label is shown in the frozen header (leftmost cell of
-      // the sub-header row, id="cyo-section-label"). We emit only a tiny
-      // invisible anchor here so updateActiveSectionLabel can detect which
-      // section the topmost visible row belongs to via its position.
-      html += `<tr class="section-anchor" data-section="${r.label}" aria-hidden="true"><td colspan="20" style="padding:0;border:0;line-height:0;height:0;"></td></tr>`;
+      // Skip the first section row only — at page load the frozen header
+      // already shows it as the active section, so rendering it inline
+      // creates a duplicate. Subsequent section rows ("Cash & Financing",
+      // "Operational", "Unit Economics") stay as visual dividers — when
+      // the user scrolls into them the header label updates and the body
+      // divider has already scrolled past, so no duplication.
+      // We still emit a hidden anchor for the first section so the scroll
+      // handler can detect when it's the active section.
+      if (!firstSectionEmitted) {
+        html += `<tr class="section-anchor" data-section="${r.label}" aria-hidden="true"><td colspan="20" style="padding:0;border:0;line-height:0;height:0;"></td></tr>`;
+        firstSectionEmitted = true;
+      } else {
+        html += `<tr class="section-row" data-section="${r.label}"><td class="sticky-col" colspan="20">${r.label}</td></tr>`;
+      }
       continue;
     }
     const rowClass = r.bold ? 'bold-row' : '';
