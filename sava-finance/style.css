@@ -367,9 +367,14 @@ main {
 /* ============================================================
    TABLES — generic
    ============================================================ */
+/* Tables become self-contained scrolling regions. This is critical for
+   sticky headers: position:sticky works against the nearest scrolling
+   ancestor, so we make .table-scroll that ancestor by setting overflow
+   on both axes. Header rows then stick to the top of the table itself,
+   regardless of where the table sits on the page. */
 .table-scroll {
-  overflow-x: auto;
-  overflow-y: visible;
+  overflow: auto;
+  max-height: calc(100vh - 180px);   /* viewport minus top bar (70) + tab nav (48) + small breathing room */
   background: white;
   border: 1px solid var(--grey-soft);
   border-radius: var(--radius);
@@ -382,22 +387,21 @@ table.data-table {
   font-size: 12.5px;
   font-variant-numeric: tabular-nums;
 }
-/* Sticky thead for every .data-table.
-   Sits below the top bar (~70px) and tab nav (~48px) → 118px.
-   IMPORTANT: position:sticky on th means the cell becomes its own layer and
-   loses inherited backgrounds — so we must set background on each th directly,
-   not just on thead. */
+/* Sticky thead: top:0 relative to the .table-scroll container.
+   IMPORTANT: each th needs its own background or sticky cells render transparent. */
 .data-table thead th {
   position: sticky;
-  top: 118px;
+  top: 0;
   z-index: 5;
   background: var(--ink);
   color: white;
 }
 .data-table thead tr:nth-child(2) th {
-  top: 152px;
-  background: var(--ink);
+  /* Second header row (CYO sub-headers) — stack below row 1.
+     Row 1 height is ~38px including padding; offset row 2 to match. */
+  top: 38px;
   z-index: 4;
+  background: var(--ink);
 }
 .data-table thead {
   background: var(--ink);
