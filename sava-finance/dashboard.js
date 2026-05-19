@@ -1636,7 +1636,29 @@ function renderActiveTab() {
     case 'financing': renderFinancing(); break;
     case 'assumptions': renderAssumptions(); break;
   }
+  // After the active panel's content renders, measure each table's thead
+  // and set CSS variables so section rows stick at the correct offset and
+  // the second header row (CYO) stacks below the first. Hardcoded pixel
+  // offsets are unreliable across font/zoom/padding changes; measuring is.
+  requestAnimationFrame(updateStickyOffsets);
 }
+
+function updateStickyOffsets() {
+  document.querySelectorAll('.data-table').forEach((tbl) => {
+    const thead = tbl.querySelector('thead');
+    if (!thead) return;
+    const totalH = thead.getBoundingClientRect().height;
+    // Single header row height (for CYO's two-row thead this is row 1's height;
+    // for single-row tables it's the whole thead).
+    const firstRow = thead.querySelector('tr');
+    const firstRowH = firstRow ? firstRow.getBoundingClientRect().height : totalH;
+    tbl.style.setProperty('--section-top', `${Math.ceil(totalH)}px`);
+    tbl.style.setProperty('--thead-row1-h', `${Math.ceil(firstRowH)}px`);
+  });
+}
+
+// Re-measure on resize (font reflow, zoom, viewport changes).
+window.addEventListener('resize', () => requestAnimationFrame(updateStickyOffsets));
 
 // ============ SCENARIO SWITCHING ============
 function setScenario(scen) {
