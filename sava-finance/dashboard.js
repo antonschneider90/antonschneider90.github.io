@@ -5,22 +5,41 @@
    ============================================================ */
 
 // ============ CONFIG ============
-const SHEET_ID = '1fJLaVixEazLYqhqpE6dyC5g3bY3jrdzu2fo3rj2sr8k';
+const SHEET_ID = '1ajLt5qKpH302ksTFlNgmT7nzbsXrWbzLBWJGYAtZaec';
 
 function jsonUrl(tabName) {
   return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tabName)}`;
 }
 
 const TABS_TO_FETCH = [
+  // Scenario-specific CYO/FYO (v6 model)
+  'Current Year Overview_Bear',
+  'Current Year Overview_Base',
+  'Current Year Overview_Bull',
+  'Forecast Years Overview_Bear',
+  'Forecast Years Overview_Base',
+  'Forecast Years Overview_Bull',
+  // Legacy CYO/FYO (mirror Assumptions!C8) — kept as fallback if scenario-specific tabs aren't loaded
   'Current Year Overview',
   'Forecast Years Overview',
+  // RFE: now genuinely independent per scenario
   'RFE_Base',
   'RFE_Bear',
   'RFE_Bull',
   'Assumptions',
+  // Scenario-specific driver tabs (v6+ model). Each one is fully independent.
+  'Headcount Plan_Bear',
+  'Headcount Plan_Base',
+  'Headcount Plan_Bull',
+  'Revenue Build_Bear',
+  'Revenue Build_Base',
+  'Revenue Build_Bull',
+  'COGS & Mfg_Bear',
+  'COGS & Mfg_Base',
+  'COGS & Mfg_Bull',
+  // Legacy driver tabs — kept for backward compatibility / fallback
   'Headcount Plan',
   'Revenue Build',
-  'Summary',
 ];
 
 // ============ STATE ============
@@ -176,19 +195,37 @@ async function loadAll() {
   const statusEl = $('#loading-status');
   state.data = {};
   state.checkCell = null;
+  // Distinguish required vs optional tabs. Optional tabs (e.g. scenario-specific drivers)
+  // may not exist if the user is still on an older model version; in that case we log
+  // and continue rather than killing the whole dashboard.
+  const OPTIONAL_TABS = new Set([
+    'Current Year Overview_Bear', 'Current Year Overview_Base', 'Current Year Overview_Bull',
+    'Forecast Years Overview_Bear', 'Forecast Years Overview_Base', 'Forecast Years Overview_Bull',
+    'Headcount Plan_Bear', 'Headcount Plan_Base', 'Headcount Plan_Bull',
+    'Revenue Build_Bear', 'Revenue Build_Base', 'Revenue Build_Bull',
+    'COGS & Mfg_Bear', 'COGS & Mfg_Base', 'COGS & Mfg_Bull',
+  ]);
+  const missingOptional = [];
   const results = await Promise.all(
     TABS_TO_FETCH.map(async (t) => {
       if (statusEl) statusEl.textContent = `Loading "${t}"...`;
       try {
         return [t, await fetchTab(t)];
       } catch (err) {
+        if (OPTIONAL_TABS.has(t)) {
+          missingOptional.push(t);
+          return [t, null];
+        }
         throw new Error(`${t}: ${err.message}`);
       }
     })
   );
-  results.forEach(([t, d]) => { state.data[t] = d; });
+  results.forEach(([t, d]) => { if (d) state.data[t] = d; });
   buildAllRowIndexes();
   state.loaded = true;
+  if (missingOptional.length > 0) {
+    console.warn(`Optional scenario-specific tabs not found (using legacy fallbacks): ${missingOptional.join(', ')}`);
+  }
   if (statusEl) statusEl.textContent = 'Rendering...';
 }
 
@@ -271,6 +308,15 @@ function cellNumByLabel(tabName, label, col, partial = false) {
 
 function rfeTabForScenario(scen) {
   return `RFE_${scen}`;
+}
+
+// Scenario-specific driver tabs (v6 model).
+// Falls back to the un-suffixed tab if the suffixed one isn't loaded
+// (defensive — lets older models keep working).
+function driverTabForScenario(baseName, scen) {
+  const suffixed = `${baseName}_${scen}`;
+  if (state.data[suffixed]) return suffixed;
+  return baseName;
 }
 
 // Sum a row across columns [startCol, endCol] (inclusive)
@@ -364,11 +410,16 @@ function baseTooltip(formatter) {
 function renderOverview() {
   const scen = state.scenario;
   const tab = rfeTabForScenario(scen);
+  const hcTab = driverTabForScenario('Headcount Plan', scen);
 
-  // KPIs from FYO (column F = 2030, which is FYO col 6)
-  const rev2030 = cellNumByLabel('Forecast Years Overview', 'Revenue', 6);
-  const ebitda2030 = cellNumByLabel('Forecast Years Overview', 'EBITDA', 6);
-  const hc2030 = cellNumByLabel('Forecast Years Overview', 'Total HC (EOY)', 6);
+  // KPIs — Revenue and EBITDA from RFE_<scen> summed over 2030 (cols BJ-BU = 62-73)
+  // HC EOY 2030 from Headcount Plan_<scen>, Dec 2030 col BU = 73
+  const revRow = rowOf(tab, 'Revenue');
+  const ebitdaRow = rowOf(tab, 'EBITDA');
+  const hcRow = rowOf(hcTab, 'Total HC');
+  const rev2030 = revRow ? sumRow(tab, revRow, 62, 73) : null;
+  const ebitda2030 = ebitdaRow ? sumRow(tab, ebitdaRow, 62, 73) : null;
+  const hc2030 = hcRow ? cellNum(hcTab, hcRow, 73) : null;
 
   // Funding need: read Series B + C sizes from RFE solver rows
   const sB = cellNumByLabel(tab, 'Series B size (USD)', 2);
@@ -402,7 +453,8 @@ function renderOverview() {
 
 // ============ RENDER: REVENUE BY STREAM CHART ============
 function renderRevByStreamChart(canvasId, scen) {
-  // Revenue Build tab — find rows by label
+  // Revenue Build_<scen> — scenario-specific in v6 model
+  const revTab = driverTabForScenario('Revenue Build', scen);
   const streams = [
     { label: 'EU+UK Rx', sheetLabel: 'EU+UK Rx revenue' },
     { label: 'EU+UK OTC', sheetLabel: 'EU+UK OTC revenue' },
@@ -413,10 +465,10 @@ function renderRevByStreamChart(canvasId, scen) {
   ];
   const years = [2025, 2026, 2027, 2028, 2029, 2030];
   const datasets = streams.map((s, i) => {
-    const row = rowOf('Revenue Build', s.sheetLabel);
+    const row = rowOf(revTab, s.sheetLabel);
     return {
       label: s.label,
-      data: years.map(y => (row ? sumYear('Revenue Build', row, y) : null) || 0),
+      data: years.map(y => (row ? sumYear(revTab, row, y) : null) || 0),
       backgroundColor: palette.series[i],
       borderRadius: 0,
     };
@@ -582,16 +634,15 @@ function renderMonthlyCashChart(canvasId, scen, withMarkers) {
 //     R26 = Net change in cash, R27 = Cash balance (EOM)
 
 function renderCYO() {
-  const cyoTab = 'Current Year Overview';
+  // Scenario-specific CYO tab (v6 model). Falls back to the legacy tab if not loaded.
+  const cyoTab = driverTabForScenario('Current Year Overview', state.scenario);
   const year = cellNumByLabel(cyoTab, 'Current year', 2);
   const lastMonth = cellNumByLabel(cyoTab, 'Last month (1-12)', 2);
   const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const monthStr = lastMonth ? monthNames[Math.round(lastMonth) - 1] : '—';
   const yrStr = year ? Math.round(year) : '—';
   $('#cyo-meta').innerHTML =
-    `Last actual month: <strong>${monthStr} ${yrStr}</strong> · ` +
-    `Scenario (Sheet's active): <span class="scen-inline">Sheet C8</span> · ` +
-    `<span style="color:var(--grey);font-size:12px;">(CYO mirrors the Sheet's active scenario; the dashboard toggle drives Forecast Years and other tabs.)</span>`;
+    `Last actual month: <strong>${monthStr} ${yrStr}</strong> · Scenario: <span class="scen-inline">${state.scenario}</span>`;
 
   // Row definitions
   const rowsSpec = [
@@ -782,11 +833,19 @@ function rfeAnnual(rfeTab, fyoLabel, year) {
 function renderFYO() {
   const scen = state.scenario;
   const rfeTab = rfeTabForScenario(scen);
-  const fyoTab = 'Forecast Years Overview';   // still used for operational / unit-econ rows
+  const revTab = driverTabForScenario('Revenue Build', scen);
+  const hcTab = driverTabForScenario('Headcount Plan', scen);
+  const cogsTab = driverTabForScenario('COGS & Mfg', scen);
   const years = [2026, 2027, 2028, 2029, 2030];
 
-  // Row defs. `source: 'rfe'` rows are recomputed from the active scenario's RFE tab.
-  //          `source: 'fyo'` rows fall through to FYO tab (which mirrors Assumptions!C8).
+  // Row defs. Every row sources from a scenario-specific tab so the dashboard
+  // scenario toggle drives ALL numbers.
+  //   'rfe'      → P&L / CF / cash from RFE_<scen>
+  //   'driver'   → Headcount Plan_<scen>, Revenue Build_<scen>, COGS & Mfg_<scen>
+  // Each 'driver' row provides:
+  //   driverTab  : which scenario-suffixed tab
+  //   driverLabel: col-A label inside that tab
+  //   eoy        : true → take Dec value of year; false → sum over year; or AVG/sum-modes
   const rowsSpec = [
     { type: 'section', label: 'P&L (USD)' },
     { label: 'Revenue',         source: 'rfe', fmt: 'm', bold: true },
@@ -810,48 +869,112 @@ function renderFYO() {
     { label: 'Cash balance (EOY)', source: 'rfe', fmt: 'm', bold: true },
 
     { type: 'section', label: 'Balance Sheet (EOY)' },
-    { label: 'Cash & equivalents', source: 'rfe', fmt: 'm' },
-    { label: 'AR + Inventory',     source: 'fyo', sheetLabel: 'AR + Inventory', fmt: 'm' },
-    { label: 'Net PP&E',           source: 'fyo', sheetLabel: 'Net PP&E', fmt: 'm' },
-    { label: 'Total Assets',       source: 'fyo', sheetLabel: 'Total Assets', fmt: 'm', bold: true },
-    { label: 'Total Liabilities',  source: 'fyo', sheetLabel: 'Total Liabilities', fmt: 'm' },
-    { label: 'Total Equity',       source: 'fyo', sheetLabel: 'Total Equity', fmt: 'm', bold: true },
+    { label: 'Cash & equivalents',  source: 'rfe', fmt: 'm' },
+    { label: 'AR + Inventory',      source: 'rfe-derived', deriveFrom: ['Accounts receivable', 'Inventory'], fmt: 'm' },
+    { label: 'Net PP&E',            source: 'rfe-eoy', rfeLabel: 'Net PP&E', fmt: 'm' },
+    { label: 'Total Assets',        source: 'rfe-eoy', rfeLabel: 'TOTAL ASSETS', fmt: 'm', bold: true },
+    { label: 'Total Liabilities',   source: 'rfe-eoy', rfeLabel: 'Total Liabilities', fmt: 'm' },
+    { label: 'Total Equity',        source: 'rfe-eoy', rfeLabel: 'Total Equity', fmt: 'm', bold: true },
 
     { type: 'section', label: 'Operational' },
-    { label: 'Total HC (EOY)',          source: 'fyo', sheetLabel: 'Total HC (EOY)', fmt: 'count' },
-    { label: 'Active patients (EOY)',   source: 'fyo', sheetLabel: 'Active patients (EOY)', fmt: 'count' },
-    { label: 'Patches sold (annual)',   source: 'fyo', sheetLabel: 'Patches sold (annual)', fmt: 'count' },
-    { label: 'Mfg lines installed (EOY)', source: 'fyo', sheetLabel: 'Mfg lines installed (EOY)', fmt: 'count' },
+    { label: 'Total HC (EOY)',           source: 'driver', driverTab: hcTab,   driverLabel: 'Total HC',                          mode: 'eoy', fmt: 'count' },
+    { label: 'Active patients (EOY)',    source: 'driver', driverTab: revTab,  driverLabel: 'Total active patients (all)',       mode: 'eoy', fmt: 'count' },
+    { label: 'Patches sold (annual)',    source: 'driver', driverTab: revTab,  driverLabel: 'Total patches sold (all channels)', mode: 'sum', fmt: 'count' },
+    { label: 'Mfg lines installed (EOY)', source: 'driver', driverTab: cogsTab, driverLabel: 'Cumulative lines installed', mode: 'eoy', fmt: 'count' },
 
     { type: 'section', label: 'Unit Economics' },
-    { label: 'Avg active patients (FY)', source: 'fyo', sheetLabel: 'Avg active patients (FY)', fmt: 'count' },
-    { label: 'New patients added (FY)',  source: 'fyo', sheetLabel: 'New patients added (FY)', fmt: 'count' },
-    { label: 'ARPU (annualized)',        source: 'fyo', sheetLabel: 'ARPU (annualized)', fmt: 'm' },
-    { label: 'CAC (S&M / new patients)', source: 'fyo', sheetLabel: 'CAC (S&M / new patients)', fmt: 'm' },
-    { label: 'LTV (per patient)',        source: 'fyo', sheetLabel: 'LTV (per patient)', fmt: 'm' },
-    { label: 'LTV:CAC ratio',            source: 'fyo', sheetLabel: 'LTV:CAC ratio', fmt: 'ratio' },
-    { label: 'All-in per-patch cost',    source: 'fyo', sheetLabel: 'All-in per-patch cost', fmt: 'm' },
+    { label: 'Avg active patients (FY)', source: 'driver', driverTab: revTab,  driverLabel: 'Total active patients (all)',       mode: 'avg', fmt: 'count' },
+    { label: 'New patients added (FY)',  source: 'driver', driverTab: revTab, driverLabel: 'Total new patients added (all channels)', mode: 'sum', fmt: 'count' },
+    { label: 'ARPU (annualized)',        source: 'derived', deriveFn: 'arpu', fmt: 'm' },
+    { label: 'CAC (S&M / new patients)', source: 'derived', deriveFn: 'cac',  fmt: 'm' },
+    { label: 'LTV (per patient)',        source: 'derived', deriveFn: 'ltv',  fmt: 'm' },
+    { label: 'LTV:CAC ratio',            source: 'derived', deriveFn: 'ltv_cac', fmt: 'ratio' },
+    { label: 'All-in per-patch cost',    source: 'derived', deriveFn: 'patch_cost', fmt: 'm' },
   ];
-  // Resolve FYO-sourced rows to row numbers once.
-  const rows = rowsSpec.map(r => {
-    if (r.type === 'section') return r;
-    if (r.source === 'fyo' && r.sheetLabel) return { ...r, fyoRow: rowOf(fyoTab, r.sheetLabel) };
-    return r;
-  });
 
-  // Inform user that ops/unit-econ rows mirror the Sheet's active scenario,
-  // not the dashboard toggle (these tabs aren't easily reconstructible from RFE).
-  const noteId = 'fyo-scen-note';
-  let noteEl = document.getElementById(noteId);
-  if (!noteEl) {
-    noteEl = document.createElement('div');
-    noteEl.id = noteId;
-    noteEl.className = 'panel-meta';
-    noteEl.style.marginTop = '4px';
-    const panelHeader = document.querySelector('#tab-fyo .panel-header');
-    if (panelHeader) panelHeader.appendChild(noteEl);
+  // Sum of "New patients added" across each year — these live in per-channel sub-rows in
+  // Revenue Build, e.g. R7/R21/R35/R49/R63/R75 ("New patients added" for each channel).
+  // Easier path: find every row labeled "New patients added" in the revTab and sum them per year.
+  function sumNewPatientsForYear(y) {
+    const data = state.data[revTab];
+    if (!data) return null;
+    const rowIdx = state.rowIdx[revTab];
+    if (!rowIdx) return null;
+    let total = 0;
+    // The label "New patients added" appears once per channel; rowOf would only find the first.
+    // Iterate the whole tab and sum every matching row.
+    for (let i = 0; i < data.length; i++) {
+      const lbl = data[i] && data[i][0];
+      if (lbl && String(lbl).trim().toLowerCase() === 'new patients added') {
+        total += (sumYear(revTab, i + 1, y) || 0);
+      }
+    }
+    return total;
   }
-  noteEl.innerHTML = `P&L, cash flow and EOY cash reflect dashboard scenario (<span class="scen-inline">${scen}</span>). Other balance-sheet, operational and unit-economic rows mirror the Sheet's active scenario.`;
+
+  // Read-time helpers
+  const readDriverEOY = (tab, label, year) => {
+    const row = rowOf(tab, label);
+    if (!row) return null;
+    return cellNum(tab, row, yearEndCol(year));
+  };
+  const readDriverSum = (tab, label, year) => {
+    const row = rowOf(tab, label);
+    if (!row) return null;
+    return sumYear(tab, row, year);
+  };
+  const readDriverAvg = (tab, label, year) => {
+    const row = rowOf(tab, label);
+    if (!row) return null;
+    // Avg over the 12 months
+    let s = 0, n = 0;
+    for (let c = yearStartCol(year); c <= yearEndCol(year); c++) {
+      const v = cellNum(tab, row, c);
+      if (v !== null && !isNaN(v)) { s += v; n++; }
+    }
+    return n ? s / n : null;
+  };
+
+  // RFE-EOY: read a row from RFE_<scen> at Dec of `year`
+  const readRfeEOY = (rfeLabel, year) => {
+    const row = rowOf(rfeTab, rfeLabel);
+    if (!row) return null;
+    return cellNum(rfeTab, row, yearEndCol(year));
+  };
+
+  // Derived computations for unit economics
+  function deriveValue(fn, year) {
+    const rev = rfeAnnual(rfeTab, 'Revenue', year);
+    if (fn === 'arpu') {
+      const avgPts = readDriverAvg(revTab, 'Total active patients (all)', year);
+      return (avgPts && Math.abs(avgPts) > 0.5) ? rev / avgPts : null;
+    }
+    if (fn === 'cac') {
+      const sm = rfeAnnual(rfeTab, 'Sales & marketing', year);
+      const newPts = readDriverSum(revTab, 'Total new patients added (all channels)', year);
+      return (newPts && Math.abs(newPts) > 0.5) ? sm / newPts : null;
+    }
+    if (fn === 'ltv') {
+      // LTV proxy: ARPU × (1 / churn) — but churn isn't easily available per-scenario from drivers.
+      // Use the model's own formula approximation: gross profit per avg patient.
+      const gp = rfeAnnual(rfeTab, 'Gross profit', year);
+      const avgPts = readDriverAvg(revTab, 'Total active patients (all)', year);
+      return (avgPts && Math.abs(avgPts) > 0.5) ? gp / avgPts : null;
+    }
+    if (fn === 'ltv_cac') {
+      const ltv = deriveValue('ltv', year);
+      const cac = deriveValue('cac', year);
+      return (cac && Math.abs(cac) > 0.001) ? ltv / cac : null;
+    }
+    if (fn === 'patch_cost') {
+      const cogs = rfeAnnual(rfeTab, 'Total COGS', year);
+      const patches = readDriverSum(revTab, 'Total patches sold (all channels)', year);
+      return (patches && Math.abs(patches) > 0.5) ? cogs / patches : null;
+    }
+    return null;
+  }
+
+  const rows = rowsSpec;
 
   const fmtVal = (v, fmt) => {
     if (v === null || isNaN(v)) return '—';
@@ -871,11 +994,35 @@ function renderFYO() {
       html += `<tr class="section-row"><td colspan="9">${r.label}</td></tr>`;
       continue;
     }
-    // Year vals — RFE-sourced rows aggregate the active-scenario RFE tab;
-    // FYO-sourced rows read from the FYO tab directly.
+    // Year vals — all sources are scenario-aware in the v6 model.
     const yearlyVals = years.map((y, i) => {
       if (r.source === 'rfe') return rfeAnnual(rfeTab, r.label, y);
-      if (r.source === 'fyo') return r.fyoRow ? cellNum(fyoTab, r.fyoRow, 2 + i) : null;
+      if (r.source === 'rfe-eoy') {
+        return r.rfeLabel ? readRfeEOY(r.rfeLabel, y) : null;
+      }
+      if (r.source === 'rfe-derived' && r.deriveFrom) {
+        // Sum of multiple RFE EOY rows (e.g. AR + Inventory)
+        let total = 0; let any = false;
+        for (const lbl of r.deriveFrom) {
+          const v = readRfeEOY(lbl, y);
+          if (v !== null) { total += v; any = true; }
+        }
+        return any ? total : null;
+      }
+      if (r.source === 'driver') {
+        const tab = r.driverTab;
+        const lbl = r.driverLabel;
+        if (r.mode === 'eoy') return readDriverEOY(tab, lbl, y);
+        if (r.mode === 'sum') return readDriverSum(tab, lbl, y);
+        if (r.mode === 'avg') return readDriverAvg(tab, lbl, y);
+        return null;
+      }
+      if (r.source === 'driver-newpatients') {
+        return sumNewPatientsForYear(y);
+      }
+      if (r.source === 'derived') {
+        return deriveValue(r.deriveFn, y);
+      }
       return null;
     });
 
@@ -1084,10 +1231,11 @@ function renderFYOWaterfall() {
 // ============ RENDER: REVENUE MIX ============
 function renderRevenue() {
   renderRevByStreamChart('chart-rev-streams', state.scenario);
-  // Patches by year — total patches sold (all channels)
+  // Patches by year — total patches sold (all channels) from scenario-specific Revenue Build
   const years = [2025, 2026, 2027, 2028, 2029, 2030];
-  const patchesRow = rowOf('Revenue Build', 'Total patches sold (all channels)');
-  const patches = years.map(y => (patchesRow ? sumYear('Revenue Build', patchesRow, y) : null) || 0);
+  const revTab = driverTabForScenario('Revenue Build', state.scenario);
+  const patchesRow = rowOf(revTab, 'Total patches sold (all channels)');
+  const patches = years.map(y => (patchesRow ? sumYear(revTab, patchesRow, y) : null) || 0);
 
   destroyChart('rev-patches');
   charts['rev-patches'] = new Chart(document.getElementById('chart-rev-patches'), {
@@ -1111,6 +1259,7 @@ function renderHeadcount() {
   // separately tracks Tech vs Non-tech rollups but the by-function breakdown
   // is what we visualize.
   const years = [2025, 2026, 2027, 2028, 2029, 2030];
+  const hcTab = driverTabForScenario('Headcount Plan', state.scenario);
   const funcs = [
     { label: 'R&D', sheetLabel: 'R&D HC (residual)' },
     { label: 'Regulatory', sheetLabel: 'Regulatory HC' },
@@ -1121,11 +1270,11 @@ function renderHeadcount() {
   ];
 
   const datasets = funcs.map((f, i) => {
-    const row = rowOf('Headcount Plan', f.sheetLabel);
+    const row = rowOf(hcTab, f.sheetLabel);
     return {
       label: f.label,
       data: years.map(y => {
-        const v = row ? cellNum('Headcount Plan', row, yearEndCol(y)) : null;
+        const v = row ? cellNum(hcTab, row, yearEndCol(y)) : null;
         return v !== null ? Math.round(v) : 0;
       }),
       backgroundColor: palette.series[i],
