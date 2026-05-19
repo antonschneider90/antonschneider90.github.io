@@ -679,7 +679,7 @@ function renderCYO() {
     { label: 'Series B inflow', sheetLabel: 'Series B inflow', fmt: 'm' },
     { label: 'Series C inflow', sheetLabel: 'Series C inflow', fmt: 'm' },
     { label: 'Net change in cash', sheetLabel: 'Net change in cash', fmt: 'm', bold: true },
-    { label: 'Cash balance (EOM)', sheetLabel: 'Cash balance (EOM)', fmt: 'm', bold: true, stock: true },
+    { label: 'Cash balance (EOM)', sheetLabel: 'Cash balance (EOM)', fmt: 'm', bold: true },
     { type: 'section', label: 'Operational' },
     { label: 'Active patients (EOM)', sheetLabel: 'Active patients (EOM)', fmt: 'count' },
     { label: 'Total patches sold', sheetLabel: 'Total patches sold', fmt: 'count' },
@@ -758,34 +758,20 @@ function renderCYO() {
       const yoyD = cellNum(cyoTab, r.row, yoyDC);
       const yoyP = cellNum(cyoTab, r.row, yoyPC);
 
-      // For stock metrics (balance sheet items like cash), YTD = Last Month and
-      // Full Year = Rest of Year, because the value is an as-of-date snapshot.
-      // Blank out the duplicate blocks (idx 1 and 3) to avoid visual confusion.
-      const isDuplicate = r.stock && (idx === 1 || idx === 3);
-      if (isDuplicate) {
-        const tip = idx === 1
-          ? 'Stock metric: YTD equals Last Month (same as-of date)'
-          : 'Stock metric: Full Year equals Rest of Year (same as-of date)';
-        html += `<td class="cell-current" title="${tip}" style="color:var(--ink-40)">—</td>`;
-        html += `<td title="${tip}" style="color:var(--ink-40)">—</td>`;
-        html += `<td class="cell-variance" style="color:var(--ink-40)">—</td>`;
-        html += `<td class="cell-variance" style="color:var(--ink-40)">—</td>`;
-      } else {
-        // Current
-        html += `<td class="cell-current">${fmtVal(cur, r.fmt)}</td>`;
-        // Prior
-        html += `<td>${fmtVal(prior, r.fmt)}</td>`;
-        // YoY $
-        const dCls = yoyD !== null && !isNaN(yoyD) && yoyD !== 0
-          ? (r.reverseVar ? (yoyD > 0 ? 'neg' : 'pos') : (yoyD > 0 ? 'pos' : 'neg'))
-          : '';
-        html += `<td class="cell-variance ${dCls}">${fmtVarDollar(yoyD, r.fmt)}</td>`;
-        // YoY %
-        const pCls = yoyP !== null && !isNaN(yoyP) && yoyP !== 0
-          ? (r.reverseVar ? (yoyP > 0 ? 'neg' : 'pos') : (yoyP > 0 ? 'pos' : 'neg'))
-          : '';
-        html += `<td class="cell-variance ${pCls}">${fmtVarPctOnly(yoyP)}</td>`;
-      }
+      // Current
+      html += `<td class="cell-current">${fmtVal(cur, r.fmt)}</td>`;
+      // Prior
+      html += `<td>${fmtVal(prior, r.fmt)}</td>`;
+      // YoY $
+      const dCls = yoyD !== null && !isNaN(yoyD) && yoyD !== 0
+        ? (r.reverseVar ? (yoyD > 0 ? 'neg' : 'pos') : (yoyD > 0 ? 'pos' : 'neg'))
+        : '';
+      html += `<td class="cell-variance ${dCls}">${fmtVarDollar(yoyD, r.fmt)}</td>`;
+      // YoY %
+      const pCls = yoyP !== null && !isNaN(yoyP) && yoyP !== 0
+        ? (r.reverseVar ? (yoyP > 0 ? 'neg' : 'pos') : (yoyP > 0 ? 'pos' : 'neg'))
+        : '';
+      html += `<td class="cell-variance ${pCls}">${fmtVarPctOnly(yoyP)}</td>`;
       // Gap
       if (idx < 3) html += `<td class="gap-col"></td>`;
     });
