@@ -443,13 +443,6 @@ table.data-table {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   padding: 10px 20px;
-  /* Sticky just below the thead so the current section's label stays visible.
-     The exact offset is set per-table at runtime via the --section-top CSS
-     variable (measured from the rendered thead height). Default 0 keeps
-     section rows visible even before JS runs. */
-  position: sticky;
-  top: var(--section-top, 0px);
-  z-index: 3;
 }
 .data-table .section-row td:first-child { padding-left: 20px; }
 .data-table tbody tr.section-row:hover td { background: var(--ink); }
