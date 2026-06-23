@@ -54,7 +54,9 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;
 .phead .meta{font-family:var(--mono);font-size:11px;color:var(--muted-2)}
 
 /* scan table */
-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px}
+table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;table-layout:fixed}
+th:nth-child(1){width:210px} th:nth-child(2),th:nth-child(3){width:52px}
+th:nth-child(4),th:nth-child(5){width:62px} th:nth-child(6){width:20px} th:nth-child(7){width:auto}
 th{text-align:right;font-weight:500;color:var(--muted-2);padding:6px 7px;border-bottom:1px solid var(--line);
   font-size:10px;letter-spacing:.06em;text-transform:uppercase}
 th:first-child,th.cmth{text-align:left}
@@ -268,7 +270,11 @@ function buildFacts(){
     if(b!==0){ const p=(a-b)/b*100; vp=(p>0?"+":"")+(Math.abs(p)>=100?p.toFixed(0):p.toFixed(1))+"%"; }
     else vp="n/m";
     const mat=l.type!=="subtotal"&&Math.abs(v)>=1.0&&Math.abs(b?v/b:0)>=0.05;
-    const lbl=l.label.replace('Revenue — ','').replace('COGS — ','');
+    let lbl=l.label.replace(/^Revenue — /,'').replace(/^COGS — /,'').replace(/\s*\([^)]*\)/g,'').trim();
+    const SHORT={"HX-2 Strike Systems":"HX-2 Strike","Maritime Systems":"Maritime","Altra Platform":"Altra",
+      "Hardware & Manufacturing":"Hardware & Mfg","Program Delivery & Integration":"Delivery & Integration",
+      "Sales, Marketing & Capture":"Sales & Marketing","General & Administrative":"G&A","Total Operating Expense":"Total Opex"};
+    lbl=SHORT[lbl]||lbl;
     return `<tr class="${l.type==='subtotal'?'sub':''}" data-line="${l.id}">
       <td class="lbl">${lbl}</td>
       <td>${f1(b)}</td><td>${f1(a)}</td>
