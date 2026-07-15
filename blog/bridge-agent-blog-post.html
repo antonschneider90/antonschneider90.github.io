@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building an AI Agent for FP&amp;A Variance Commentary - Anton Schneider</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        .blog-post {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+        }
+        .blog-post-header {
+            margin-bottom: 2.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .blog-post-meta {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .blog-post-title {
+            font-size: 2.25rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 0;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .blog-post-body h2 {
+            font-size: 1.35rem;
+            font-weight: 600;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .blog-post-body p {
+            font-size: 1.05rem;
+            line-height: 1.75;
+            color: #374151;
+            margin-bottom: 1.25rem;
+        }
+        .blog-post-body a {
+            color: #2563eb;
+            text-decoration: underline;
+        }
+        .blog-post-body a:hover {
+            color: #1d4ed8;
+        }
+        .blog-post-body ul {
+            margin-bottom: 1.25rem;
+            padding-left: 1.5rem;
+        }
+        .blog-post-body li {
+            font-size: 1.05rem;
+            line-height: 1.75;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+        .blog-post-body code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            background: #f3f4f6;
+            padding: 0.15em 0.4em;
+            border-radius: 3px;
+            color: #111827;
+        }
+        .screenshot {
+            margin: 2rem 0;
+        }
+        .screenshot img {
+            width: 100%;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            display: block;
+        }
+        .screenshot-caption {
+            margin-top: 0.6rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: #9ca3af;
+        }
+        .blog-post-footer {
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e5e7eb;
+            font-size: 0.95rem;
+            color: #6b7280;
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: #6b7280;
+            text-decoration: none;
+            margin-bottom: 2rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .back-link:hover {
+            color: #111827;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="../index.html" class="logo">
+                <span class="logo-text">Anton Schneider</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="../index.html#models">Models</a></li>
+                <li><a href="../blog.html">Blog</a></li>
+                <li><a href="../index.html#about">About</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section style="padding-top: 120px; background: white; min-height: 100vh;">
+        <div class="blog-post">
+            <a href="../blog.html" class="back-link">← Back to Blog</a>
+
+            <div class="blog-post-header">
+                <div class="blog-post-meta">
+                    <span>Jul 14, 2026</span>
+                    <span>•</span>
+                    <span>Finance &amp; AI</span>
+                    <span>•</span>
+                    <span>4 min read</span>
+                </div>
+                <h1 class="blog-post-title">Building an AI Agent for FP&amp;A Variance Commentary</h1>
+            </div>
+
+            <div class="blog-post-body">
+
+                <p>
+                    In my <a href="automated-data-updates-for-reports-and-models.html">earlier post</a> I wrote about the time FP&amp;A teams spend on manual reporting — and where I wanted to take it next. This is where it went.
+                </p>
+
+                <p>
+                    I built Bridge: a variance-commentary agent that reads a live P&amp;L, investigates the material variances, and writes board-ready commentary. It also drops a one-liner next to each P&amp;L line in the table — short annotations that give the numbers context at a glance.
+                </p>
+
+                <h2>The problem it solves</h2>
+
+                <p>
+                    Variance commentary that's actually useful goes beyond reporting what moved. Revenue beat plan — but was it more units at plan price, or the same units at a higher price? Was the COGS overrun volume-driven or a unit cost increase? Did gross margin move because of pricing, or because the product mix shifted?
+                </p>
+
+                <p>
+                    Decomposing variances into their drivers is standard FP&amp;A work. The question is how much of it can be automated — and how to do that without losing the analytical depth that makes the commentary useful in the first place.
+                </p>
+
+                <h2>How it's built</h2>
+
+                <p>
+                    The architecture is three layers. A <strong>Google Sheet</strong> holds the model: drivers (units, ASP, headcount, rates) feed the P&amp;L, variance, and decomposition tabs through formulas. Change a driver and everything recalculates. A <strong>Cloudflare Worker</strong> reads the Sheet live on each run and handles the API call, keeping credentials out of the browser. The <strong>agent UI</strong> triggers the agent, streams its reasoning as it works, and writes the output into the P&amp;L table and the board commentary panel.
+                </p>
+
+                <p>
+                    The agent has five tools: <code>scan_variances</code>, <code>get_line_history</code>, <code>decompose_line</code>, <code>get_driver</code>, and <code>cross_reference_accounts</code>. It calls them in a loop — scanning for material variances, then investigating each one — until it has enough to write the commentary. The tool outputs are defined by resolvers that sit between the raw model data and what the agent sees. Getting those shapes right — consistent and well-defined regardless of which line is being investigated — is what makes the loop reliable.
+                </p>
+
+                <div class="screenshot">
+                    <img src="bridge-screenshot-pnl-table.png" alt="Bridge P&L table with commentary column populated after a run">
+                    <p class="screenshot-caption">The P&amp;L table after a run. Each material line has a signed, decomposition-based one-liner in the Commentary column.</p>
+                </div>
+
+                <h2>The decomposition</h2>
+
+                <p>
+                    For any line driven by volume × rate — revenue lines, most cost lines — the agent decomposes the total variance into three effects:
+                </p>
+
+                <ul>
+                    <li><strong>Volume</strong> — the impact of producing or selling more (or fewer) units, held at plan price.</li>
+                    <li><strong>Rate</strong> — the impact of price or unit cost differing from plan, held at plan volume.</li>
+                    <li><strong>Mix</strong> — the interaction term (Δvolume × Δrate), which ensures the three effects sum exactly to the total variance.</li>
+                </ul>
+
+                <p>
+                    At the gross profit level there's a fourth: program mix — the impact of the hardware/software revenue blend shifting within the period. A business can beat its revenue number while gross margin falls, purely because the mix tilted toward lower-margin products. That's a very different conversation than a pricing problem, and separating the two is where the decomposition earns its keep.
+                </p>
+
+                <p>
+                    Milestone revenue lines use a separate decomposition: timing versus scope. Timing means the revenue is intact but recognised in a later period. Scope means work was removed. The two have completely different implications for the forecast.
+                </p>
+
+                <div class="screenshot">
+                    <img src="bridge-screenshot-reasoning-panel.png" alt="Agent reasoning panel showing tool calls and decomposition outputs">
+                    <p class="screenshot-caption">The agent reasoning panel — each tool call and what it returns, streamed in real time as the agent investigates.</p>
+                </div>
+
+                <h2>What it produces</h2>
+
+                <p>
+                    After a run, Bridge outputs a prose narrative covering the headline story, the drivers behind each material variance, and the watch items for next month. Alongside that, a one-liner next to each material P&amp;L line — specific enough to be useful, short enough to read at a glance.
+                </p>
+
+                <div class="screenshot">
+                    <img src="bridge-screenshot-commentary-prose.png" alt="Board commentary prose output showing R&D and Sales variance analysis">
+                    <p class="screenshot-caption">A section of the board commentary. The agent identifies whether an overrun is a trend or a one-off, and flags the watch items for next month.</p>
+                </div>
+
+                <h2>A few things that matter when building this kind of agent</h2>
+
+                <p>
+                    A couple of practical lessons from building and iterating on Bridge:
+                </p>
+
+                <p>
+                    <strong>Define the tool outputs precisely.</strong> The agent reasons over what the tools return. Vague or inconsistently shaped outputs produce vague commentary. In Bridge, each tool has a fixed return schema — variance figures are always signed, effects always sum to the total, decomposition types are always explicit. The model produces better output when it's working with structured, consistent data rather than trying to infer structure from raw numbers.
+                </p>
+
+                <p>
+                    <strong>Prompt for structure, not just content.</strong> The agent writes two things in a single response: board prose and a per-line notes block that the UI parses to populate the table. Getting both to coexist cleanly required being very explicit in the instructions — including a concrete example of the notes format and a list of the exact line IDs to use. Without that, the model would produce good prose but skip the structured block, or format it inconsistently enough that the parser missed entries.
+                </p>
+
+                <p>
+                    <strong>Build a reliable fallback for the data pipeline.</strong> Reading a live Google Sheet through a Cloudflare Worker has several failure points — the gviz API format, tab naming, caching. Bridge tags the data source in the response metadata (<code>data_source: "google-sheet"</code> vs <code>"baked-fallback"</code>) so it's immediately obvious whether the agent ran on live data or a stale snapshot. Small thing, but it saves a lot of confusion when something goes wrong silently.
+                </p>
+
+                <p>
+                    Bridge is a proof of concept built on a synthetic dataset. The pattern — a tool-calling agent over a live model, with the decomposition framework baked into the tool contract — is what I wanted to demonstrate. If you're working on something similar, or thinking about how agents fit into a finance function, I'd be glad to compare notes. Reach out via <a href="https://linkedin.com/in/antonschneider1">LinkedIn</a> or <a href="mailto:homepageanton@gmail.com">email</a>.
+                </p>
+
+            </div>
+
+            <div class="blog-post-footer">
+                <p>Anton Schneider — <a href="https://antonschneider.com">antonschneider.com</a></p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-text">
+                    <p>&copy; 2026 Anton Schneider</p>
+                    <p class="footer-location">London, UK</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
