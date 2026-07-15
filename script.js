@@ -1,6 +1,13 @@
 // Blog posts data
 const blogPosts = [
-{
+    {
+    date: "2026-07-14",
+    title: "Building an AI Agent for FP&A Variance Commentary",
+    category: "Finance & AI",
+    excerpt: "I built Bridge: a variance-commentary agent that reads a live P&L, decomposes variances into volume, rate and mix effects, and writes board-ready commentary. Here's how it works and what I learned building it.",
+    slug: "bridge-agent-blog-post"
+},
+    {
     date: "2026-04-30",
     title: "Making AI a Team Sport",
     category: "Automated Reporting & Forecasting",
