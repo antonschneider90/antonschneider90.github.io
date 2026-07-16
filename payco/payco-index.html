@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PayCo CBFS — Forecast Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <!-- Chart.js for charts (Papaparse removed: data now fetched as gviz JSON for raw precision) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <!-- Loading overlay -->
+  <div id="loading-overlay" class="loading">
+    <div class="loading-inner">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">Loading CBFS model data...</div>
+      <div class="loading-subtext" id="loading-status">Connecting to Google Sheets</div>
+    </div>
+  </div>
+
+  <!-- Error overlay -->
+  <div id="error-overlay" class="error-overlay hidden">
+    <div class="error-inner">
+      <h2>Could not load data</h2>
+      <p id="error-message"></p>
+      <button onclick="location.reload()">Try again</button>
+    </div>
+  </div>
+
+  <header class="top-bar">
+    <div class="brand">
+      <div class="brand-mark">CBFS</div>
+      <div class="brand-text">
+        <div class="brand-title">PayCo Forecast Model</div>
+        <div class="brand-sub">Anton Schneider</div>
+      </div>
+    </div>
+
+    <div class="top-controls">
+      <div class="check-badge" id="check-badge">
+        <span class="check-dot"></span>
+        <span class="check-label" id="check-label">—</span>
+      </div>
+      <div class="scenario-toggle" role="tablist" aria-label="Scenario">
+        <button class="scen-btn" data-scenario="Bear" aria-label="Bear scenario">Bear</button>
+        <button class="scen-btn active" data-scenario="Base" aria-label="Base scenario">Base</button>
+        <button class="scen-btn" data-scenario="Bull" aria-label="Bull scenario">Bull</button>
+      </div>
+      <button class="refresh-btn" id="refresh-btn" title="Refresh data from Sheet">
+        <span class="refresh-icon">↻</span>
+        <span>Refresh</span>
+      </button>
+    </div>
+  </header>
+
+  <nav class="tab-nav" role="tablist">
+    <button class="tab-btn active" data-tab="overview">Overview</button>
+    <button class="tab-btn" data-tab="current">Current Year</button>
+    <button class="tab-btn" data-tab="forecast">Forecast Years</button>
+    <button class="tab-btn" data-tab="unit-econ">Unit Economics</button>
+    <button class="tab-btn" data-tab="scenarios">Scenarios</button>
+    <button class="tab-btn" data-tab="sensitivity">Sensitivity</button>
+    <button class="tab-btn" data-tab="instructions">Instructions</button>
+
+  </nav>
+
+  <main id="main-content">
+    <!-- ===================== OVERVIEW ===================== -->
+    <section class="tab-panel active" id="tab-overview">
+      <div class="panel-header">
+        <div>
+          <h1>Executive Summary</h1>
+          <div class="panel-meta" id="overview-meta"></div>
+        </div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">2024 GPV</div>
+          <div class="kpi-value" id="kpi-gpv">—</div>
+          <div class="kpi-detail" id="kpi-gpv-detail"></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">2024 Revenue</div>
+          <div class="kpi-value" id="kpi-rev">—</div>
+          <div class="kpi-detail" id="kpi-rev-detail"></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">2024 Gross Margin %</div>
+          <div class="kpi-value" id="kpi-gm">—</div>
+          <div class="kpi-detail" id="kpi-gm-detail"></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Merchants EOY 2024</div>
+          <div class="kpi-value" id="kpi-merch">—</div>
+          <div class="kpi-detail" id="kpi-merch-detail"></div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="chart-card">
+          <h3>Revenue by year (<span id="rev-chart-scen">Base</span>)</h3>
+          <div class="chart-wrap"><canvas id="chart-revenue-year"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Revenue mix by segment — 2018-2024 (<span id="seg-mix-scen">Base</span>)</h3>
+          <div class="chart-wrap"><canvas id="chart-seg-mix"></canvas></div>
+        </div>
+      </div>
+
+      <div class="note" id="overview-note"></div>
+    </section>
+
+    <!-- ===================== CURRENT YEAR ===================== -->
+    <section class="tab-panel" id="tab-current">
+      <div class="panel-header">
+        <div>
+          <h1>Current Year Overview</h1>
+          <div class="panel-meta" id="current-meta"></div>
+        </div>
+      </div>
+      <div class="sheet-scenario-note" id="current-scen-note"></div>
+      <div id="current-content" class="table-scroll"></div>
+    </section>
+
+    <!-- ===================== FORECAST YEARS ===================== -->
+    <section class="tab-panel" id="tab-forecast">
+      <div class="panel-header">
+        <div>
+          <h1>Forecast Years Overview</h1>
+          <div class="panel-meta">Annual view 2018-2024 · reflects <span class="scen-inline" id="fc-scen-inline">Base</span> scenario</div>
+        </div>
+      </div>
+      <div id="forecast-content" class="table-scroll"></div>
+    </section>
+
+    <!-- ===================== UNIT ECONOMICS ===================== -->
+    <section class="tab-panel" id="tab-unit-econ">
+      <div class="panel-header">
+        <div>
+          <h1>Unit Economics</h1>
+          <div class="panel-meta">2020 cohort · CAC flat across scenarios · LTV is 5-year discounted · <span class="scen-inline" id="ue-scen-inline">Base</span> scenario</div>
+        </div>
+      </div>
+      <div id="unit-econ-content"></div>
+    </section>
+
+    <!-- ===================== SCENARIOS ===================== -->
+    <section class="tab-panel" id="tab-scenarios">
+      <div class="panel-header">
+        <div>
+          <h1>Scenario Comparison</h1>
+          <div class="panel-meta">Base / Bear / Bull side-by-side 2020-2024 with variances vs Base</div>
+        </div>
+      </div>
+      <div id="scenarios-content" class="table-scroll"></div>
+    </section>
+
+    <!-- ===================== SENSITIVITY ===================== -->
+    <section class="tab-panel" id="tab-sensitivity">
+      <div class="panel-header">
+        <div>
+          <h1>Sensitivity Analysis</h1>
+          <div class="panel-meta">Revenue impact of key lever perturbations · Base case anchor</div>
+        </div>
+      </div>
+      <div id="sensitivity-content"></div>
+    </section>
+
+    <!-- ===================== INSTRUCTIONS ===================== -->
+    <section class="tab-panel" id="tab-instructions">
+      <div class="panel-header">
+        <div>
+          <h1>Instructions</h1>
+          <div class="panel-meta">How this dashboard connects to the model</div>
+        </div>
+      </div>
+      <div class="instructions-grid">
+
+        <div class="instruction-card">
+          <h3>Data source</h3>
+          <p>This dashboard reads live from a Google Sheet (<a href="https://docs.google.com/spreadsheets/d/11h9hLqsE7Do9TygPRmJYObpp9TiN8A70c8dE_lmdLpc/edit" target="_blank" rel="noopener">open the model</a>) which is "Published to the web" so each tab's data is available as a CSV endpoint. On page load, the dashboard fetches 7 tabs in parallel: Current Year Overview, Forecast Years Overview, RFE_Base, RFE_Bear, RFE_Bull, Assumptions, and Summary.</p>
+        </div>
+
+        <div class="instruction-card">
+          <h3>Scenario toggle</h3>
+          <p>The <strong>Base / Bear / Bull</strong> toggle in the top bar controls every tab. Switching is instant because all three scenarios are pre-fetched from the parallel <code>RFE_Base</code>, <code>RFE_Bear</code>, <code>RFE_Bull</code> tabs in the Sheet.</p>
+          <p>Those three RFE tabs are parallel copies of the main RFE engine with scenario hardcoded. They update automatically whenever you change any Base/Bear/Bull assumption in the Sheet.</p>
+        </div>
+
+        <div class="instruction-card">
+          <h3>Where to change assumptions</h3>
+          <p>All assumptions live in the <strong>Assumptions</strong> tab of the Sheet. Key cells:</p>
+          <ul>
+            <li><code>C5</code> — Last month of actuals (drives where actuals end and forecast begins)</li>
+            <li><code>C7</code> — active scenario for the Sheet's own CYO (Base / Bear / Bull). Not used by this dashboard.</li>
+            <li><code>D/E/F 16-19</code> — volume take rate per product (now 2.6% flat across all)</li>
+            <li><code>D/E/F 20</code> — custom pricing threshold ($5m/month merchant GPV)</li>
+            <li><code>D/E/F 22</code> — custom pricing discount (15% off rate and trx fee)</li>
+            <li><code>D/E/F 24</code> — per-transaction fee ($0.20)</li>
+            <li><code>D/E/F 29</code> — Recurring billing uplift (% of Recurring GPV, 2020+)</li>
+            <li><code>D/E/F 41</code> — <strong>Basic → Recurring migration rate</strong> (% of Basic GPV migrating per month)</li>
+            <li><code>D/E/F 42</code> — <strong>New SaaS merchant sell-in mix</strong> (% onboarded directly as Recurring)</li>
+            <li><code>D/E/F 56-58</code> — new merchants added per year by segment and scenario</li>
+            <li><code>D/E/F 60-62</code> — annual merchant churn by segment (Base/Bear/Bull)</li>
+            <li><code>D/E/F 64-66</code> — Existing merchant GPV growth per year by segment</li>
+            <li><code>D/E/F 68-69</code> — new merchant ramp (months to full GPV, starting % of segment average)</li>
+            <li><code>C 82-84</code> — segment CAC (flat across scenarios)</li>
+            <li><code>C 85</code> — WACC for LTV discounting</li>
+          </ul>
+        </div>
+
+        <div class="instruction-card">
+          <h3>SaaS Recurring migration mechanic</h3>
+          <p>PayCo Billing (Recurring) launched in May 2018. The model treats Basic API → Recurring migration as a strategic priority:</p>
+          <ul>
+            <li><strong>Migration rate</strong> (Assumptions <code>D/E/F 41</code>): each forecast month, X% of cohort Basic API GPV shifts to Recurring. Defaults: Base 1.5% / Bear 0.5% / Bull 3.0% per month (≈17% / 6% / 30% per year).</li>
+            <li><strong>Sell-in mix</strong> (<code>D/E/F 42</code>): of new SaaS merchants onboarded 2020+, this % start on Recurring; the rest start on Basic and migrate over time. Default: 50% across all scenarios.</li>
+            <li><strong>Recurring billing uplift</strong> (<code>D/E/F 29</code>): incremental revenue on Recurring GPV (added to base 2.6% volume rate). Default: Base 0.8% / Bear 0.5% / Bull 1.1%.</li>
+            <li>Net effect by 2024: Recurring share of SaaS GPV rises from 37% (2019) to <strong>68% Base / 45% Bear / 86% Bull</strong>.</li>
+          </ul>
+        </div>
+
+        <div class="instruction-card">
+          <h3>When to hit Refresh</h3>
+          <p>Click the <strong>Refresh</strong> button in the top right whenever you edit the Sheet and want the dashboard to pick up those edits. Google Sheets typically takes <strong>1-5 minutes</strong> to republish CSV endpoints after a change, so if numbers don't update immediately, wait a minute and try again.</p>
+          <p>You do NOT need to refresh when toggling scenarios — that's instant, client-side.</p>
+        </div>
+
+        <div class="instruction-card">
+          <h3>Data integrity check</h3>
+          <p>The <strong>Data check</strong> badge in the top bar reads from the model's integrity check row. It ties reported revenue/GPV/merchant counts back to the raw Product Usage data. Green <span style="color: var(--green); font-weight: 600;">OK</span> means all checks pass; red <span style="color: var(--red); font-weight: 600;">ERROR</span> means there's a mismatch. If you see ERROR, scroll to row 1130 of any RFE tab in the Sheet to see which check (GPV / Events / Merchants) failed and for which month.</p>
+        </div>
+
+        <div class="instruction-card">
+          <h3>Adding a new merchant</h3>
+          <p>If raw data starts showing a new merchant ID, you need to wire it in manually in four places:</p>
+          <ol>
+            <li>Add the merchant ID, name, and segment to the <strong>Segmentation</strong> tab</li>
+            <li>Add the merchant to the <strong>Merchant Activity</strong> tab</li>
+            <li>Add per-merchant detail rows in all four RFE tabs: <code>Reporting & Forecasting Engine</code>, <code>RFE_Base</code>, <code>RFE_Bear</code>, <code>RFE_Bull</code></li>
+            <li>Update <code>B2</code> in Current Year Overview to pull the new actuals</li>
+          </ol>
+          <p>Easy way to do step 3: copy the block of rows of an existing merchant in the same segment, paste below, then update the merchant ID reference (col B) to the new merchant. Do this in all 4 tabs. The Instructions tab in the Sheet has more details.</p>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <div>Data source: <a href="https://docs.google.com/spreadsheets/d/11h9hLqsE7Do9TygPRmJYObpp9TiN8A70c8dE_lmdLpc/edit" target="_blank" rel="noopener">Google Sheet</a> · auto-republished on edits</div>
+      <div>Last fetched: <span id="last-fetched">—</span></div>
+    </div>
+  </footer>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>
