@@ -1,5 +1,5 @@
 /* ============================================================
-   PayCo CBFS Dashboard — dashboard.js
+   PayCo CBFS Dashboard - dashboard.js
    Fetches data from Google Sheets (published CSVs),
    renders Overview / Current Year / Forecast / Unit Econ /
    Scenarios / Sensitivity tabs. Scenario toggle switches between
@@ -12,7 +12,7 @@ const SHEET_ID = '11h9hLqsE7Do9TygPRmJYObpp9TiN8A70c8dE_lmdLpc';
 // Build gviz JSON URL for a specific tab name.
 // Using JSON instead of CSV because CSV applies cell number-formatting (e.g. "$#,##0,\k"
 // rounds monthly values to thousands), which produces accumulated rounding error vs the model.
-// JSON returns both raw `v` (value) and `f` (formatted) per cell — we always read `v`.
+// JSON returns both raw `v` (value) and `f` (formatted) per cell - we always read `v`.
 function jsonUrl(tabName) {
   return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tabName)}`;
 }
@@ -39,12 +39,12 @@ const state = {
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
-// Parse a numeric cell — handles "$1,234.5m", "24.73%", "+$0.4m", "—", etc.
+// Parse a numeric cell - handles "$1,234.5m", "24.73%", "+$0.4m", "-", etc.
 function parseNum(val) {
   if (val === null || val === undefined) return null;
   if (typeof val === 'number') return val;
   let s = String(val).trim();
-  if (!s || s === '—' || s === '-' || s === 'n/a' || s === '#N/A') return null;
+  if (!s || s === '-' || s === '-' || s === 'n/a' || s === '#N/A') return null;
 
   // Extract sign
   let sign = 1;
@@ -72,7 +72,7 @@ function parseNum(val) {
 
 // Format money
 function fmtM(n) {
-  if (n === null || n === undefined || isNaN(n)) return '—';
+  if (n === null || n === undefined || isNaN(n)) return '-';
   const abs = Math.abs(n);
   const sign = n < 0 ? '-' : '';
   if (abs >= 1e9) return sign + '$' + (abs / 1e9).toFixed(1) + 'b';
@@ -81,7 +81,7 @@ function fmtM(n) {
   return sign + '$' + abs.toFixed(0);
 }
 function fmtMVar(n) {
-  if (n === null || n === undefined || isNaN(n)) return '—';
+  if (n === null || n === undefined || isNaN(n)) return '-';
   const sign = n >= 0 ? '+' : '-';
   const abs = Math.abs(n);
   if (abs >= 1e6) return sign + '$' + (abs / 1e6).toFixed(1) + 'm';
@@ -89,29 +89,29 @@ function fmtMVar(n) {
   return sign + '$' + abs.toFixed(0);
 }
 function fmtPct(n, decimals = 1) {
-  if (n === null || n === undefined || isNaN(n)) return '—';
+  if (n === null || n === undefined || isNaN(n)) return '-';
   return (n * 100).toFixed(decimals) + '%';
 }
 function fmtPctVar(n) {
-  if (n === null || n === undefined || isNaN(n)) return '—';
+  if (n === null || n === undefined || isNaN(n)) return '-';
   const sign = n >= 0 ? '+' : '';
   return sign + (n * 100).toFixed(0) + '%';
 }
 function fmtBps(n) {
-  if (n === null || n === undefined || isNaN(n)) return '—';
+  if (n === null || n === undefined || isNaN(n)) return '-';
   const sign = n >= 0 ? '+' : '';
   return sign + Math.round(n * 10000) + ' bps';
 }
 function fmtInt(n) {
-  if (n === null || n === undefined || isNaN(n)) return '—';
+  if (n === null || n === undefined || isNaN(n)) return '-';
   return Math.round(n).toLocaleString();
 }
 function fmtCount(n, decimals = 1) {
-  if (n === null || n === undefined || isNaN(n)) return '—';
+  if (n === null || n === undefined || isNaN(n)) return '-';
   return n.toFixed(decimals);
 }
 function fmtCountVar(n) {
-  if (n === null || n === undefined || isNaN(n)) return '—';
+  if (n === null || n === undefined || isNaN(n)) return '-';
   const sign = n >= 0 ? '+' : '';
   return sign + n.toFixed(1);
 }
@@ -145,7 +145,7 @@ async function fetchTab(tabName) {
   // Data rows: each cell -> raw value `v`. When gviz infers a column as
   // numeric and a cell holds a non-numeric string (e.g. 'CHECK OK'), v comes
   // back as null. In that case we fall back to the formatted value `f` only
-  // if it's a non-numeric string — never for numeric cells, since `f` applies
+  // if it's a non-numeric string - never for numeric cells, since `f` applies
   // cell display formatting that would round/truncate monthly values.
   const dataRows = rows.map(r => {
     const cells = r.c || [];
@@ -153,7 +153,7 @@ async function fetchTab(tabName) {
       const cell = cells[j];
       if (cell === null || cell === undefined) return null;
       if (cell.v !== null && cell.v !== undefined) return cell.v;
-      // v is null — try formatted value, but only if it's clearly a non-numeric label
+      // v is null - try formatted value, but only if it's clearly a non-numeric label
       if (cell.f !== undefined && cell.f !== null) {
         const f = String(cell.f).trim();
         if (f && !/^[-+(]?[\d$,. ]+\)?[%mkb]?$/i.test(f)) return f;
@@ -201,7 +201,7 @@ async function loadAll() {
   const statusEl = $('#loading-status');
   state.data = {};
   state.checkCell = null;
-  // Clear RFE anchor cache — recomputed on next access
+  // Clear RFE anchor cache - recomputed on next access
   for (const k of Object.keys(_rfeAnchors)) delete _rfeAnchors[k];
   const results = await Promise.all(
     TABS_TO_FETCH.map(async (t) => {
@@ -326,7 +326,7 @@ function rfeAnchors(tab) {
     }
   }
 
-  // Cohort 2020 rows — find by col A = segment, col B = "New 2020", col E = metric
+  // Cohort 2020 rows - find by col A = segment, col B = "New 2020", col E = metric
   const cohort2020 = {};
   for (const seg of ['SaaS', 'E-Commerce Store', 'Platform']) {
     cohort2020[seg] = {
@@ -335,7 +335,7 @@ function rfeAnchors(tab) {
     };
   }
 
-  // Check cell (CHECK OK / CHECK ERROR) — find the row where col A contains "OVERALL" and grab col F
+  // Check cell (CHECK OK / CHECK ERROR) - find the row where col A contains "OVERALL" and grab col F
   // Actually our check row has col A = "OVERALL" and the result in col F
   let checkRow = null;
   for (let i = 0; i < (state.data[tab] || []).length; i++) {
@@ -392,7 +392,7 @@ function rfeTabForScenario(scen) {
   return `RFE_${scen}`;
 }
 
-// Find active scenario text in Assumptions tab — look for cell containing "Base", "Bear", or "Bull"
+// Find active scenario text in Assumptions tab - look for cell containing "Base", "Bear", or "Bull"
 // near a row labeled "Active scenario" or similar
 function findAssumptionScenario() {
   const data = state.data['Assumptions'];
@@ -411,7 +411,7 @@ function findAssumptionScenario() {
   return null;
 }
 
-// Find CAC for a segment in Assumptions tab — look for row with label like "CAC — SaaS" or "CAC SaaS"
+// Find CAC for a segment in Assumptions tab - look for row with label like "CAC - SaaS" or "CAC SaaS"
 function findAssumptionCAC(seg) {
   const data = state.data['Assumptions'];
   if (!data) return null;
@@ -485,9 +485,9 @@ function findAssumptionChurn(seg, scenario) {
 // Handles: Excel serial number (e.g. 43862), gviz "Date(2020,1,1)" (month 0-indexed),
 // ISO "2020-02-01" or "2020-02", or already-formatted strings.
 function formatLastActualMonth(v) {
-  if (v === null || v === undefined || v === '') return '—';
+  if (v === null || v === undefined || v === '') return '-';
 
-  // Numeric Excel serial date — Excel/Sheets epoch is 1899-12-30 (accounts for the
+  // Numeric Excel serial date - Excel/Sheets epoch is 1899-12-30 (accounts for the
   // 1900 leap-year bug, which is why day 1 corresponds to 1900-01-01).
   if (typeof v === 'number' || /^\d+(\.\d+)?$/.test(String(v).trim())) {
     const serial = Number(v);
@@ -503,7 +503,7 @@ function formatLastActualMonth(v) {
 
   const s = String(v).trim();
 
-  // gviz Date format: "Date(2020,1,1)" — month is 0-indexed
+  // gviz Date format: "Date(2020,1,1)" - month is 0-indexed
   const gvizMatch = s.match(/^Date\((\d{4})\s*,\s*(\d{1,2})\s*,/);
   if (gvizMatch) {
     const yr = gvizMatch[1];
@@ -515,7 +515,7 @@ function formatLastActualMonth(v) {
   const isoMatch = s.match(/^(\d{4})-(\d{2})/);
   if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}`;
 
-  // Slash format "M/D/YYYY" or "D/M/YYYY" — best effort, assume MM/DD/YYYY (US-style)
+  // Slash format "M/D/YYYY" or "D/M/YYYY" - best effort, assume MM/DD/YYYY (US-style)
   const slashMatch = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
   if (slashMatch) {
     return `${slashMatch[3]}-${String(parseInt(slashMatch[1], 10)).padStart(2, '0')}`;
@@ -524,7 +524,7 @@ function formatLastActualMonth(v) {
   return s;  // fallback: show whatever we got
 }
 
-// Find Last Actual Month from CYO tab — look for the row with label "Last month of actuals"
+// Find Last Actual Month from CYO tab - look for the row with label "Last month of actuals"
 function findCYOLastActualMonth() {
   const data = state.data['Current Year Overview'];
   if (!data) return null;
@@ -545,7 +545,7 @@ function findCYOLastActualMonth() {
 function renderOverview() {
   const tab = rfeTabForScenario(state.scenario);
   const a = rfeAnchors(tab);
-  // KPIs — 2024 full-year revenue, GM, merchants EOY, GPV
+  // KPIs - 2024 full-year revenue, GM, merchants EOY, GPV
   const rev2024 = sumYear(tab, a.grand.rev_tot, 2024);
   const gm2024 = sumYear(tab, a.grand.gm, 2024);
   const merch2024 = eoyVal(tab, a.grand.mcount, 2024);
@@ -567,7 +567,7 @@ function renderOverview() {
   // GM as a percentage (replaces dollar GM). Detail: bps change 2019 → 2024.
   const gmPct2024 = rev2024 ? (gm2024 / rev2024) : null;
   const gmPct2019 = rev2019 ? (gm2019 / rev2019) : null;
-  $('#kpi-gm').textContent = gmPct2024 !== null ? (gmPct2024 * 100).toFixed(1) + '%' : '—';
+  $('#kpi-gm').textContent = gmPct2024 !== null ? (gmPct2024 * 100).toFixed(1) + '%' : '-';
   if (gmPct2024 !== null && gmPct2019 !== null) {
     const bps = Math.round((gmPct2024 - gmPct2019) * 10000);
     const sign = bps >= 0 ? '+' : '';
@@ -576,7 +576,7 @@ function renderOverview() {
     $('#kpi-gm-detail').textContent = '';
   }
 
-  $('#kpi-merch').textContent = merch2024 !== null ? Math.round(merch2024).toString() : '—';
+  $('#kpi-merch').textContent = merch2024 !== null ? Math.round(merch2024).toString() : '-';
   const merchAdd = (merch2024 !== null && merch2019 !== null) ? (merch2024 - merch2019) : null;
   $('#kpi-merch-detail').textContent = merchAdd !== null ? `+${Math.round(merchAdd)} vs EOY 2019` : '';
 
@@ -595,7 +595,7 @@ function renderOverview() {
     <h3>Context</h3>
     <ul>
       <li>This dashboard mirrors the PayCo CBFS Excel model, live from a Google Sheet. Edit the Sheet → refresh this page to see updates.</li>
-      <li>Scenario toggle uses pre-computed parallel tabs (<code>RFE_Base</code>, <code>RFE_Bear</code>, <code>RFE_Bull</code>) — instant switching, no re-calculation needed.</li>
+      <li>Scenario toggle uses pre-computed parallel tabs (<code>RFE_Base</code>, <code>RFE_Bear</code>, <code>RFE_Bull</code>) - instant switching, no re-calculation needed.</li>
       <li>Dashboard and model can be updated every month by pasting one more month of historical raw data in the model and updating the last month of actuals cell (see Instructions tab).</li>
     </ul>
   `;
@@ -695,7 +695,7 @@ function renderSegMixChart(tab) {
         },
         tooltip: {
           callbacks: {
-            label: (c) => `${c.dataset.label}: ${c.parsed.y !== null ? c.parsed.y.toFixed(1) + '%' : '—'}`
+            label: (c) => `${c.dataset.label}: ${c.parsed.y !== null ? c.parsed.y.toFixed(1) + '%' : '-'}`
           }
         }
       },
@@ -738,7 +738,7 @@ function sumRangeCols(tab, row, startCol, endCol) {
 function parseYYYYMM(s) {
   if (s === null || s === undefined || s === '') return null;
 
-  // Excel serial number — Excel/Sheets epoch is 1899-12-30 (Excel's 1900 leap-year bug)
+  // Excel serial number - Excel/Sheets epoch is 1899-12-30 (Excel's 1900 leap-year bug)
   if (typeof s === 'number' || /^\d+(\.\d+)?$/.test(String(s).trim())) {
     const serial = Number(s);
     if (serial > 0 && serial < 100000) {
@@ -750,7 +750,7 @@ function parseYYYYMM(s) {
 
   const str = String(s).trim();
 
-  // gviz Date format: "Date(2020,1,1)" — month 0-indexed
+  // gviz Date format: "Date(2020,1,1)" - month 0-indexed
   const gvizMatch = str.match(/^Date\((\d{4})\s*,\s*(\d{1,2})\s*,/);
   if (gvizMatch) {
     return { year: parseInt(gvizMatch[1], 10), month: parseInt(gvizMatch[2], 10) + 1 };
@@ -827,17 +827,17 @@ function renderCurrentYear() {
   const lastYear = parsed.year;
   const lastMonth = parsed.month;
 
-  const activeSheetScen = findAssumptionScenario() || '—';
+  const activeSheetScen = findAssumptionScenario() || '-';
   $('#current-meta').textContent = `Last actual month: ${lastYear}-${String(lastMonth).padStart(2, '0')} · Current year: ${lastYear} · Scenario: ${state.scenario}`;
 
-  // No banner — the meta line already shows the scenario
+  // No banner - the meta line already shows the scenario
   $('#current-scen-note').textContent = '';
 
   const anch = rfeAnchors(tab);
 
   // Define rows to render
   const sectionRows = [
-    { type: 'section', label: 'FINANCIALS — GRAND TOTAL' },
+    { type: 'section', label: 'FINANCIALS - GRAND TOTAL' },
     { label: 'GPV', metric: { row: anch.grand.gpv }, fmt: 'm', bold: true },
     { label: 'Revenue', metric: { row: anch.grand.rev_tot }, fmt: 'm', bold: true },
     { label: 'Net Take Rate % (Rev/GPV)', metric: { num: anch.grand.rev_tot, den: anch.grand.gpv }, fmt: 'pctBps' },
@@ -847,9 +847,9 @@ function renderCurrentYear() {
   ];
 
   // Add by-segment sections
-  sectionRows.push({ type: 'section', label: 'FINANCIALS — BY SEGMENT' });
+  sectionRows.push({ type: 'section', label: 'FINANCIALS - BY SEGMENT' });
   for (const seg of ['SaaS', 'E-Commerce Store', 'Platform']) {
-    sectionRows.push({ type: 'subheader', label: `— ${seg} —` });
+    sectionRows.push({ type: 'subheader', label: `- ${seg} -` });
     const segR = anch.segments[seg];
     sectionRows.push({ label: 'GPV', metric: { row: segR.gpv }, fmt: 'm', bold: true });
     sectionRows.push({ label: 'Revenue', metric: { row: segR.rev_tot }, fmt: 'm', bold: true });
@@ -859,26 +859,26 @@ function renderCurrentYear() {
     sectionRows.push({ label: 'Gross Margin %', metric: { num: segR.gm, den: segR.rev_tot }, fmt: 'pctBps' });
   }
 
-  // KPIs — merchants EOY (uses eoy_row semantic — value at end of range, not sum)
+  // KPIs - merchants EOY (uses eoy_row semantic - value at end of range, not sum)
   sectionRows.push({ type: 'section', label: 'KPIs' });
   sectionRows.push({ label: '# Merchants (EOY)', metric: { eoy_row: anch.grand.mcount }, fmt: 'count', bold: true });
 
   // Formatters
   const fmtVal = (v, fmt) => {
-    if (v === null || isNaN(v)) return '—';
+    if (v === null || isNaN(v)) return '-';
     if (fmt === 'm') return fmtM(v);
     if (fmt === 'pctBps') return (v * 100).toFixed(2) + '%';
     if (fmt === 'count') return Math.round(v).toLocaleString();
     return v.toFixed(2);
   };
   const fmtVarDollar = (v, fmt) => {
-    if (v === null || isNaN(v)) return '—';
+    if (v === null || isNaN(v)) return '-';
     if (fmt === 'pctBps') return fmtBps(v);  // percentage-point diff → bps
     if (fmt === 'count') return (v >= 0 ? '+' : '') + Math.round(v).toLocaleString();
     return fmtMVar(v);
   };
   const fmtVarPct = (v) => {
-    if (v === null || isNaN(v)) return '—';
+    if (v === null || isNaN(v)) return '-';
     return fmtPctVar(v);
   };
 
@@ -949,18 +949,18 @@ function renderForecast() {
   $('#fc-scen-inline').textContent = state.scenario;
 
   const rows = [
-    { sec: 'FINANCIALS — GRAND TOTAL', type: 'section' },
+    { sec: 'FINANCIALS - GRAND TOTAL', type: 'section' },
     { label: 'GPV', row: anch.grand.gpv, fmt: 'm', bold: true },
     { label: 'Revenue', row: anch.grand.rev_tot, fmt: 'm', bold: true },
     { label: 'Net Take Rate %', num: anch.grand.rev_tot, den: anch.grand.gpv, fmt: 'pct', indent: true },
     { label: 'COGS', row: anch.grand.cogs_tot, fmt: 'm', bold: true },
     { label: 'Gross Margin', row: anch.grand.gm, fmt: 'm', bold: true },
     { label: 'Gross Margin %', num: anch.grand.gm, den: anch.grand.rev_tot, fmt: 'pct', indent: true },
-    { sec: 'FINANCIALS — BY SEGMENT', type: 'section' },
+    { sec: 'FINANCIALS - BY SEGMENT', type: 'section' },
   ];
 
   for (const seg of ['SaaS', 'E-Commerce Store', 'Platform']) {
-    rows.push({ sec: `— ${seg} —`, type: 'subheader' });
+    rows.push({ sec: `- ${seg} -`, type: 'subheader' });
     const segR = anch.segments[seg];
     rows.push({ label: 'GPV', row: segR.gpv, fmt: 'm', bold: true, indent: true });
     rows.push({ label: 'Revenue', row: segR.rev_tot, fmt: 'm', bold: true, indent: true });
@@ -995,7 +995,7 @@ function renderForecast() {
 
     // Formatting
     const fmtVal = (v) => {
-      if (v === null || isNaN(v)) return '—';
+      if (v === null || isNaN(v)) return '-';
       if (r.fmt === 'm') return fmtM(v);
       if (r.fmt === 'pct') return (v * 100).toFixed(2) + '%';
       if (r.fmt === 'eoy-count') return Math.round(v).toLocaleString();
@@ -1020,14 +1020,14 @@ function renderForecast() {
     if (v2020 !== null && v2024 !== null && v2020 !== 0) fcst = Math.pow(v2024 / v2020, 1 / 4) - 1;
     if (hist !== null && fcst !== null) varp = fcst - hist;
 
-    const fmtAAG = r.fmt === 'm' ? (aag !== null ? fmtMVar(aag) : '—')
-                 : r.fmt === 'pct' ? (aag !== null ? fmtBps(aag) : '—')
-                 : (aag !== null ? fmtCountVar(aag) : '—');
+    const fmtAAG = r.fmt === 'm' ? (aag !== null ? fmtMVar(aag) : '-')
+                 : r.fmt === 'pct' ? (aag !== null ? fmtBps(aag) : '-')
+                 : (aag !== null ? fmtCountVar(aag) : '-');
     html += `<td class="cell-variance ${aag > 0 ? 'pos' : aag < 0 ? 'neg' : ''}">${fmtAAG}</td>`;
-    html += `<td class="cell-variance ${cagr > 0 ? 'pos' : cagr < 0 ? 'neg' : ''}">${cagr !== null ? fmtPctVar(cagr) : '—'}</td>`;
-    html += `<td class="cell-variance ${hist > 0 ? 'pos' : hist < 0 ? 'neg' : ''}">${hist !== null ? fmtPctVar(hist) : '—'}</td>`;
-    html += `<td class="cell-variance ${fcst > 0 ? 'pos' : fcst < 0 ? 'neg' : ''}">${fcst !== null ? fmtPctVar(fcst) : '—'}</td>`;
-    html += `<td class="cell-variance ${varp > 0 ? 'pos' : varp < 0 ? 'neg' : ''}">${varp !== null ? fmtPctVar(varp) : '—'}</td>`;
+    html += `<td class="cell-variance ${cagr > 0 ? 'pos' : cagr < 0 ? 'neg' : ''}">${cagr !== null ? fmtPctVar(cagr) : '-'}</td>`;
+    html += `<td class="cell-variance ${hist > 0 ? 'pos' : hist < 0 ? 'neg' : ''}">${hist !== null ? fmtPctVar(hist) : '-'}</td>`;
+    html += `<td class="cell-variance ${fcst > 0 ? 'pos' : fcst < 0 ? 'neg' : ''}">${fcst !== null ? fmtPctVar(fcst) : '-'}</td>`;
+    html += `<td class="cell-variance ${varp > 0 ? 'pos' : varp < 0 ? 'neg' : ''}">${varp !== null ? fmtPctVar(varp) : '-'}</td>`;
     html += '</tr>';
   }
   html += '</tbody></table>';
@@ -1107,18 +1107,18 @@ function renderUnitEcon() {
         </div>
         <div>
           <div class="ue-metric-label">Annual churn</div>
-          <div class="ue-metric-value">${churns[seg] !== null && churns[seg] !== undefined ? (churns[seg] * 100).toFixed(1) + '%' : '—'}</div>
+          <div class="ue-metric-value">${churns[seg] !== null && churns[seg] !== undefined ? (churns[seg] * 100).toFixed(1) + '%' : '-'}</div>
         </div>
       </div>
       <div class="ue-ratio-row">
         <span class="ue-ratio-label">LTV / CAC</span>
-        <span class="ratio-pill ${ratioClass}">${ltvCAC !== null ? ltvCAC.toFixed(1) + 'x' : '—'}</span>
+        <span class="ratio-pill ${ratioClass}">${ltvCAC !== null ? ltvCAC.toFixed(1) + 'x' : '-'}</span>
       </div>
       <table class="ue-yearly-table">
         <thead><tr><th>Cohort year</th><th>Y1</th><th>Y2</th><th>Y3</th><th>Y4</th><th>Y5</th></tr></thead>
         <tbody>
-          <tr><td>GM / merchant</td>${annualGMPerM.map(v => `<td>${v !== null ? fmtM(v) : '—'}</td>`).join('')}</tr>
-          <tr class="cum-row"><td>Cumulative GM</td>${cum.map(v => `<td>${v !== null ? fmtM(v) : '—'}</td>`).join('')}</tr>
+          <tr><td>GM / merchant</td>${annualGMPerM.map(v => `<td>${v !== null ? fmtM(v) : '-'}</td>`).join('')}</tr>
+          <tr class="cum-row"><td>Cumulative GM</td>${cum.map(v => `<td>${v !== null ? fmtM(v) : '-'}</td>`).join('')}</tr>
         </tbody>
       </table>
     </div>`;
@@ -1131,7 +1131,7 @@ function renderUnitEcon() {
       <li><strong>Partial year for the cohort.</strong> The 2020 cohort only adds merchants from March onwards (Jan and Feb 2020 are actuals with no new-2020 merchants). So Y1 captures 10 months of cohort adds, not 12.</li>
       <li><strong>New merchant ramp.</strong> New merchants start at 20-30% of segment average GPV (depending on scenario) and ramp linearly to 100% over 9-18 months. A merchant who joined in March 2020 doesn't reach full run-rate until 2021.</li>
     </ul>
-    <p>By Y2, the full cohort is on board and fully ramped, which is why Y2 is roughly 3× Y1 (not 2× as a simple half-year effect would suggest). The LTV calculation correctly uses the actual GM earned — a merchant's economic value in Y1 equals what they actually delivered, not hypothetical steady-state.</p>
+    <p>By Y2, the full cohort is on board and fully ramped, which is why Y2 is roughly 3× Y1 (not 2× as a simple half-year effect would suggest). The LTV calculation correctly uses the actual GM earned - a merchant's economic value in Y1 equals what they actually delivered, not hypothetical steady-state.</p>
   </div>`;
   $('#unit-econ-content').innerHTML = html;
 }
@@ -1176,7 +1176,7 @@ function renderScenarios() {
       const bullVar = (bull !== null && base !== null) ? bull - base : null;
 
       const fmtV = (v) => {
-        if (v === null || isNaN(v)) return '—';
+        if (v === null || isNaN(v)) return '-';
         if (r.fmt === 'm') {
           // Format as $X,XXXm with thousand separators, no decimals.
           // E.g. 1,900,000,000 → $1,900m;  -1,484,900,000 → -$1,485m
@@ -1189,7 +1189,7 @@ function renderScenarios() {
         return v.toFixed(1);
       };
       const fmtVar = (v) => {
-        if (v === null || isNaN(v)) return '—';
+        if (v === null || isNaN(v)) return '-';
         if (r.fmt === 'm') {
           // Variance with explicit + / - sign, $X,XXXm style, no decimals.
           const sign = v >= 0 ? '+' : '-';
@@ -1219,7 +1219,7 @@ function renderSensitivity() {
   const data = state.data['Summary'];
   if (!data) { $('#sensitivity-content').innerHTML = '<p class="note">No data.</p>'; return; }
 
-  // Find the sensitivity table — look for row with "Perturbation" in col B
+  // Find the sensitivity table - look for row with "Perturbation" in col B
   let headerRow = -1;
   for (let i = 0; i < data.length; i++) {
     const row = data[i] || [];
@@ -1303,7 +1303,7 @@ function renderSensitivity() {
   };
   const fmtInM = (v) => {
     const n = normalizeToM(v);
-    if (n === null || isNaN(n)) return '—';
+    if (n === null || isNaN(n)) return '-';
     const sign = n >= 0 ? '+' : '-';
     const abs = Math.abs(n);
     return sign + '$' + abs.toFixed(1) + 'm';
@@ -1354,7 +1354,7 @@ function renderCheckBadge() {
   }
 
   if (!status) {
-    label.textContent = 'Data check: —';
+    label.textContent = 'Data check: -';
     return;
   }
 
